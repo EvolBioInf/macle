@@ -11,27 +11,27 @@
 #include "eprintf.h"
 #include "stack.h"
 
-static intptr_t *array;
+static int *array;
 static size_t n;
 static size_t maxN;
 
 void stackInit(size_t m) {
   maxN = m;
-  array = (intptr_t *)emalloc(maxN * sizeof(intptr_t));
+  array = (int *)emalloc(maxN * sizeof(int));
   n = 0;
 }
 
 bool stackEmpty() { return n == 0; }
 
-void stackPush(intptr_t stackItem) {
+void stackPush(int stackItem) {
   if (n == maxN) {
     maxN *= 2;
-    array = (intptr_t *)erealloc(array, maxN * sizeof(intptr_t));
+    array = (int *)erealloc(array, maxN * sizeof(int));
   }
   array[n++] = stackItem;
 }
 
-intptr_t stackTop() {
+int stackTop() {
   if (n > 0)
     return array[n - 1];
   else {
@@ -40,7 +40,7 @@ intptr_t stackTop() {
   }
 }
 
-intptr_t stackPop() {
+int stackPop() {
   if (n > 0)
     return array[--n];
   else {

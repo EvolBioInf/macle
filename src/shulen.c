@@ -11,6 +11,7 @@
 
 bool thresholdReached = false;
 
+// TODO: unused parameter q - richtig so?
 double sum(double x, double p, double q, double l) {
   double s = 0;
   double k = 0;

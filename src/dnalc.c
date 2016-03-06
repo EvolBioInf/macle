@@ -93,11 +93,10 @@ void scanFile(int fd) {
     Fact *lzf = computeLZFact(esa);
     tock(b, "computeLZFact");
 
+    tick();
     size_t plen;
-    /* Periodicity *ps = getPeriodicities2(esa->str, esa->n, &plen); */
     Periodicity *ps = getPeriodicities(true, lzf, &plen);
-    for (size_t j = 0; j < plen; j++)
-      printPeriodicity(ps + j);
+    tock(b, "getPeriodicities");
 
     if (args.p) {
       printf("%s \t(ML=%.4f)\n", seq->headers[i], mlf->cNor);
@@ -105,6 +104,9 @@ void scanFile(int fd) {
       printFact(mlf);
       printf("LZ-Factors:\n");
       printFact(lzf);
+      printf("Periodicities:\n");
+      for (size_t j = 0; j < plen; j++)
+        printPeriodicity(ps + j);
     }
 
     // calculate window complexity, TODO: does this make sense?

@@ -140,7 +140,6 @@ Periodicity *getPeriodicities(bool runsOnly, Fact *lzf, size_t *plen) {
     size_t bj = factStart(lzf, j); // b_j
     size_t ej = factEnd(lzf, j);   // e_j
     if (factLen(lzf, j) >= 4) {
-      printf("TODO type2 j=%zu\n", j);
       /* size_t dj = bj - prevOcc(j); //TODO: using LCP-Array */
       /* for (size_t i=bj+1; i<=ej-1; i++) { */
       /*   for each () { */
@@ -161,8 +160,9 @@ Periodicity *getPeriodicities(bool runsOnly, Fact *lzf, size_t *plen) {
     List *tmp;
     if (curr) {
       do {
-        ps[(*plen)++] = *(Periodicity *)(curr->value);
-        free((Periodicity *)curr->value);
+        Periodicity *p = (Periodicity *)(curr->value);
+        ps[(*plen)++] = *p;
+        free(p);
         tmp = curr;
         curr = curr->next;
         free(tmp);

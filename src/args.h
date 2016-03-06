@@ -2,8 +2,9 @@
 #include "prelude.h"
 
 #define PROGNAME "dnalc"
+#define DESCRIPTION "Calculate DNA local neighborhood complexity"
 #define VERSION "0.1"
-#define COPYRIGHT "Copyright (C) 2016 Bernhard Haubold, Anton Pirogov"
+#define COPYRIGHT "Copyright (C) 2016 Anton Pirogov, Bernhard Haubold"
 
 typedef struct Args {
   bool h;     // help message?

@@ -8,9 +8,9 @@
 
 void stackInit(size_t maxN);
 bool stackEmpty();
-void stackPush(intptr_t l);
-intptr_t stackPop();
-intptr_t stackTop();
+void stackPush(int l);
+int stackPop();
+int stackTop();
 void freeStack();
 
 #endif

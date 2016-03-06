@@ -19,14 +19,14 @@ static struct option opts[] = {
 };
 
 char usage[] = PROGNAME
-    " " VERSION "\n" COPYRIGHT "\n"
+    " " VERSION " - " DESCRIPTION "\n" COPYRIGHT "\n"
     "Usage: " PROGNAME " [OPTIONS] [FILES]\n"
     "OPTIONS:\n"
     "\t-h: print this help message and exit\n"
     "\t-s <NUM>: seed for random number generator (default: generated internally)\n"
     "\t-w <NUM>: size of sliding window\n"
     "\t-k <NUM>: interval between sliding windows\n"
-    "\t-p: print match-length and Lempel-Ziv factors\n"
+    "\t-p: print match-length and Lempel-Ziv factors and periodicities\n"
     "\t-g: output with gnuplot commands (to pipe directly into 'gnuplot -p')\n"
     "\t-b: print benchmarking information\n";
 

@@ -6,11 +6,11 @@
 #ifndef STACK_H
 #define STACK_H
 
-void stackInit(int maxN);
-int stackEmpty();
-void stackPush(int l);
-int stackPop();
-int stackTop();
+void stackInit(size_t maxN);
+bool stackEmpty();
+void stackPush(intptr_t l);
+intptr_t stackPop();
+intptr_t stackTop();
 void freeStack();
 
 #endif

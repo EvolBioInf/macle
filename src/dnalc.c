@@ -9,9 +9,10 @@
 
 #include "sequenceData.h"
 #include "complexity.h"
+#include "periodicity.h"
 #include "lempelziv.h"
 
-// for benchmarking
+// ---- for benchmarking ----
 #include <sys/resource.h>
 struct rusage ruse;
 double last_tick_time = 0;
@@ -24,7 +25,7 @@ void tock(bool b, char *str) {
   if (b)
     fprintf(stderr, "[BENCH] %s: %.3fs\n", str, CPU_TIME - last_tick_time);
 }
-//----------------
+// ---------------------------
 
 void gnuplotCode(uint32_t w, uint32_t k, int n) {
   printf( //"set terminal png; "
@@ -83,7 +84,7 @@ void scanFile(int fd) {
     size_t n = seqLen(seq, i);
 
     tick();
-    Esa *esa = getEsa(t, n);
+    Esa *esa = getEsa(t, n+1); //esa for sequence+$
     tock(b, "getEsa");
     tick();
     Fact *mlf = mlComplexity(esa, gc);
@@ -91,6 +92,12 @@ void scanFile(int fd) {
     tick();
     Fact *lzf = computeLZFact(esa);
     tock(b, "computeLZFact");
+
+    size_t plen;
+    /* Periodicity *ps = getPeriodicities(esa->str, esa->n, &plen); */
+    Periodicity *ps = getPeriodicities2(lzf, &plen);
+    for (size_t j=0; j<plen; j++)
+      printPeriodicity(ps+j);
 
     if (args.p) {
       printf("%s \t(ML=%.4f)\n", seq->headers[i], mlf->cNor);

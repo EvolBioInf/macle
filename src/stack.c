@@ -6,31 +6,32 @@
  * Author: Bernhard Haubold, haubold@evolbio.mpg.de
  * Date: Wed Nov 25 17:32:47 2009
  **************************************************/
-#include <stdlib.h>
+#include "prelude.h"
+
 #include "eprintf.h"
 #include "stack.h"
 
-static int *array;
-static int n;
-static int maxN;
+static intptr_t *array;
+static size_t n;
+static size_t maxN;
 
-void stackInit(int m) {
+void stackInit(size_t m) {
   maxN = m;
-  array = (int *)emalloc(maxN * sizeof(int));
+  array = (intptr_t*)emalloc(maxN * sizeof(intptr_t));
   n = 0;
 }
 
-int stackEmpty() { return n == 0; }
+bool stackEmpty() { return n == 0; }
 
-void stackPush(int stackItem) {
+void stackPush(intptr_t stackItem) {
   if (n == maxN) {
     maxN *= 2;
-    array = (int *)erealloc(array, maxN * sizeof(int));
+    array = (intptr_t *)erealloc(array, maxN * sizeof(intptr_t));
   }
   array[n++] = stackItem;
 }
 
-int stackTop() {
+intptr_t stackTop() {
   if (n > 0)
     return array[n - 1];
   else {
@@ -39,7 +40,7 @@ int stackTop() {
   }
 }
 
-int stackPop() {
+intptr_t stackPop() {
   if (n > 0)
     return array[--n];
   else {

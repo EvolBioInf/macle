@@ -84,7 +84,7 @@ void scanFile(int fd) {
     size_t n = seqLen(seq, i);
 
     tick();
-    Esa *esa = getEsa(t, n+1); //esa for sequence+$
+    Esa *esa = getEsa(t, n + 1); // esa for sequence+$
     tock(b, "getEsa");
     tick();
     Fact *mlf = mlComplexity(esa, gc);
@@ -94,10 +94,10 @@ void scanFile(int fd) {
     tock(b, "computeLZFact");
 
     size_t plen;
-    /* Periodicity *ps = getPeriodicities(esa->str, esa->n, &plen); */
-    Periodicity *ps = getPeriodicities2(lzf, &plen);
-    for (size_t j=0; j<plen; j++)
-      printPeriodicity(ps+j);
+    /* Periodicity *ps = getPeriodicities2(esa->str, esa->n, &plen); */
+    Periodicity *ps = getPeriodicities(true, lzf, &plen);
+    for (size_t j = 0; j < plen; j++)
+      printPeriodicity(ps + j);
 
     if (args.p) {
       printf("%s \t(ML=%.4f)\n", seq->headers[i], mlf->cNor);

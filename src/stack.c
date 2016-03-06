@@ -17,7 +17,7 @@ static size_t maxN;
 
 void stackInit(size_t m) {
   maxN = m;
-  array = (intptr_t*)emalloc(maxN * sizeof(intptr_t));
+  array = (intptr_t *)emalloc(maxN * sizeof(intptr_t));
   n = 0;
 }
 

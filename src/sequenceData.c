@@ -620,11 +620,11 @@ double gcContent(Sequence *seq) {
   return (double)gc / (double)(numChar);
 }
 
-//get pointer to start of i'th sequence
+// get pointer to start of i'th sequence
 char *getSeq(Sequence *seq, size_t i) {
   return &(seq->seq[i ? seq->borders[i - 1] + 2 : 0]);
 }
-//get length of i'th sequence (excluding trailing $)
+// get length of i'th sequence (excluding trailing $)
 size_t seqLen(Sequence *seq, size_t i) {
   return seq->borders[i] - (i ? seq->borders[i - 1] + 2 : 0);
 }

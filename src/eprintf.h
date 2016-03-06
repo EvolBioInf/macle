@@ -4,17 +4,16 @@
  * Author: Bernhard Haubold, haubold@evolbio.mpg.de
  * File created on Fri Dec 17 11:16:37 2004.
  *****************************************************************/
-#ifndef EPRINTF
-#define EPRINTF
+#pragma once
+
 #include <stdio.h>
 
-extern FILE *efopen(char *fname, char *mode); 
-extern int eopen(char *fname, int flag);
-extern void eprintf(char *, ...);
-extern char *estrdup (char *);
-extern void *emalloc(size_t);
-extern void *erealloc(void *, size_t);
-extern char *progname(void);
-extern void setprogname2(char *);
+void setprogname2(char *);
+void eprintf(char *, ...);
 
-#endif
+FILE *efopen(char *fname, char *mode);
+int eopen(char *fname, int flag);
+char *estrdup(char *);
+void *emalloc(size_t);
+void *ecalloc(size_t, size_t);
+void *erealloc(void *, size_t);

@@ -10,13 +10,12 @@
 #include "prelude.h"
 
 /* define data container */
-typedef struct esa{
-  uint64_t *sa;                /* suffix array */
-  int64_t *lcp;                /* longest common prefix array */
-  char *str;                   /* pointer to underlying string */
-  size_t n;                    /* length of sa and lcp */
+typedef struct esa {
+  uint64_t *sa; /* suffix array */
+  int64_t *lcp; /* longest common prefix array */
+  char *str;    /* pointer to underlying string */
+  size_t n;     /* length of sa and lcp */
 } Esa;
 
 Esa *getEsa(char *seq, size_t n);
 void freeEsa(Esa *esa);
-

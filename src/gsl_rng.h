@@ -13,4 +13,3 @@
 
 gsl_rng *ini_gsl_rng(uint32_t useSeed);
 void free_gsl_rng(gsl_rng *r, uint32_t useSeed);
-

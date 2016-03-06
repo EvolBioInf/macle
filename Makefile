@@ -20,7 +20,7 @@ clean:
 	@echo " $(RM) -r build"; $(RM) -r build
 	@echo " $(RM) src/*.o"; $(RM) src/*.o
 
-lint: $(SOURCES)
-	clang-format $^
+format:
+	clang-format -i src/*.[ch]
 
 .PHONY: all clean lint

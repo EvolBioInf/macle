@@ -1,19 +1,24 @@
 #pragma once
 #include "prelude.h"
 
-typedef struct Args{
-	bool h;     // help message?
-	uint32_t s; // seed for random number generator
+#define PROGNAME "dnalc"
+#define VERSION "0.1"
+#define COPYRIGHT "Copyright (C) 2016 Bernhard Haubold, Anton Pirogov"
 
-	uint32_t w; // sliding window size 
-	uint32_t k; // sliding interval
-	bool p;     // print match length decomposition?
-	bool g;     // gnuplot output?
-	bool b;     // benchmark run
+typedef struct Args {
+  bool h;     // help message?
+  uint32_t s; // seed for random number generator
 
-	// non-parameter arguments
-	size_t num_files;
-	char **files;
+  uint32_t w; // sliding window size
+  uint32_t k; // sliding interval
+  bool p;     // print match length decomposition?
+  bool g;     // gnuplot output?
+  bool b;     // benchmark run
+
+  // non-parameter arguments
+  size_t num_files;
+  char **files;
 } Args;
 
-Args parseArgs(int argc, char *argv[]);
+void parseArgs(int argc, char *argv[]);
+extern Args args;

@@ -1,5 +1,5 @@
 /***** stack.h ************************************
- * Description: 
+ * Description:
  * Author: Bernhard Haubold, haubold@evolbio.mpg.de
  * Date: Wed Nov 25 17:32:50 2009
  **************************************************/

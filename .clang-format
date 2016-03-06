@@ -3,4 +3,4 @@ IndentWidth:     2
 ContinuationIndentWidth: 4
 TabWidth:        8
 UseTab:          Never
-ColumnLimit:     100
+ColumnLimit:     90

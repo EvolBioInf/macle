@@ -8,11 +8,10 @@
 #include <inttypes.h> //(u)int(8|16|32|64)_t and others
 #include <stddef.h>   //size_t, ptrdiff_t
 
-#include <limits.h>   //MAX/MIN constants for int types ...
-#include <float.h>    //... and for floating point numbers
+#include <limits.h> //MAX/MIN constants for int types ...
+#include <float.h>  //... and for floating point numbers
 
-#include <tgmath.h>   //type generic math (normal and complex)
+#include <tgmath.h> //type generic math (normal and complex)
 
-#define MAX(X,Y) (((X)>(Y))?(X):(Y))
-#define MIN(X,Y) (((X)<(Y))?(X):(Y))
-
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))

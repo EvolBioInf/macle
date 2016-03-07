@@ -10,6 +10,7 @@
 #include "sequenceData.h"
 #include "complexity.h"
 #include "periodicity.h"
+#include "interval.h"
 #include "lempelziv.h"
 
 // ---- for benchmarking ----
@@ -86,6 +87,11 @@ void scanFile(int fd) {
     tick();
     Esa *esa = getEsa(t, n + 1); // esa for sequence+$
     tock(b, "getEsa");
+    if (args.p) {
+      printf("%s\n", seq->headers[i]);
+      printEsa(esa);
+    }
+
     tick();
     Fact *mlf = mlComplexity(esa, gc);
     tock(b, "mlComplexity");
@@ -95,11 +101,18 @@ void scanFile(int fd) {
 
     tick();
     size_t plen;
-    Periodicity *ps = getPeriodicities(true, lzf, &plen);
+    Periodicity *ps = getPeriodicities(false, lzf, esa, &plen);
     tock(b, "getPeriodicities");
+    tick();
+
+    //for comparison
+    size_t plen2;
+    getPeriodicities2(esa, &plen2);
+    tock(b, "getPeriodicities2");
+    printf("per: %zu, referenz: %zu\n", plen, plen2);
+    //---
 
     if (args.p) {
-      printf("%s \t(ML=%.4f)\n", seq->headers[i], mlf->cNor);
       printf("ML-Factors:\n");
       printFact(mlf);
       printf("LZ-Factors:\n");
@@ -117,6 +130,7 @@ void scanFile(int fd) {
 
     freeFact(mlf);
     freeFact(lzf);
+    free(ps);
 
     freeEsa(esa);
   }

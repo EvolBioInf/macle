@@ -33,17 +33,22 @@ uint64_t *getSa(char *seq, size_t n) {
   return sa2;
 }
 
-/* getLcp: compute LCP array using the algorithm in Figure 3
+/* calcLcp: compute LCP array using the algorithm in Figure 3
  *   of Kasai et al (2001). Linear-time longest-common-prefix
  *   computation in suffix arrays and its applications. LNCS 2089
  *   p. 191-192.
  */
-int64_t *getLcp(uint64_t *sa, char *seq, size_t n) {
-  char *t = seq;
+void calcLcp(Esa *esa) {
+  char *t = esa->str;
+  size_t n = esa->n;
+  uint64_t *sa = esa->sa;
+
   uint64_t *rank = (uint64_t *)emalloc(n * sizeof(uint64_t)); // isa
-  int64_t *lcp = (int64_t *)emalloc((n + 1) * sizeof(int64_t));
   for (size_t i = 0; i < n; i++)
     rank[sa[i]] = i;
+  esa->isa = rank;
+
+  int64_t *lcp = (int64_t *)emalloc((n + 1) * sizeof(int64_t));
   int64_t h = 0, j = 0;
   lcp[0] = lcp[n] = -1;
   for (size_t i = 0; i < n; i++) {
@@ -57,16 +62,15 @@ int64_t *getLcp(uint64_t *sa, char *seq, size_t n) {
         h--;
     }
   }
-  free(rank);
-  return lcp;
+  esa->lcp = lcp;
 }
 
 Esa *getEsa(char *seq, size_t n) {
   Esa *esa = (Esa *)emalloc(sizeof(Esa));
   esa->sa = getSa(seq, n);
-  esa->lcp = getLcp(esa->sa, seq, n);
   esa->str = seq;
   esa->n = n;
+  calcLcp(esa);
   return esa;
 }
 
@@ -74,4 +78,11 @@ void freeEsa(Esa *esa) {
   free(esa->sa);
   free(esa->lcp);
   free(esa);
+}
+
+void printEsa(Esa *esa) {
+  printf("i\tSA\tLCP\tSuffix\n");
+  for (size_t i = 0; i < esa->n; i++)
+    printf("%zu\t%zu\t%ld\t%s\n", i, esa->sa[i], esa->lcp[i], esa->str + esa->sa[i]);
+  printf("\t\t%ld\n", esa->lcp[esa->n]);
 }

@@ -1,5 +1,5 @@
 CC := clang
-CFLAGS := -std=gnu99 -Wall -Wextra -Wshadow -pedantic -O3 -g
+CFLAGS := -std=gnu99 -Wall -Wextra -Wshadow -pedantic -O0 -g
 LDFLAGS := -lm -lz -lgsl -lgslcblas -lblas -ldivsufsort
 TARGET := dnalc
 VERSION=0.1

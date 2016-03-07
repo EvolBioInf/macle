@@ -11,11 +11,14 @@
 
 /* define data container */
 typedef struct esa {
-  uint64_t *sa; /* suffix array */
-  int64_t *lcp; /* longest common prefix array */
-  char *str;    /* pointer to underlying string */
-  size_t n;     /* length of sa and lcp */
+  uint64_t *sa;  /* suffix array */
+  uint64_t *isa; /* inverse suffix array */
+  int64_t *lcp;  /* longest common prefix array */
+  char *str;     /* pointer to underlying string */
+  size_t n;      /* length of sa and lcp */
 } Esa;
 
 Esa *getEsa(char *seq, size_t n);
 void freeEsa(Esa *esa);
+
+void printEsa(Esa *esa);

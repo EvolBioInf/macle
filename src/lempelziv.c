@@ -38,23 +38,24 @@ size_t *computeLpf(Esa *esa) {
   lcp[0] = 0;
   lcp[n] = 0;
   lpf[n] = 0;
-  stackInit(1);
-  stackPush(0);
+  Stack *s = newStack(1);
+  stackPush(s, 0);
 
   for (size_t i = 1; i <= n; i++) {
-    while (!stackEmpty() && (sa[i] < sa[stackTop()] ||
-                             (sa[i] > sa[stackTop()] && lcp[i] <= lcp[stackTop()]))) {
-      if (sa[i] < sa[stackTop()]) {
-        lpf[sa[stackTop()]] = MAX(lcp[stackTop()], lcp[i]);
-        lcp[i] = MIN(lcp[stackTop()], lcp[i]);
+    while (!stackEmpty(s) &&
+           (sa[i] < sa[(size_t)stackTop(s)] ||
+            (sa[i] > sa[(size_t)stackTop(s)] && lcp[i] <= lcp[(size_t)stackTop(s)]))) {
+      if (sa[i] < sa[(size_t)stackTop(s)]) {
+        lpf[sa[(size_t)stackTop(s)]] = MAX(lcp[(size_t)stackTop(s)], lcp[i]);
+        lcp[i] = MIN(lcp[(size_t)stackTop(s)], lcp[i]);
       } else
-        lpf[sa[stackTop()]] = lcp[stackTop()];
-      stackPop();
+        lpf[sa[(size_t)stackTop(s)]] = lcp[(size_t)stackTop(s)];
+      stackPop(s);
     }
     if (i < n)
-      stackPush(i);
+      stackPush(s, (void *)i);
   }
-  freeStack();
+  freeStack(s);
 
   return lpf;
 }

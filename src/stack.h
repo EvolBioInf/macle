@@ -1,16 +1,17 @@
-/***** stack.h ************************************
- * Description:
- * Author: Bernhard Haubold, haubold@evolbio.mpg.de
- * Date: Wed Nov 25 17:32:50 2009
- **************************************************/
-#ifndef STACK_H
-#define STACK_H
+#pragma once
 
-void stackInit(size_t maxN);
-bool stackEmpty();
-void stackPush(int l);
-int stackPop();
-int stackTop();
-void freeStack();
+typedef void *stackel;
 
-#endif
+typedef struct stack {
+  size_t currMax; // allocated
+  size_t n; // used
+  stackel *array;
+} Stack;
+
+Stack *newStack(size_t initialMax);
+void freeStack(Stack *s);
+
+bool stackEmpty(Stack *s);
+void stackPush(Stack *s, stackel l);
+stackel stackPop(Stack *s);
+stackel stackTop(Stack *s);

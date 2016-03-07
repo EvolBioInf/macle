@@ -11,42 +11,43 @@
 #include "eprintf.h"
 #include "stack.h"
 
-static int *array;
-static size_t n;
-static size_t maxN;
-
-void stackInit(size_t m) {
-  maxN = m;
-  array = (int *)emalloc(maxN * sizeof(int));
-  n = 0;
+Stack *newStack(size_t max) {
+  Stack *s = emalloc(sizeof(Stack));
+  s->currMax = max;
+  s->array = emalloc(max * sizeof(stackel));
+  s->n = 0;
+  return s;
 }
 
-bool stackEmpty() { return n == 0; }
+void freeStack(Stack *s) {
+  free(s->array);
+  free(s);
+}
 
-void stackPush(int stackItem) {
-  if (n == maxN) {
-    maxN *= 2;
-    array = (int *)erealloc(array, maxN * sizeof(int));
+bool stackEmpty(Stack *s) { return s->n == 0; }
+
+void stackPush(Stack *s, stackel stackItem) {
+  if (s->n == s->currMax) {
+    s->currMax *= 2;
+    s->array = (stackel *)erealloc(s->array, s->currMax * sizeof(stackel));
   }
-  array[n++] = stackItem;
+  s->array[s->n++] = stackItem;
 }
 
-int stackTop() {
-  if (n > 0)
-    return array[n - 1];
+stackel stackTop(Stack *s) {
+  if (s->n > 0)
+    return s->array[s->n - 1];
   else {
     printf("ERROR[stack]: trying to pop an empty stack.\n");
-    return -1;
+    return (void *)-1;
   }
 }
 
-int stackPop() {
-  if (n > 0)
-    return array[--n];
+stackel stackPop(Stack *s) {
+  if (s->n > 0)
+    return s->array[--(s->n)];
   else {
     printf("ERROR[stack]: trying to pop an empty stack.\n");
-    return -1;
+    return (void *)-1;
   }
 }
-
-void freeStack() { free(array); }

@@ -9,5 +9,5 @@ typedef struct Periodicity {
 
 void printPeriodicity(Periodicity *p);
 
-Periodicity *getPeriodicities(bool runsOnly, Fact *lzf, size_t *plen);
-Periodicity *getPeriodicities2(char *str, size_t n, size_t *plen);
+Periodicity *getPeriodicities(bool runsOnly, Fact *lzf, Esa *esa, size_t *plen);
+Periodicity *getPeriodicities2(Esa *esa, size_t *plen);

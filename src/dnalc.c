@@ -105,7 +105,7 @@ void scanFile(int fd) {
     tock(b, "getPeriodicities");
     tick();
 
-    //for comparison
+    // for comparison
     size_t plen2;
     getPeriodicities2(esa, &plen2);
     tock(b, "getPeriodicities2");

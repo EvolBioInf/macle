@@ -40,39 +40,44 @@ void printLcpTree(Interval *in) {
 
 // returns true if an interval has been found and written to ret
 bool getSubInterval(Interval *ret, Esa *esa, Interval iv, char c) {
-  size_t l = iv.lb;
-  size_t r = iv.rb;
+  int64_t l = iv.lb;
+  int64_t r = iv.rb;
+  int64_t N = esa->n;
   char curr;
-  if (l > esa->n - 1 || r > esa->n - 1 || l > r)
-    return -1;
+  if (l > N - 1 || r > N - 1 || l > r)
+    return false;
 
   // get left
-  size_t n=0;
-  while (l <= r && n<esa->n) {
+  int64_t n = 0;
+  while (l < r) {
     n = (l + r) / 2;
+    /* printf("%zu %zu %zu\n", l, r, n); */
     curr = esa->str[esa->sa[n] + iv.lcp];
     if (curr >= c)
-      r = n - 1;
+      r = n;
     else if (curr < c)
       l = n + 1;
   }
   curr = esa->str[esa->sa[l] + iv.lcp];
+  /* printf("l lr: %ld %ld\n", l, r); */
   int64_t nl = curr == c ? l : -1;
 
   // get right
   l = iv.lb;
   r = iv.rb;
-  n=0;
-  while (r >= l && n<esa->n) {
-    n = (l + r) / 2;
+  n = 0;
+  while (l < r) {
+    n = (l + r + 1) / 2;
+    /* printf("%zu %zu %zu\n", l, r, n); */
     curr = esa->str[esa->sa[n] + iv.lcp];
     if (curr > c)
       r = n - 1;
     else if (curr <= c)
-      l = n + 1;
+      l = n;
   }
-  curr = esa->str[esa->sa[l - 1] + iv.lcp];
-  int64_t nr = curr == c ? l - 1 : -1;
+  curr = esa->str[esa->sa[r] + iv.lcp];
+  /* printf("r lr: %ld %ld\n", l, r); */
+  int64_t nr = curr == c ? r : -1;
 
   ret->lb = nl;
   ret->rb = nr;
@@ -84,12 +89,13 @@ bool getSubInterval(Interval *ret, Esa *esa, Interval iv, char c) {
 }
 
 // get interval of longest prefix matches of query using iterated binary search in ESA
-// TODO: more efficient?
+// TODO: more efficient? this is very slow
 Interval getInterval(Esa *esa, char *query, size_t n) {
   Interval iv = {0, 0, esa->n - 1, 0, 0};
   Interval tmp = {0, 0, 0, 0, 0};
   size_t i = 0;
   for (; i < n; i++) {
+    /* printf("try %c\n", query[i]); */
     if (!getSubInterval(&tmp, esa, iv, query[i]))
       break;
     iv = tmp;

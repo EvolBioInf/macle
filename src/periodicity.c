@@ -117,7 +117,7 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf) {
       Periodicity *lastp = NULL;
       List *last = NULL;
       List *curr = Lt1[i];
-      if (curr) {
+      if (curr)
         do {
           Periodicity *currp = (Periodicity *)curr->value;
           if (lastp && lastp->b == currp->b && lastp->e == currp->e) {
@@ -131,29 +131,29 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf) {
             lastp = currp;
           }
         } while (curr);
-      }
     }
   }
   return Lt1;
 }
 
-//calculate PrevOcc_j (previous occurence of LZ-factor s_j in text, 1-indexed)
-//if a factor is a first occurence, returns -1
-//TODO: use fact that multiple s_j can be the same -> organize as trie,
-//to reuse lcp-intervals for calculation!
+// calculate PrevOcc_j (previous occurence of LZ-factor s_j in text, 1-indexed)
+// if a factor is a first occurence, returns -1
+// TODO: use fact that multiple s_j can be the same -> organize as trie,
+// to reuse lcp-intervals for calculation! MUCH TOO SLOW
 size_t *calcPrevOcc(Fact *lzf, Esa *esa) {
   size_t *prevOcc = emalloc(lzf->n * sizeof(size_t));
 
-  for (size_t i=0; i<lzf->n; i++) {
+  for (size_t i = 0; i < lzf->n; i++) {
     size_t len = factLen(lzf, i);
-    Interval iv = getInterval(esa, lzf->str+lzf->fact[i], len);
+    /* printf("getInterval for %zu/%zu (len: %zu)\n", i+1, lzf->n, len); */
+    Interval iv = getInterval(esa, lzf->str + lzf->fact[i], len);
     int64_t best = -1;
-    for (size_t j=iv.lb; j<=(size_t)iv.rb; j++) {
+    for (size_t j = iv.lb; j <= (size_t)iv.rb; j++) {
       size_t curr = esa->sa[j];
-      if (curr<lzf->fact[i] && (int64_t)curr>best)
+      if (curr < lzf->fact[i] && (int64_t)curr > best)
         best = curr;
     }
-    prevOcc[i] = best + 1; //1-indexed!
+    prevOcc[i] = best + 1; // 1-indexed!
   }
 
   return prevOcc;
@@ -167,16 +167,17 @@ void calcType2Periodicities(List **Lt1, Fact *lzf, Esa *esa) {
     size_t ej = factEnd(lzf, j);   // e_j
     if (factLen(lzf, j) >= 4) {
       size_t dj = bj - prevOcc[j];
-      for (size_t i=bj+1; i<=ej-1; i++) {
-        List *curr = Lt1[i-dj];
-        if (curr) do {
-          Periodicity *p = (Periodicity *)(curr->value);
-          if (p->e+dj >= ej)
-            break;
-          Periodicity *newp = newPeriodicity(i, p->e+dj, p->l);
-          listPrepend(&Lt1[i], newp);
-          curr = curr->next;
-        } while (curr);
+      for (size_t i = bj + 1; i <= ej - 1; i++) {
+        List *curr = Lt1[i - dj];
+        if (curr)
+          do {
+            Periodicity *p = (Periodicity *)(curr->value);
+            if (p->e + dj >= ej)
+              break;
+            Periodicity *newp = newPeriodicity(i, p->e + dj, p->l);
+            listPrepend(&Lt1[i], newp);
+            curr = curr->next;
+          } while (curr);
       }
     }
   }

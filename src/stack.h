@@ -4,7 +4,7 @@ typedef void *stackel;
 
 typedef struct stack {
   size_t currMax; // allocated
-  size_t n; // used
+  size_t n;       // used
   stackel *array;
 } Stack;
 

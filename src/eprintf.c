@@ -17,7 +17,7 @@
 static char *name = NULL; /* program name for messages */
 
 /* setprogname2: set stored name of program */
-void setprogname2(char *str) { name = estrdup(str); }
+void setprogname2(char *str) { name = str; }
 
 /* progname: return stured name of program */
 char *progname(void) { return name; }

@@ -1,5 +1,7 @@
-#include "list.h"
+#include "prelude.h"
 #include "eprintf.h"
+
+#include "list.h"
 
 List *newList() { return ecalloc(1, sizeof(List)); }
 
@@ -11,8 +13,7 @@ void listAppend(List **l, void *val) {
     List *curr = *l;
     while (curr->next)
       curr = curr->next;
-    curr->next = newList();
-    curr->next->value = val;
+    curr->next = item;
   } else {
     *l = item;
   }
@@ -26,4 +27,15 @@ void listPrepend(List **l, void *val) {
   item->next = curr;
   item->value = val;
   *l = item;
+}
+
+void freeList(List **l) {
+  List *curr = *l;
+  List *tmp = NULL;
+  if (curr) do {
+    tmp = curr->next;
+    free(curr);
+    curr = tmp;
+  } while(curr);
+  *l = NULL;
 }

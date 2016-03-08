@@ -76,6 +76,7 @@ Esa *getEsa(char *seq, size_t n) {
 
 void freeEsa(Esa *esa) {
   free(esa->sa);
+  free(esa->isa);
   free(esa->lcp);
   free(esa);
 }

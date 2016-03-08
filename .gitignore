@@ -2,4 +2,5 @@
 build/
 tags
 randomSeed.dat
+gmon.out
 

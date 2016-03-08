@@ -38,7 +38,7 @@ stackel stackTop(Stack *s) {
   if (s->n > 0)
     return s->array[s->n - 1];
   else {
-    printf("ERROR[stack]: trying to pop an empty stack.\n");
+    fprintf(stderr, "ERROR[stack]: trying to pop an empty stack.\n");
     return (void *)-1;
   }
 }
@@ -47,7 +47,7 @@ stackel stackPop(Stack *s) {
   if (s->n > 0)
     return s->array[--(s->n)];
   else {
-    printf("ERROR[stack]: trying to pop an empty stack.\n");
+    fprintf(stderr, "ERROR[stack]: trying to pop an empty stack.\n");
     return (void *)-1;
   }
 }

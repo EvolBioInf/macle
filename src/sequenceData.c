@@ -4,18 +4,14 @@
  * Author: Bernhard Haubold, haubold@evolbio.mpg.de
  * File created on Sun Jun  6 10:34:31 2004.
  *****************************************************************/
-#include <stdio.h>
+#include "prelude.h"
 #include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <ctype.h>
-#include "sequenceData.h"
-#include "stringUtil.h"
-#include "eprintf.h"
-#include "args.h"
+#include <unistd.h>
 
-static int lastSequence = 0;
-static char *line = NULL;
+#include "sequenceData.h"
+#include "eprintf.h"
+#include "stringUtil.h"
 
 /* convertToACGT: convert nucleotide data to acgt alphabet.
  */
@@ -58,13 +54,11 @@ Sequence *revcomp(Sequence *seq) {
   n = seq->len;
   newSeq->seq = (char *)emalloc((n + 1) * sizeof(char));
   newSeq->freqTab = NULL;
-  newSeq->sbjctId = NULL;
   newSeq->numSeq = 1;
   newSeq->headers = (char **)emalloc(newSeq->numSeq * sizeof(char *));
   newSeq->borders = (long *)emalloc(newSeq->numSeq * sizeof(long));
   for (i = 0; i < newSeq->numSeq; i++)
     newSeq->headers[i] = NULL;
-  newSeq->id = strdup2(seq->id);
   j = 0;
   for (i = n - 1; i >= 0; i--) {
     c = seq->seq[i];
@@ -92,131 +86,6 @@ Sequence *revcomp(Sequence *seq) {
   newSeq->seq[n] = '\0';
   return newSeq;
 }
-/* Get next sequence from an open data stream in FASTA format; this stream may be the
- * stdin */
-Sequence *getPermanentNextSequence(FILE *fp) {
-  Sequence *sequence;
-  int seqlen, seqi, i, l;
-  int currentBuffer;
-
-  if (lastSequence) {
-    return NULL;
-  }
-  if (line == NULL) {
-    line = (char *)emalloc((SEQLINE + 2) * sizeof(char));
-    line = fgets(line, SEQLINE, fp);
-  }
-  /* make a sequence object */
-  sequence = (Sequence *)emalloc(sizeof(Sequence));
-  /* allocate memory for sequence id */
-  sequence->id = (char *)emalloc((strlen(line) + 1) * sizeof(char));
-  /* copy sequence id */
-  strcpy(sequence->id, chomp(line));
-  /* allocate memory for sequence string */
-  sequence->seq = (char *)emalloc((SEQBUFFER + 1) * sizeof(char));
-  seqlen = 0;
-  currentBuffer = SEQBUFFER;
-  seqi = 0;
-  while ((line = fgets(line, SEQLINE, fp)) != NULL) {
-    if (strstr(line, ">") != NULL) {
-      sequence->seq[seqi++] = '\0';
-      sequence->seq = (char *)realloc(sequence->seq, seqi * sizeof(char));
-      return sequence;
-    }
-    if (strlen(line) > SEQLINE) {
-      printf("error in getNextSequence: cannot deal with lines longer than %d bp.\n",
-             SEQLINE);
-      printf("  change the SEQLINE parameter in file sequenceData.h and recompile.\n");
-      exit(2);
-    }
-    l = strlen(line);
-    /* disregard the final carriage return */
-    if (line[l - 1] == '\n')
-      l--;
-    seqlen += l;
-    if (seqlen > currentBuffer) {
-      currentBuffer += SEQBUFFER;
-      sequence->seq = (char *)erealloc(sequence->seq, currentBuffer);
-    }
-    for (i = 0; i < l; i++) {
-      sequence->seq[seqi++] = line[i];
-    }
-    /* sequence->seq = strncat(sequence->seq,line,strlen(line)-1); */
-  }
-  sequence->seq[seqi++] = '\0';
-  sequence->seq = (char *)realloc(sequence->seq, seqi * sizeof(char));
-  sequence->len = seqi - 1;
-  lastSequence = 1;
-  return sequence;
-}
-
-/* convert multiple sequences contained in seq into an
- * array of sequences each representing a single sequence
- */
-Sequence **sequence2array(Sequence *seq) {
-  Sequence **seqs;
-  long i, j, k, len;
-
-  /* allocate space for sequences */
-  seqs = (Sequence **)emalloc(seq->numSeq * sizeof(Sequence *));
-  for (i = 0; i < seq->numSeq; i++) {
-    seqs[i] = (Sequence *)emalloc(sizeof(Sequence));
-    seqs[i]->freqTab = (int *)emalloc(DICSIZE * sizeof(int));
-    seqs[i]->seq = NULL;
-    seqs[i]->borders = NULL;
-    seqs[i]->numNuc = 0;
-    seqs[i]->sbjctId = NULL;
-    for (j = 0; j < DICSIZE; j++)
-      seqs[i]->freqTab[j] = 0;
-  }
-  /* deal with first sequence */
-  len = seq->borders[0];
-  seqs[0]->seq = (char *)emalloc((len + 2) * sizeof(char));
-  seqs[0]->len = len + 1;
-  for (i = 0; i < len; i++) {
-    seqs[0]->seq[i] = seq->seq[i];
-    seqs[0]->freqTab[(int)seq->seq[i]]++;
-    seqs[0]->numNuc++;
-  }
-  seqs[0]->numNuc *= 2;
-  seqs[0]->seq[len] = BORDER;
-  seqs[0]->seq[len + 1] = '\0';
-  seqs[0]->id = (char *)emalloc(6 * sizeof(char));
-  seqs[0]->id[0] = '\0';
-  strcat(seqs[0]->id, "strId");
-  seqs[0]->numSeq = 1;
-  seqs[0]->borders = (long *)emalloc(sizeof(long));
-  seqs[0]->borders[0] = seq->borders[0];
-  seqs[0]->headers = (char **)emalloc(sizeof(char *));
-  seqs[0]->headers[0] = (char *)emalloc((strlen(seq->headers[0]) + 1) * sizeof(char));
-  seqs[0]->headers[0] = strcpy(seqs[0]->headers[0], seq->headers[0]);
-  /* deal with remaining sequences */
-  for (i = 1; i < seq->numSeq; i++) {
-    len = seq->borders[i] - seq->borders[i - 1];
-    seqs[i]->len = len;
-    seqs[i]->seq = (char *)emalloc((len + 1) * sizeof(char));
-    k = 0;
-    for (j = seq->borders[i - 1] + 1; j < seq->borders[i]; j++) {
-      seqs[i]->seq[k++] = seq->seq[j];
-      seqs[i]->freqTab[(int)seq->seq[j]]++;
-      seqs[i]->numNuc++;
-    }
-    seqs[i]->seq[len - 1] = BORDER;
-    seqs[i]->seq[len] = '\0';
-    seqs[i]->id = (char *)emalloc(6 * sizeof(char));
-    seqs[i]->id[0] = '\0';
-    strcat(seqs[i]->id, "strId");
-    seqs[i]->numSeq = 1;
-    seqs[i]->borders = (long *)emalloc(sizeof(long));
-    seqs[i]->borders[0] = len - 1;
-    seqs[i]->headers = (char **)emalloc(sizeof(char *));
-    seqs[i]->headers[0] = (char *)emalloc((strlen(seq->headers[i]) + 1) * sizeof(char));
-    seqs[i]->headers[0][0] = '\0';
-    seqs[i]->headers[0] = strcpy(seqs[i]->headers[0], seq->headers[i]);
-    seqs[i]->numNuc *= 2;
-  }
-  return seqs;
-}
 
 /* read FASTA-formatted sequence data from an open file descriptor
  * into single sequence string
@@ -238,13 +107,9 @@ Sequence *readFasta(int fd) {
     s->freqTab[i] = 0;
   s->borders = (long *)emalloc(sizeof(long));
   s->headers = (char **)emalloc(sizeof(char *));
-  s->id = (char *)emalloc(6 * sizeof(char));
-  s->id[0] = '\0';
-  strcat(s->id, "strId");
   headerOpen = 0;
   s->len = 0;
   s->numSeq = 0;
-  s->sbjctId = NULL;
   maxLen = 0;
   headerLen = 0;
 
@@ -309,231 +174,25 @@ Sequence *readFasta(int fd) {
   return s;
 }
 
-/* Get next sequence from an open data stream in FASTA format; this stream may be the
- * stdin */
-Sequence *getNextSequence(FILE *fp) {
-  Sequence *sequence;
-  int seqi, i, l;
-  int currentBuffer;
-
-  if (fp == NULL || lastSequence) {
-    return NULL;
-  }
-
-  if (line == NULL) {
-    line = (char *)malloc((SEQLINE + 2) * sizeof(char));
-    line = fgets(line, SEQLINE, fp);
-  }
-
-  /* make a sequence object */
-  sequence = (Sequence *)malloc(sizeof(Sequence));
-  /* allocate memory for sequence id */
-  sequence->id = (char *)malloc((strlen(line) + 1) * sizeof(char));
-  /* copy sequence id */
-  strcpy(sequence->id, line);
-  /* allocate memory for sequence string */
-  sequence->seq = (char *)malloc((SEQBUFFER + 1) * sizeof(char));
-  sequence->numSeq = 1;
-  sequence->headers = (char **)emalloc(sizeof(char *));
-  sequence->headers[0] = (char *)emalloc(sizeof(char));
-  sequence->headers[0][0] = '\0';
-  sequence->borders = (long *)emalloc(sizeof(long));
-
-  sequence->len = 0;
-  currentBuffer = SEQBUFFER;
-  seqi = 0;
-  while ((line = fgets(line, SEQLINE, fp)) != NULL) {
-    if (line[0] == '>') {
-      sequence->len++;
-      sequence->seq = (char *)realloc(sequence->seq, sequence->len);
-      sequence->seq[sequence->len - 1] = BORDER;
-      sequence->borders[0] = sequence->len - 1;
-      return sequence;
-    }
-    if (strlen(line) > SEQLINE) {
-      printf("error in getNextSequence: cannot deal with lines longer than %d bp.\n",
-             SEQLINE);
-      printf("  change the SEQLINE parameter in file sequenceData.h and recompile.\n");
-      exit(2);
-    }
-    l = strlen(line);
-    /* disregard the final carriage return */
-    if (line[l - 1] == '\n')
-      l--;
-    sequence->len += l;
-    if (sequence->len > currentBuffer) {
-      currentBuffer += SEQBUFFER;
-      sequence->seq = (char *)erealloc(sequence->seq, currentBuffer);
-    }
-    for (i = 0; i < l; i++) {
-      sequence->seq[seqi++] = line[i];
-    }
-    /* sequence->seq = strncat(sequence->seq,line,strlen(line)-1); */
-  }
-  sequence->len++;
-  sequence->seq = (char *)realloc(sequence->seq, sequence->len);
-  sequence->seq[sequence->len - 1] = BORDER;
-  sequence->borders[0] = sequence->len - 1;
-  lastSequence = 1;
-  return sequence;
-}
-
 /* freeSequence: free the data structure Sequence */
 void freeSequence(Sequence *seq) {
-  int i;
-
-  for (i = 0; i < seq->numSeq; i++)
+  for (int i = 0; i < seq->numSeq; i++)
     free(seq->headers[i]);
   free(seq->headers);
   free(seq->borders);
-  free(seq->id);
   free(seq->seq);
   free(seq->freqTab);
-  free(seq->sbjctId);
   free(seq);
-}
-
-/* prepareSeq: prepares sequence string for analysis by shustring-type programs.
- * Does the following: 1) set all residues to upper case
- *                     2) generate reverse complement
- *                     3) concatenate reverse complement to end of forward strand
- */
-void prepareSeq(Sequence *sequence) {
-  Sequence *rstrand;
-  int i;
-
-  strtoupper(sequence->seq, sequence->len);
-  /* take care of reverse strand */
-  rstrand = revcomp(sequence);
-  rstrand->headers = (char **)emalloc(sizeof(char *));
-  rstrand->headers[0] = (char *)emalloc(sizeof(char));
-  rstrand->borders = (long *)emalloc(sizeof(long));
-  rstrand->numSeq = 1;
-  /* sequence->seq[sequence->len] = '\0'; */
-  sequence->len += sequence->len;
-  sequence->seq = (char *)erealloc(sequence->seq, (sequence->len + 1) * sizeof(char));
-  sequence->borders =
-      (long *)erealloc(sequence->borders, 2 * sequence->numSeq * sizeof(long));
-  for (i = 1; i < sequence->numSeq; i++) {
-    sequence->borders[2 * sequence->numSeq - i - 1] =
-        sequence->len - sequence->borders[i - 1] - 2;
-  }
-  sequence->borders[2 * sequence->numSeq - 1] = sequence->len - 1;
-  /* move first border of reverted sequences to the end */
-  rstrand->seq++;
-  strncat(sequence->seq, rstrand->seq, sequence->len);
-  rstrand->seq--;
-  sequence->seq[sequence->len - 1] = BORDER;
-  sequence->seq[sequence->len] = '\0';
-  freeSequence(rstrand);
-}
-
-/* catSeq: concatenate the sequences contained in two Sequence objects */
-Sequence *catSeq(Sequence *seq1, Sequence *seq2) {
-  Sequence *cat;
-  long i, j, n;
-
-  cat = (Sequence *)emalloc(sizeof(Sequence));
-  cat->seq = (char *)emalloc((strlen(seq1->seq) + strlen(seq2->seq) + 1) * sizeof(char));
-  cat->seq[0] = '\0';
-  cat->seq = strncat(cat->seq, seq1->seq, seq1->len);
-  cat->seq = strncat(cat->seq, seq2->seq, seq2->len);
-  cat->id = (char *)emalloc(6 * sizeof(char));
-  cat->id[0] = '\0';
-  strcat(cat->id, "strId");
-  n = seq1->numSeq + seq2->numSeq;
-  cat->numSeq = n;
-  cat->numQuery = seq1->numSeq;
-  cat->freqTab = NULL;
-  cat->queryStart = 0;
-  cat->queryEnd = seq1->len - 1;
-  cat->borders = (long *)emalloc(2 * n * sizeof(long));
-  cat->headers = (char **)emalloc(n * sizeof(char *));
-  /* take care of the n headers */
-  for (i = 0; i < seq1->numSeq; i++) {
-    cat->headers[i] = (char *)emalloc((strlen(seq1->headers[i]) + 1) * sizeof(char));
-    cat->headers[i] = strcpy(cat->headers[i], seq1->headers[i]);
-  }
-  j = i;
-  for (i = 0; i < seq2->numSeq; i++) {
-    cat->headers[j] = (char *)emalloc((strlen(seq2->headers[i]) + 1) * sizeof(char));
-    cat->headers[j] = strcpy(cat->headers[j], seq2->headers[i]);
-    j++;
-  }
-  /* take care of the 2n borders */
-  for (i = 0; i < seq1->numSeq; i++) {
-    cat->borders[i] = seq1->borders[i];
-  }
-  j = i;
-  for (i = 0; i < seq2->numSeq; i++) {
-    cat->borders[j + i] = seq1->borders[2 * seq1->numSeq - 1] + seq2->borders[i] + 1;
-  }
-  /* sbjct IDs */
-  cat->sbjctId = (int *)emalloc(seq2->len * sizeof(int));
-  for (i = 0; i < seq2->len; i++)
-    cat->sbjctId[i] = -1;
-  for (i = 0; i <= seq2->borders[0]; i++)
-    cat->sbjctId[i] = 0;
-  for (i = 1; i < seq2->numSeq; i++)
-    for (j = seq2->borders[i - 1] + 1; j <= seq2->borders[i]; j++)
-      cat->sbjctId[j] = i;
-  n = seq2->numSeq - 1;
-  for (; i < 2 * seq2->numSeq; i++) {
-    for (j = seq2->borders[i - 1] + 1; j <= seq2->borders[i]; j++)
-      cat->sbjctId[j] = n;
-    n--;
-  }
-
-  cat->len = seq1->len + seq2->len;
-  cat->numQueryNuc = seq1->numNuc;
-  cat->numSbjctNuc = seq2->numNuc;
-  cat->numNuc = seq1->numNuc + seq2->numNuc;
-  return cat;
-}
-
-/* cloneSeq: make exact copy of Sequence object */
-Sequence *cloneSeq(Sequence *ori) {
-  Sequence *clone;
-  int i;
-
-  clone = (Sequence *)emalloc(sizeof(Sequence));
-  clone->sbjctId = NULL;
-  clone->seq = (char *)emalloc(((int)ori->len) * sizeof(char));
-  clone->seq[0] = '\0';
-  clone->seq = strncpy(clone->seq, ori->seq, ori->len);
-  /* clone->seq[ori->len] = '\0'; */
-  clone->id = (char *)emalloc(6 * sizeof(char));
-  clone->id = strncpy(clone->id, ori->id, 6);
-  clone->numSeq = ori->numSeq;
-  clone->numQuery = ori->numQuery;
-  clone->borders = (long *)emalloc(ori->numSeq * sizeof(long));
-  for (i = 0; i < ori->numSeq; i++)
-    clone->borders[i] = ori->borders[i];
-  clone->headers = (char **)emalloc(ori->numSeq * sizeof(char *));
-  for (i = 0; i < ori->numSeq; i++) {
-    clone->headers[i] = (char *)emalloc((strlen(ori->headers[i]) + 1) * sizeof(char));
-    clone->headers[i] = strcpy(clone->headers[i], ori->headers[i]);
-  }
-  clone->len = ori->len;
-  clone->freqTab = (int *)emalloc(DICSIZE * sizeof(int));
-  for (i = 0; i < DICSIZE; i++)
-    clone->freqTab[i] = ori->freqTab[i];
-  clone->numQueryNuc = ori->numQueryNuc;
-  clone->numSbjctNuc = ori->numSbjctNuc;
-  clone->numNuc = ori->numNuc;
-  clone->queryStart = ori->queryStart;
-  clone->queryEnd = ori->queryEnd;
-
-  return clone;
 }
 
 // helpers
 
+//TODO: calculate gc content from freqTab directly?
 double gcContent(Sequence *seq) {
   uint64_t gc = 0;
   uint64_t numChar = 0;
   for (int i = 0; i < seq->numSeq; i++) {
-    char *s = getSeq(seq, i);
+    char *s = seqStr(seq, i);
     size_t len = seqLen(seq, i);
     for (size_t j = 0; j < len; j++) {
       if (s[j] == 'A' || s[j] == 'C' || s[j] == 'G' || s[j] == 'T') {
@@ -547,7 +206,7 @@ double gcContent(Sequence *seq) {
 }
 
 // get pointer to start of i'th sequence
-char *getSeq(Sequence *seq, size_t i) {
+char *seqStr(Sequence *seq, size_t i) {
   return &(seq->seq[i ? seq->borders[i - 1] + 2 : 0]);
 }
 // get real length of i'th sequence (excluding trailing $)

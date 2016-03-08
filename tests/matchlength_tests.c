@@ -18,7 +18,7 @@ char *checkML(char *file, char *facts[], size_t num) {
   Sequence *seq = readFasta(fd);
   close(fd);
 
-  char *s = getSeq(seq,0);
+  char *s = seqStr(seq,0);
   size_t n = seqLen(seq,0);
   Esa *esa = getEsa(s, n+1); //calculate esa, including $
 
@@ -29,6 +29,7 @@ char *checkML(char *file, char *facts[], size_t num) {
     mu_assert(!strncmp(mlf->str+mlf->fact[i], facts[i], factLen(mlf, i)), "wrong factor");
   }
 
+  freeFact(mlf);
   freeEsa(esa);
   freeSequence(seq);
   return NULL;

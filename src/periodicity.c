@@ -29,8 +29,8 @@ size_t lcp2(char *str, size_t n, size_t i, size_t j) {
   return k;
 }
 
-// naive: length of lcs of prefixes 1..i and 1..j of given seq (1-indexed)
-size_t lcs2(char *str, size_t i, size_t j) {
+// naive: length of lcs of prefixes 1..i and 1..j of given seq (input 1-indexed)
+size_t lcs2(char *str, int64_t i, int64_t j) {
   i--;
   j--;
   int64_t k = 0;

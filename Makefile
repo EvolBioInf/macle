@@ -1,6 +1,6 @@
 CC := clang
-CFLAGS := -std=gnu99 -Isrc -Wall -Wextra -Wshadow -pedantic -O0 -g
-LDFLAGS := -lm -lz -lgsl -lgslcblas -lblas -ldivsufsort
+CFLAGS := -std=gnu99 -Isrc -Wall -Wextra -Wshadow -pedantic -O2 -g # -pg
+LDFLAGS := -lm -lz -lgsl -lgslcblas -lblas -ldivsufsort # -pg
 TARGET := dnalc
 VERSION=0.1
 
@@ -35,7 +35,7 @@ tests: $(TESTS)
 	sh ./tests/runtests.sh
 
 valgrind:
-	VALGRIND="valgrind --log-file=/tmp/valgrind-%p.log" $(MAKE)
+	VALGRIND="valgrind --leak-check=full" $(MAKE)
 
 format:
 	clang-format -i src/*.[ch] tests/*.[ch]

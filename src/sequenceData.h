@@ -18,30 +18,18 @@
 /* basic sequence type representing >= 1 entry in FASTA file */
 typedef struct sequence {
   char *seq;        /* the sequence */
-  char *id;         /* the sequence id */
+  long len;         /* sequence length */
+
   int numSeq;       /* number of sequences represented */
-  int numQuery;     /* number of query sequences */
   long *borders;    /* position of last character of sequence in seq */
   char **headers;   /* FASTA header lines */
-  long len;         /* sequence length */
   int *freqTab;     /* frequency table */
-  long numQueryNuc; /* number of nucleotides in query sequence */
-  long numSbjctNuc; /* number of nucleotides in sbjct sequence */
-  long numNuc;      /* number of nucleotides in sequence */
-  long queryStart;
-  long queryEnd;
-  long effQueryNuc; /* number of nucleotides in query that are the starting
-                     * point for shustrings that are longer than expected
-                     * by chance alone */
-  int *sbjctId;     /* sequence id for each sbjct position */
-  double queryGc;   /* GC content of query */
-  double sbjctGc;   /* GC content of sbjct */
 } Sequence;
 
 Sequence *readFasta(int fd);
 void freeSequence(Sequence *seq);
 
-char *getSeq(Sequence *seq, size_t i);
+char *seqStr(Sequence *seq, size_t i);
 size_t seqLen(Sequence *seq, size_t i);
 size_t maxSeqLen(Sequence *seq);
 size_t minSeqLen(Sequence *seq);
@@ -49,13 +37,5 @@ size_t minSeqLen(Sequence *seq);
 Sequence *revcomp(Sequence *seq);
 void convertToAcgt(Sequence *seq);
 double gcContent(Sequence *seq);
-
-Sequence *getNextSequence(FILE *fp);
-Sequence *getPermanentNextSequence(FILE *fp);
-Sequence **sequence2array(Sequence *seq);
-
-void prepareSeq(Sequence *sequence);
-Sequence *catSeq(Sequence *seq1, Sequence *seq2);
-Sequence *cloneSeq(Sequence *ori);
 
 #endif

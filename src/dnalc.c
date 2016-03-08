@@ -81,7 +81,7 @@ void scanFile(int fd) {
   double gc = gcContent(seq);
 
   for (int i = 0; i < seq->numSeq; i++) {
-    char *t = getSeq(seq, i);
+    char *t = seqStr(seq, i);
     size_t n = seqLen(seq, i);
 
     tick();
@@ -104,10 +104,9 @@ void scanFile(int fd) {
     Periodicity *ps = getPeriodicities(false, lzf, esa, &plen);
     tock(b, "getPeriodicities");
     tick();
-
     // for comparison
     size_t plen2;
-    getPeriodicities2(esa, &plen2);
+    Periodicity *ps2 = getPeriodicities2(esa, &plen2);
     tock(b, "getPeriodicities2");
     printf("per: %zu, referenz: %zu\n", plen, plen2);
     //---
@@ -131,6 +130,7 @@ void scanFile(int fd) {
     freeFact(mlf);
     freeFact(lzf);
     free(ps);
+    free(ps2);
 
     freeEsa(esa);
   }

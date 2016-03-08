@@ -11,7 +11,7 @@ char *test_getEsa() {
   Sequence *seq = readFasta(fd);
   close(fd);
 
-  char *s = getSeq(seq,0);
+  char *s = seqStr(seq,0);
   size_t n = seqLen(seq,0);
   Esa *esa = getEsa(s, n+1); //calculate esa, including $
 

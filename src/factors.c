@@ -19,3 +19,5 @@ void printFact(Fact *mlf) {
     mlf->str[end] = tmp;
   }
 }
+
+extern inline size_t factLen(Fact *f, size_t i);

@@ -14,3 +14,12 @@ typedef struct Fact {
 
 void freeFact(Fact *f);
 void printFact(Fact *f);
+
+// length of factor
+inline size_t factLen(Fact *f, size_t i) {
+  if (i == 0)
+    return f->fact[1];
+  if (i == f->n - 1)
+    return f->strLen - f->fact[f->n - 1];
+  return f->fact[i + 1] - f->fact[i];
+}

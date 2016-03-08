@@ -38,28 +38,24 @@ typedef struct sequence {
   double sbjctGc;   /* GC content of sbjct */
 } Sequence;
 
+Sequence *readFasta(int fd);
+void freeSequence(Sequence *seq);
+
 char *getSeq(Sequence *seq, size_t i);
 size_t seqLen(Sequence *seq, size_t i);
 size_t maxSeqLen(Sequence *seq);
 size_t minSeqLen(Sequence *seq);
 
 Sequence *revcomp(Sequence *seq);
-Sequence *getNextSequence(FILE *fp);
-
-int *getDnaDictionary(int *dic);
-int *getRestrictedDnaDictionary(int *dic);
-
-Sequence *freeSequence(Sequence *seq);
-Sequence *getPermanentNextSequence(FILE *fp);
 void convertToAcgt(Sequence *seq);
-void resetSequenceReader();
-Sequence *readFasta(int fd);
+double gcContent(Sequence *seq);
+
+Sequence *getNextSequence(FILE *fp);
+Sequence *getPermanentNextSequence(FILE *fp);
 Sequence **sequence2array(Sequence *seq);
+
 void prepareSeq(Sequence *sequence);
 Sequence *catSeq(Sequence *seq1, Sequence *seq2);
-void randomizeSeq(Sequence *seq);
-void randomizeSbjct(Sequence *seq);
 Sequence *cloneSeq(Sequence *ori);
-double gcContent(Sequence *seq);
 
 #endif

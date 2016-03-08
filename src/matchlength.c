@@ -4,7 +4,7 @@
  * Date: Wed Jul 15 10:49:56 2015
  **************************************************/
 #include "prelude.h"
-#include "complexity.h"
+#include "matchlength.h"
 #include "eprintf.h"
 #include "sequenceData.h"
 #include "shulen.h"

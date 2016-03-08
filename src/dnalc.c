@@ -8,7 +8,7 @@
 #include "gsl_rng.h"
 
 #include "sequenceData.h"
-#include "complexity.h"
+#include "matchlength.h"
 #include "periodicity.h"
 #include "interval.h"
 #include "lempelziv.h"

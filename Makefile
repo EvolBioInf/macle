@@ -1,5 +1,5 @@
 CC := clang
-CFLAGS := -std=gnu99 -Wall -Wextra -Wshadow -pedantic -O0 -g
+CFLAGS := -std=gnu99 -Isrc -Wall -Wextra -Wshadow -pedantic -O0 -g
 LDFLAGS := -lm -lz -lgsl -lgslcblas -lblas -ldivsufsort
 TARGET := dnalc
 VERSION=0.1
@@ -7,7 +7,11 @@ VERSION=0.1
 SOURCES := $(wildcard src/*.c)
 OBJECTS := $(SOURCES:.c=.o)
 
-all: build/$(TARGET)
+TEST_SRC=$(wildcard tests/*.c)
+TEST_OBJ=$(TEST_SRC:.c=.o)
+TESTS=$(patsubst tests/%.c,build/%,$(TEST_SRC))
+
+all: build/$(TARGET) tests
 
 build/$(TARGET): $(OBJECTS)
 	@echo " mkdir -p build"; mkdir -p build
@@ -16,11 +20,24 @@ build/$(TARGET): $(OBJECTS)
 src/%.o: src/%.c
 	@echo " $(CC) $(CFLAGS) -c -o $@ $<"; $(CC) $(CFLAGS) -c -o $@ $<
 
+tests/%.o: tests/%.c
+	@echo " $(CC) $(CFLAGS) -c -o $@ $<"; $(CC) $(CFLAGS) -c -o $@ $<
+
+$(TESTS): $(OBJECTS) $(TEST_OBJ)
+	@echo " $(CC) $(filter-out src/dnalc.o,$(OBJECTS)) $@.o -o $@ $(LDFLAGS)"
+	$(CC) $(filter-out src/dnalc.o,$(OBJECTS)) $(@:build/%=tests/%).o -o $@ $(LDFLAGS)
+
 clean:
 	@echo " $(RM) -r build"; $(RM) -r build
-	@echo " $(RM) src/*.o"; $(RM) src/*.o
+	@echo " $(RM) $(OBJECTS) $(TEST_OBJ) $(TESTS)"; $(RM) $(OBJECTS) $(TEST_OBJ) $(TESTS)
+
+tests: $(TESTS)
+	sh ./tests/runtests.sh
+
+valgrind:
+	VALGRIND="valgrind --log-file=/tmp/valgrind-%p.log" $(MAKE)
 
 format:
-	clang-format -i src/*.[ch]
+	clang-format -i src/*.[ch] tests/*.[ch]
 
-.PHONY: all clean lint
+.PHONY: all clean lint tests valgrind

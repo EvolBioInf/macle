@@ -62,15 +62,6 @@ Periodicity *getPeriodicities2(Esa *esa, size_t *plen) {
   return ps;
 }
 
-// length of factor
-static inline size_t factLen(Fact *f, size_t i) {
-  if (i == 0)
-    return f->fact[1];
-  if (i == f->n - 1)
-    return f->strLen - f->fact[f->n - 1];
-  return f->fact[i + 1] - f->fact[i];
-}
-
 // start position (1-indexed)
 static inline size_t factStart(Fact *f, size_t i) { return f->fact[i] + 1; }
 

@@ -47,74 +47,6 @@ void convertToAcgt(Sequence *seq) {
   replace((char *)seq->seq, 'U', 'T');
 }
 
-/* everything that is not [acgtACGT] is flagged by a -1 */
-int *getRestrictedDnaDictionary(int *dic) {
-  int i;
-
-  if (dic == NULL)
-    dic = (int *)emalloc((DICSIZE + 1) * sizeof(int));
-
-  for (i = 0; i < DICSIZE; i++)
-    dic[i] = -1;
-
-  dic['a'] = 0; /* a */
-  dic['c'] = 1; /* c */
-  dic['g'] = 2; /* g */
-  dic['t'] = 3; /* t */
-  dic['A'] = 0; /* A */
-  dic['C'] = 1; /* C */
-  dic['G'] = 2; /* G */
-  dic['T'] = 3; /* T */
-
-  return dic;
-}
-
-/* getDnaDictionary: create DNA dictionary */
-int *getDnaDictionary(int *dic) {
-  int i;
-
-  if (dic == NULL)
-    dic = (int *)malloc((DICSIZE + 1) * sizeof(int));
-
-  for (i = 0; i < DICSIZE; i++)
-    dic[i] = 0;
-
-  dic['a'] = 0; /* a */
-  dic['c'] = 1; /* c */
-  dic['g'] = 2; /* g */
-  dic['t'] = 3; /* t */
-  dic['A'] = 0; /* A */
-  dic['C'] = 1; /* C */
-  dic['G'] = 2; /* G */
-  dic['T'] = 3; /* T */
-  dic['r'] = dic['g'];
-  dic['R'] = dic['g'];
-  dic['y'] = dic['t'];
-  dic['Y'] = dic['t'];
-  dic['m'] = dic['a'];
-  dic['M'] = dic['a'];
-  dic['k'] = dic['g'];
-  dic['K'] = dic['g'];
-  dic['s'] = dic['g'];
-  dic['S'] = dic['g'];
-  dic['w'] = dic['a'];
-  dic['W'] = dic['a'];
-  dic['h'] = dic['a'];
-  dic['H'] = dic['a'];
-  dic['b'] = dic['g'];
-  dic['B'] = dic['g'];
-  dic['v'] = dic['g'];
-  dic['V'] = dic['g'];
-  dic['d'] = dic['g'];
-  dic['D'] = dic['g'];
-  dic['n'] = dic['g'];
-  dic['N'] = dic['g'];
-  dic['u'] = dic['t'];
-  dic['U'] = dic['t'];
-
-  return dic;
-}
-
 /* reverse and complement a sequence */
 Sequence *revcomp(Sequence *seq) {
   long i, j, n;
@@ -216,11 +148,6 @@ Sequence *getPermanentNextSequence(FILE *fp) {
   sequence->len = seqi - 1;
   lastSequence = 1;
   return sequence;
-}
-
-void resetSequenceReader() {
-  line = NULL;
-  lastSequence = 0;
 }
 
 /* convert multiple sequences contained in seq into an
@@ -452,7 +379,7 @@ Sequence *getNextSequence(FILE *fp) {
 }
 
 /* freeSequence: free the data structure Sequence */
-Sequence *freeSequence(Sequence *seq) {
+void freeSequence(Sequence *seq) {
   int i;
 
   for (i = 0; i < seq->numSeq; i++)
@@ -464,7 +391,6 @@ Sequence *freeSequence(Sequence *seq) {
   free(seq->freqTab);
   free(seq->sbjctId);
   free(seq);
-  return seq;
 }
 
 /* prepareSeq: prepares sequence string for analysis by shustring-type programs.
@@ -624,7 +550,7 @@ double gcContent(Sequence *seq) {
 char *getSeq(Sequence *seq, size_t i) {
   return &(seq->seq[i ? seq->borders[i - 1] + 2 : 0]);
 }
-// get length of i'th sequence (excluding trailing $)
+// get real length of i'th sequence (excluding trailing $)
 size_t seqLen(Sequence *seq, size_t i) {
   return seq->borders[i] - (i ? seq->borders[i - 1] + 2 : 0);
 }
@@ -639,6 +565,7 @@ size_t maxSeqLen(Sequence *seq) {
   }
   return max;
 }
+// length of shortest sequence in file
 size_t minSeqLen(Sequence *seq) {
   size_t min = seq->len;
   for (int i = 0; i < seq->numSeq; i++) {

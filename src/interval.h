@@ -4,8 +4,8 @@
 
 typedef struct interval {
   int64_t lcp;
-  int64_t lb;
-  int64_t rb;
+  size_t lb;
+  size_t rb;
 
   struct interval **childList;
   size_t numChildren;

@@ -45,7 +45,7 @@ Periodicity *getPeriodicities2(Esa *esa, size_t *plen) {
   char *str = esa->str;
   Periodicity *ps = emalloc(((size_t)2.05 * n) * sizeof(Periodicity));
   *plen = 0;
-  for (size_t l = 1; l < n / 2; l++) {
+  for (size_t l = 1; l <= n / 2; l++) {
     size_t i = 2 * l + 1;
     while (i <= n + 1) {
       size_t L = lcs2(str, i - 1 - l, i - 1);

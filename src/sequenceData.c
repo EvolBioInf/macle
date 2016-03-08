@@ -7,6 +7,7 @@
 #include "prelude.h"
 #include <string.h>
 #include <ctype.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include "sequenceData.h"
@@ -187,7 +188,7 @@ void freeSequence(Sequence *seq) {
 
 // helpers
 
-//TODO: calculate gc content from freqTab directly?
+// TODO: calculate gc content from freqTab directly?
 double gcContent(Sequence *seq) {
   uint64_t gc = 0;
   uint64_t numChar = 0;
@@ -233,4 +234,13 @@ size_t minSeqLen(Sequence *seq) {
       min = len;
   }
   return min;
+}
+
+// read sequence(s) from given file, if NULL, uses stdin
+Sequence *readFastaFromFile(char *file) {
+  int fd = file ? open(file, 0) : 0;
+  Sequence *seq = readFasta(fd);
+  if (file)
+    close(fd);
+  return seq;
 }

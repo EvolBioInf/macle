@@ -1,8 +1,5 @@
 #include "prelude.h"
 
-#include <unistd.h>
-#include <fcntl.h>
-
 #include "args.h"
 #include "eprintf.h"
 #include "gsl_rng.h"
@@ -53,12 +50,8 @@ void printPlot(uint32_t w, uint32_t k, size_t n, Sequence *seq, double **ys) {
 }
 
 // read sequence, do stuff
-void scanFile(int fd) {
+void scanFile(Sequence *seq) {
   bool b = args.b;
-  tick();
-  Sequence *seq = readFasta(fd);
-  tock(b, "readFasta");
-
   size_t maxlen = maxSeqLen(seq); // this implies the domain of the plot
   size_t minlen = minSeqLen(seq); // this restricts the reasonable window sizes
 
@@ -150,7 +143,6 @@ void scanFile(int fd) {
   for (int i = 0; i < seq->numSeq; i++)
     free(ys[i]);
   free(ys);
-  freeSequence(seq);
 }
 
 int main(int argc, char *argv[]) {
@@ -159,15 +151,15 @@ int main(int argc, char *argv[]) {
   gsl_rng *rng = ini_gsl_rng(args.s); // init seed, if provided
 
   // process files (or stdin, if none given)
-  int fd = 0;
   if (!args.num_files) {
-    fd = 0;
-    scanFile(fd);
+    Sequence *seq = readFastaFromFile(NULL);
+    scanFile(seq);
+    freeSequence(seq);
   } else {
     for (size_t i = 0; i < args.num_files; i++) {
-      fd = open(args.files[i], 0);
-      scanFile(fd);
-      close(fd);
+      Sequence *seq = readFastaFromFile(args.files[i]);
+      scanFile(seq);
+      freeSequence(seq);
     }
   }
 

@@ -1,37 +1,36 @@
 #include "minunit.h"
+#include <string.h>
 
-#include "sequenceData.h"
 #include "esa.h"
 #include "lempelziv.h"
 
-#include <fcntl.h>
-#include <unistd.h>
-
-char *factors[] = {
- "G","C","A","C","GCACGCAC",
- "ACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA",
- "T","AT","GC","TA","AC","T","CTC","A","G","TCT","GT","GTGTG","CA","$"
-};
+// hotspot paper example
+static char *seq = "GCACGCACGCACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA"
+                   "CACATATGCTAACTCTCAGTCTGTGTGTGCA$";
+// correct factorization
+static char *factors[] = {
+    "G",   "C",        "A",
+    "C",   "GCACGCAC", "ACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA",
+    "T",   "AT",       "GC",
+    "TA",  "AC",       "T",
+    "CTC", "A",        "G",
+    "TCT", "GT",       "GTGTG",
+    "CA",  "$"};
 
 char *test_LempelZiv() {
-  int fd = open("Data/hotspotExample2.fasta", 0);
-  Sequence *seq = readFasta(fd);
-  close(fd);
-
-  char *s = seqStr(seq,0);
-  size_t n = seqLen(seq,0);
-  Esa *esa = getEsa(s, n+1); //calculate esa, including $
+  size_t n = strlen(seq);
+  Esa *esa = getEsa(seq, n); // calculate esa, including $
 
   Fact *lzf = computeLZFact(esa);
   mu_assert(lzf->n == 20, "wrong number of LZ factors");
 
-  for (size_t i=0; i<lzf->n; i++) {
-    mu_assert(!strncmp(lzf->str+lzf->fact[i], factors[i], factLen(lzf, i)), "wrong factor");
+  for (size_t i = 0; i < lzf->n; i++) {
+    mu_assert(!strncmp(lzf->str + lzf->fact[i], factors[i], factLen(lzf, i)),
+              "wrong factor");
   }
 
   freeFact(lzf);
   freeEsa(esa);
-  freeSequence(seq);
   return NULL;
 }
 

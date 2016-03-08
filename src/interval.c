@@ -141,8 +141,8 @@ Interval *getLcpTree(Esa *esa) {
 
 // get lcp between two arbitrary suffixes
 int64_t getLcp(Interval *tree, size_t i, size_t j) {
-  int64_t l = MIN(i, j);
-  int64_t r = MAX(i, j);
+  size_t l = MIN(i, j);
+  size_t r = MAX(i, j);
   Interval *curr = tree;
   Interval *better;
   printf("look for %zu-%zu\n", l, r);

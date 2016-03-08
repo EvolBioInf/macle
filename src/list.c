@@ -32,10 +32,11 @@ void listPrepend(List **l, void *val) {
 void freeList(List **l) {
   List *curr = *l;
   List *tmp = NULL;
-  if (curr) do {
-    tmp = curr->next;
-    free(curr);
-    curr = tmp;
-  } while(curr);
+  if (curr)
+    do {
+      tmp = curr->next;
+      free(curr);
+      curr = tmp;
+    } while (curr);
   *l = NULL;
 }

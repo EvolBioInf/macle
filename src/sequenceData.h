@@ -17,16 +17,17 @@
 
 /* basic sequence type representing >= 1 entry in FASTA file */
 typedef struct sequence {
-  char *seq;        /* the sequence */
-  long len;         /* sequence length */
+  char *seq; /* the sequence */
+  long len;  /* sequence length */
 
-  int numSeq;       /* number of sequences represented */
-  long *borders;    /* position of last character of sequence in seq */
-  char **headers;   /* FASTA header lines */
-  int *freqTab;     /* frequency table */
+  int numSeq;     /* number of sequences represented */
+  long *borders;  /* position of last character of sequence in seq */
+  char **headers; /* FASTA header lines */
+  int *freqTab;   /* frequency table */
 } Sequence;
 
 Sequence *readFasta(int fd);
+Sequence *readFastaFromFile(char *file);
 void freeSequence(Sequence *seq);
 
 char *seqStr(Sequence *seq, size_t i);

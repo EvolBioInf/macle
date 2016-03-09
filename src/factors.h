@@ -2,9 +2,10 @@
 
 /* a factorization of a string (LempelZiv or MatchLength) */
 typedef struct Fact {
-  size_t *fact; /* positions of factors */
-  size_t *lpf;  /* lpf in case of Lempel-Ziv, otherwise unset */
-  size_t n;     /* number of factors */
+  size_t *fact;     /* positions of factors */
+  int64_t *prevOcc; /* LZ: prevOcc array (previous occurence of factor s_j) */
+  size_t *lpf;      /* lpf in case of Lempel-Ziv, otherwise unset */
+  size_t n;         /* number of factors */
 
   char *str;     /* string */
   size_t strLen; /* string length */

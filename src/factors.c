@@ -5,6 +5,8 @@ void freeFact(Fact *f) {
   free(f->fact);
   if (f->lpf)
     free(f->lpf);
+  if (f->prevOcc)
+    free(f->prevOcc);
   free(f);
 }
 

@@ -11,8 +11,8 @@
 
 /* define data container */
 typedef struct esa {
-  size_t *sa;   /* suffix array */
-  size_t *isa;  /* inverse suffix array */
+  int64_t *sa;  /* suffix array */
+  int64_t *isa; /* inverse suffix array */
   int64_t *lcp; /* longest common prefix array */
   char *str;    /* pointer to underlying string */
   size_t n;     /* length of sa and lcp */

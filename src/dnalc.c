@@ -89,7 +89,7 @@ void scanFile(Sequence *seq) {
     Fact *mlf = mlComplexity(esa, gc);
     tock(b, "mlComplexity");
     tick();
-    Fact *lzf = computeLZFact(esa);
+    Fact *lzf = computeLZFact(esa, false);
     tock(b, "computeLZFact");
 
     tick();
@@ -101,7 +101,7 @@ void scanFile(Sequence *seq) {
     size_t plen2;
     Periodicity *ps2 = getPeriodicities2(esa, &plen2);
     tock(b, "getPeriodicities2");
-    printf("per: %zu, referenz: %zu\n", plen, plen2);
+    printf("p: %zu %zu\n", plen, plen2);
     //---
 
     if (args.p) {

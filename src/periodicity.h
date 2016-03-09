@@ -1,7 +1,6 @@
 #pragma once
 #include "esa.h"
 
-// TODO: maybe use Interval instead? (has basically same fields)
 typedef struct Periodicity {
   size_t b; // beginning index
   size_t e; // end index (inclusive)

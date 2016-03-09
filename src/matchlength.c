@@ -34,7 +34,8 @@ uint64_t factorsFromTo(Fact *f, int64_t l, int64_t r) { return getsum_ft(f->lpf,
 
 Fact *computeMLFact(Esa *esa) {
   Fact *mlf = (Fact *)emalloc(sizeof(Fact));
-  mlf->lpf = 0; // no lpf array in this factorization
+  mlf->lpf = NULL;     // no lpf array in this factorization
+  mlf->prevOcc = NULL; // no prevOcc too
   mlf->str = esa->str;
   mlf->strLen = esa->n;
 

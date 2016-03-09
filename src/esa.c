@@ -18,7 +18,7 @@
 #include "esa.h"
 
 // calculate suffix array using divsufsort
-uint64_t *getSa(char *seq, size_t n) {
+int64_t *getSa(char *seq, size_t n) {
   sauchar_t *t = (sauchar_t *)seq;
   saidx_t *sa1 = (saidx_t *)emalloc(n * sizeof(saidx_t));
   if (divsufsort(t, sa1, (saidx_t)n) != 0) {
@@ -26,7 +26,7 @@ uint64_t *getSa(char *seq, size_t n) {
     exit(-1);
   }
 
-  uint64_t *sa2 = (uint64_t *)emalloc(n * sizeof(uint64_t));
+  int64_t *sa2 = (int64_t *)emalloc(n * sizeof(int64_t));
   for (size_t i = 0; i < n; i++)
     sa2[i] = (long)sa1[i];
   free(sa1);
@@ -41,9 +41,9 @@ uint64_t *getSa(char *seq, size_t n) {
 void calcLcp(Esa *esa) {
   char *t = esa->str;
   size_t n = esa->n;
-  uint64_t *sa = esa->sa;
+  int64_t *sa = esa->sa;
 
-  uint64_t *rank = (uint64_t *)emalloc(n * sizeof(uint64_t)); // isa
+  int64_t *rank = (int64_t *)emalloc(n * sizeof(int64_t)); // isa
   for (size_t i = 0; i < n; i++)
     rank[sa[i]] = i;
   esa->isa = rank;

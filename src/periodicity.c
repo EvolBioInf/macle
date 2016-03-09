@@ -74,7 +74,7 @@ static inline size_t factEnd(Fact *f, size_t i) {
 List **calcType1Periodicities(bool runsOnly, Fact *lzf) {
   // as required, array of lists of max. per. of type 1
   // indexed by start position, each sorted by end position
-  List **Lt1 = ecalloc(lzf->strLen, sizeof(List *));
+  List **Lt1 = ecalloc(lzf->strLen + 1, sizeof(List *));
   for (size_t j = 1; j < lzf->n; j++) {
     size_t sjLen = factLen(lzf, j);       // |s_j|
     size_t sjm1Len = factLen(lzf, j - 1); // |s_(j-1)|
@@ -127,38 +127,20 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf) {
   return Lt1;
 }
 
-// calculate PrevOcc_j (previous occurence of LZ-factor s_j in text, 1-indexed)
-// if a factor is a first occurence, returns -1
-// TODO: use fact that multiple s_j can be the same -> organize as trie,
-// to reuse lcp-intervals for calculation! MUCH TOO SLOW
-size_t *calcPrevOcc(Fact *lzf, Esa *esa) {
-  size_t *prevOcc = emalloc(lzf->n * sizeof(size_t));
-
-  for (size_t i = 0; i < lzf->n; i++) {
-    size_t len = factLen(lzf, i);
-    /* printf("getInterval for %zu/%zu (len: %zu)\n", i+1, lzf->n, len); */
-    Interval iv = getInterval(esa, lzf->str + lzf->fact[i], len);
-    int64_t best = -1;
-    for (size_t j = iv.lb; j <= (size_t)iv.rb; j++) {
-      size_t curr = esa->sa[j];
-      if (curr < lzf->fact[i] && (int64_t)curr > best)
-        best = curr;
-    }
-    prevOcc[i] = best + 1; // 1-indexed!
-  }
-
-  return prevOcc;
+// prevOcc conforming to algorithm - 1-indexed and current value instead of -1
+static inline int64_t getPrevOcc(Fact *lzf, size_t i) {
+  int64_t tmp = lzf->prevOcc[lzf->fact[i]];
+  return (tmp == -1 ? lzf->fact[i] : tmp) + 1;
 }
 
 // Algorithm 5.18 - calculate type 2 periodicities (proper substrings of LZ-factors)
 void calcType2Periodicities(List **Lt1, Fact *lzf, Esa *esa) {
-  size_t *prevOcc = calcPrevOcc(lzf, esa);
   for (size_t j = 1; j < lzf->n; j++) {
     size_t bj = factStart(lzf, j); // b_j
     size_t ej = factEnd(lzf, j);   // e_j
     if (factLen(lzf, j) >= 4) {
-      size_t dj = bj - prevOcc[j];
-      for (size_t i = bj + 1; i <= ej - 1; i++) {
+      int64_t dj = bj - getPrevOcc(lzf, j);
+      for (size_t i = bj + 1; i < ej; i++) {
         List *curr = Lt1[i - dj];
         if (curr)
           do {
@@ -172,7 +154,6 @@ void calcType2Periodicities(List **Lt1, Fact *lzf, Esa *esa) {
       }
     }
   }
-  free(prevOcc);
 }
 
 // max. periodicities in O(n) using LZ-Factors

@@ -26,13 +26,14 @@
  *   Computer Society, Los Alamitos, CA, 2008,
  *   pp. 482-488.
  */
-size_t *computeLpf(Esa *esa) {
+size_t *computeLpf(Esa *esa, int64_t **prevOccP) {
   size_t n = esa->n;
-  esa->sa = erealloc(esa->sa, (n + 1) * sizeof(uint64_t));
+  esa->sa = erealloc(esa->sa, (n + 1) * sizeof(int64_t));
   esa->lcp = erealloc(esa->lcp, (n + 1) * sizeof(int64_t));
   size_t *lpf = (size_t *)emalloc((n + 1) * sizeof(size_t));
+  int64_t *prevOcc = (int64_t *)emalloc(n * sizeof(int64_t));
 
-  uint64_t *sa = esa->sa;
+  int64_t *sa = esa->sa;
   int64_t *lcp = esa->lcp;
   sa[n] = -1;
   lcp[0] = 0;
@@ -42,27 +43,104 @@ size_t *computeLpf(Esa *esa) {
   stackPush(s, 0);
 
   for (size_t i = 1; i <= n; i++) {
-    while (!stackEmpty(s) &&
-           (sa[i] < sa[(size_t)stackTop(s)] ||
-            (sa[i] > sa[(size_t)stackTop(s)] && lcp[i] <= lcp[(size_t)stackTop(s)]))) {
+    while (
+        !stackEmpty(s) &&
+        (sa[i] <
+         sa[(size_t)stackTop(s)] /* ||  //TODO: clarify - this or-branch seems wrong?
+            (sa[i] > sa[(size_t)stackTop(s)] && lcp[i] <= lcp[(size_t)stackTop(s)]) */)) {
       if (sa[i] < sa[(size_t)stackTop(s)]) {
         lpf[sa[(size_t)stackTop(s)]] = MAX(lcp[(size_t)stackTop(s)], lcp[i]);
         lcp[i] = MIN(lcp[(size_t)stackTop(s)], lcp[i]);
       } else
         lpf[sa[(size_t)stackTop(s)]] = lcp[(size_t)stackTop(s)];
-      stackPop(s);
+      int64_t v = (int64_t)stackPop(s);
+      // fill prevOcc
+      if (lpf[sa[v]] == 0)
+        prevOcc[sa[v]] = -1;
+      else if (lcp[v] > lcp[i])
+        prevOcc[sa[v]] = sa[(size_t)stackTop(s)];
+      else
+        prevOcc[sa[v]] = sa[i];
     }
     if (i < n)
       stackPush(s, (void *)i);
   }
   freeStack(s);
 
+  *prevOccP = prevOcc;
   return lpf;
 }
 
-Fact *computeLZFact(Esa *esa) {
+// alternative prevOcc calculation (from same paper)
+int64_t *computeLpf2(Esa *esa, int64_t **prevOccP) {
   size_t n = esa->n;
-  size_t *lpf = computeLpf(esa);
+  int64_t *sa = esa->sa;
+  int64_t *lprev = malloc(n * sizeof(int64_t));
+  int64_t *lnext = malloc(n * sizeof(int64_t));
+  int64_t *prevl = malloc(n * sizeof(int64_t));
+  int64_t *prevr = malloc(n * sizeof(int64_t));
+  int64_t *lpf = calloc(n, sizeof(int64_t));
+  int64_t *lpfl = calloc(n, sizeof(int64_t));
+  int64_t *lpfr = calloc(n, sizeof(int64_t));
+  int64_t *prevOcc = malloc(n * sizeof(int64_t));
+  for (size_t i = 0; i < esa->n; i++) {
+    lprev[sa[i]] = i == 0 ? -1 : sa[i - 1];
+    lnext[sa[i]] = i == esa->n - 1 ? -1 : sa[i + 1];
+  }
+  for (int64_t sai = esa->n - 1; sai >= 0; sai--) {
+    prevl[sai] = lprev[sai];
+    prevr[sai] = lnext[sai];
+    if (lprev[sai] != -1)
+      lnext[lprev[sai]] = lnext[sai];
+    if (lnext[sai] != -1)
+      lprev[lnext[sai]] = lprev[sai];
+  }
+  free(lprev);
+  free(lnext);
+
+  prevOcc[0] = -1;
+  for (size_t i = 1; i < esa->n; i++) {
+    size_t j = MAX(lpfl[i - 1] - 1, 0);
+    size_t k = MAX(lpfr[i - 1] - 1, 0);
+    if (prevl[i] == -1)
+      lpfl[i] = 0;
+    else {
+      while (esa->str[i + j] == esa->str[prevl[i] + j])
+        j++;
+      lpfl[i] = j;
+    }
+    if (prevr[i] == -1)
+      lpfr[i] = 0;
+    else {
+      while (esa->str[i + k] == esa->str[prevr[i] + k])
+        k++;
+      lpfr[i] = k;
+    }
+    lpf[i] = MAX(lpfl[i], lpfr[i]);
+    if (lpf[i] == 0)
+      prevOcc[i] = -1;
+    else if (lpfl[i] > lpfr[i])
+      prevOcc[i] = prevl[i];
+    else
+      prevOcc[i] = prevr[i];
+  }
+
+  /* for (size_t i = 0; i < esa->n; i++) */
+  /*   printf("i:%zu sai:%ld prevl:%ld prevr:%ld lpf:%ld po:%ld\n", */
+  /*       i, sa[i], prevl[sa[i]], prevr[sa[i]], lpf[sa[i]],prevOcc[sa[i]]); */
+
+  free(prevl);
+  free(prevr);
+  free(lpfl);
+  free(lpfr);
+  *prevOccP = prevOcc;
+  return lpf;
+}
+
+Fact *computeLZFact(Esa *esa, bool alternative) {
+  size_t n = esa->n;
+  int64_t *prevOcc;
+  size_t *lpf = alternative ? computeLpf2(esa,&prevOcc) : computeLpf(esa, &prevOcc);
 
   Fact *lzf = (Fact *)emalloc(sizeof(Fact));
   lzf->fact = (size_t *)emalloc(n * sizeof(size_t));
@@ -73,6 +151,7 @@ Fact *computeLZFact(Esa *esa) {
     i++;
   }
   lzf->lpf = lpf;
+  lzf->prevOcc = prevOcc;
   lzf->n = i;
 
   lzf->str = esa->str;

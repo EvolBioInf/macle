@@ -24,7 +24,7 @@ char *test_knownExample() {
   char *s = "AACCAACCAACCAA$"; // from Ohlebusch book
   size_t n = strlen(s);
   Esa *esa = getEsa(s, n + 1); // calculate esa, including $
-  Fact *lzf = computeLZFact(esa);
+  Fact *lzf = computeLZFact(esa, false);
 
   size_t plen;
   Periodicity *ps = getPeriodicities(false, lzf, esa, &plen);
@@ -40,7 +40,7 @@ char *test_onlyRuns() {
   char *s = "AAAAAAAAGCGCGCGCGCGCGCGTTTTTTTTTTTTACTACTACTACTACTACTA$";
   size_t n = strlen(s);
   Esa *esa = getEsa(s, n + 1); // calculate esa, including $
-  Fact *lzf = computeLZFact(esa);
+  Fact *lzf = computeLZFact(esa, false);
 
   size_t plen;
   Periodicity *ps = getPeriodicities(false, lzf, esa, &plen);
@@ -61,9 +61,9 @@ char *test_onlyRuns() {
 }
 
 char *test_compareWithReference() {
-  Sequence *seq = readFastaFromFile("/home/admin/rand100k.fa");
+  Sequence *seq = readFastaFromFile("Data/broken.fa");
   Esa *esa = getEsa(seqStr(seq, 0), seqLen(seq, 0) + 1); // calculate esa, including $
-  Fact *lzf = computeLZFact(esa);
+  Fact *lzf = computeLZFact(esa, false);
 
   size_t plen, plen2;
   Periodicity *ps, *ps2;
@@ -82,16 +82,26 @@ char *test_compareWithReference() {
       printf("should: ");
       printPeriodicity(&ps2[i + missed]);
       fprintnf(stdout, seq->seq + ps2[i + missed].b - 1, 80);
-      printf("\nrelevant LZ-Factors:\n");
+      printf("\nrelevant LZ-Factor:\n");
+      size_t fact = 0;
       for (size_t j = 0; j < lzf->n; j++) {
         size_t b = lzf->fact[j];
         size_t e = lzf->fact[j] + factLen(lzf, j);
-        if ((b >= ps[i].b - 10 && b < ps[i].e + 10) ||
-            (e >= ps[i].b - 10 && e < ps[i].e + 10)) {
+        if (b <= ps2[i + missed].b - 1 && e >= ps2[i + missed].e - 1) {
+          printf("%zu: ", j);
           fprintnf(stdout, lzf->str + lzf->fact[j], factLen(lzf, j));
           printf("\n");
+          fact = lzf->fact[j];
         }
       }
+      int64_t prev = fact;
+      fact = 0;
+      while (prev != -1) {
+        fact = prev;
+        prev = lzf->prevOcc[fact];
+        printf("pos: %ld\n", prev);
+      }
+
       missed++;
     }
   }
@@ -101,6 +111,7 @@ char *test_compareWithReference() {
   freeFact(lzf);
   freeEsa(esa);
   freeSequence(seq);
+  mu_assert(plen == plen2, "periodicities do not match");
   return NULL;
 }
 

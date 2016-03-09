@@ -71,8 +71,8 @@ static inline size_t factEnd(Fact *f, size_t i) {
 }
 
 // Algorithm 5.17 - calculate type1 periodicities
-List **calcType1Periodicities(bool runsOnly, Fact *lzf, size_t *pnum) {
-  (*pnum) = 0;
+List **calcType1Periodicities(bool runsOnly, Fact *lzf, size_t **lens) {
+  *lens = ecalloc(lzf->strLen+1, sizeof(size_t));
   // as required, array of lists of max. per. of type 1
   // indexed by start position, each sorted by end position
   List **Lt1 = ecalloc(lzf->strLen + 1, sizeof(List *));
@@ -91,7 +91,7 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, size_t *pnum) {
       if (L + R >= l && (R >= 1 || bj - l - L > bjm1)) {
         Periodicity *p = newPeriodicity(bj - l - L, ejm1 + R, l);
         listAppend(&Lt1[p->b], p);
-        (*pnum)++;
+        (*lens)[p->b]++;
       }
     }
 
@@ -101,7 +101,7 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, size_t *pnum) {
       if (L + R >= l && bj + l - 1 + R <= ej && L < l) {
         Periodicity *p = newPeriodicity(bj - L, ejm1 + l + R, l);
         listAppend(&Lt1[p->b], p);
-        (*pnum)++;
+        (*lens)[p->b]++;
       }
     }
   }
@@ -118,7 +118,7 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, size_t *pnum) {
             last->next = curr->next;
             free(currp);
             free(curr);
-            (*pnum)--;
+            (*lens)[i]--;
             curr = last->next;
           } else {
             last = curr;
@@ -156,7 +156,7 @@ void listInsert(List **l, Periodicity *p) {
 }
 
 // Algorithm 5.18 - calculate type 2 periodicities (proper substrings of LZ-factors)
-void calcType2Periodicities(List **Lt1, Fact *lzf, size_t *pnum) {
+void calcType2Periodicities(List **Lt1, Fact *lzf, size_t **lens) {
   for (size_t j = 1; j < lzf->n; j++) {
     size_t bj = factStart(lzf, j); // b_j
     size_t ej = factEnd(lzf, j);   // e_j
@@ -172,7 +172,7 @@ void calcType2Periodicities(List **Lt1, Fact *lzf, size_t *pnum) {
             Periodicity *newp = newPeriodicity(i, p->e + dj, p->l);
             /* listPrepend(&Lt1[i], newp); */ // XXX: doesn't work with prepend!!!
             listInsert(&Lt1[i], newp); // need to sort into list correctly!!!!!!!!!!!!!!!
-            (*pnum)++;
+            (*lens)[i]++;
             curr = curr->next;
           } while (curr);
       }
@@ -181,9 +181,12 @@ void calcType2Periodicities(List **Lt1, Fact *lzf, size_t *pnum) {
 }
 
 // max. periodicities in O(n) using LZ-Factors, returns array of lists
-List **getPeriodicityLists(bool runsOnly, Fact *lzf, size_t *pnum) {
-  List **Lt1 = calcType1Periodicities(runsOnly, lzf, pnum);
-  calcType2Periodicities(Lt1, lzf, pnum);
+List **getPeriodicityLists(bool runsOnly, Fact *lzf, size_t **lens) {
+  List **Lt1 = calcType1Periodicities(runsOnly, lzf, lens);
+  calcType2Periodicities(Lt1, lzf, lens);
+  //make prefix sum out of it
+  for (size_t i=1; i<=lzf->strLen; i++)
+    (*lens)[i] += (*lens)[i-1];
   return Lt1;
 }
 
@@ -209,7 +212,10 @@ Periodicity *collectPeriodicities(List **pl, size_t seqLen, size_t pnum) {
 }
 
 Periodicity *getPeriodicities(bool runsOnly, Fact *lzf, size_t *pnum) {
-  List **pl = getPeriodicityLists(runsOnly, lzf, pnum);
+  size_t *lens;
+  List **pl = getPeriodicityLists(runsOnly, lzf, &lens);
+  *pnum = lens[lzf->strLen];
+  free(lens);
   return collectPeriodicities(pl, lzf->strLen, *pnum);
 }
 

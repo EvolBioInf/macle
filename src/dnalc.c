@@ -7,8 +7,8 @@
 #include "sequenceData.h"
 #include "matchlength.h"
 #include "periodicity.h"
-#include "interval.h"
 #include "lempelziv.h"
+#include "stringUtil.h"
 
 // ---- for benchmarking ----
 #include <sys/resource.h>
@@ -21,7 +21,7 @@ double last_tick_time = 0;
 void tick() { last_tick_time = CPU_TIME; }
 void tock(bool b, char *str) {
   if (b)
-    fprintf(stderr, "[BENCH] %s: %.3fs\n", str, CPU_TIME - last_tick_time);
+    fprintf(stderr, "[BENCH] %s: %.2fs\n", str, CPU_TIME - last_tick_time);
 }
 // ---------------------------
 
@@ -65,7 +65,7 @@ void scanFile(Sequence *seq) {
     k = w;       // default interval = whole (smallest) seq.
   k = MIN(k, w); // biggest interval = window size
 
-  // array for results
+  // array for results for all sequences in file
   double **ys = malloc(seq->numSeq * sizeof(double *));
   for (int i = 0; i < seq->numSeq; i++)
     ys[i] = calloc(maxlen, sizeof(double));
@@ -91,18 +91,11 @@ void scanFile(Sequence *seq) {
     tick();
     Fact *lzf = computeLZFact(esa, false);
     tock(b, "computeLZFact");
-
     tick();
     size_t plen;
-    Periodicity *ps = getPeriodicities(false, lzf, esa, &plen);
+    Periodicity *ps = getPeriodicities(false, lzf, &plen);
     tock(b, "getPeriodicities");
     tick();
-    // for comparison
-    size_t plen2;
-    Periodicity *ps2 = getPeriodicities2(esa, &plen2);
-    tock(b, "getPeriodicities2");
-    printf("p: %zu %zu\n", plen, plen2);
-    //---
 
     if (args.p) {
       printf("ML-Factors:\n");
@@ -119,11 +112,12 @@ void scanFile(Sequence *seq) {
       double facs = factorsFromTo(mlf, j * k, MIN(n, j * k + w) - 1);
       ys[i][j] = (facs / w - mlf->cMin) / (mlf->cMax - mlf->cMin);
     }
+    // TODO: window periodicity complexity?
+    // TODO: put this neatly in a different function?
 
     freeFact(mlf);
     freeFact(lzf);
     free(ps);
-    free(ps2);
 
     freeEsa(esa);
   }

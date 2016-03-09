@@ -27,6 +27,7 @@ gsl_rng *ini_gsl_rng(uint32_t useSeed) {
     seed = -time(NULL);
 
   gsl_rng_set(r, seed);
+  srand(seed);
   return r;
 }
 

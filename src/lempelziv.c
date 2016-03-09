@@ -72,14 +72,14 @@ size_t *computeLpf(Esa *esa, int64_t **prevOccP) {
 }
 
 // alternative prevOcc calculation (from same paper)
-int64_t *computeLpf2(Esa *esa, int64_t **prevOccP) {
+size_t *computeLpf2(Esa *esa, int64_t **prevOccP) {
   size_t n = esa->n;
   int64_t *sa = esa->sa;
   int64_t *lprev = malloc(n * sizeof(int64_t));
   int64_t *lnext = malloc(n * sizeof(int64_t));
   int64_t *prevl = malloc(n * sizeof(int64_t));
   int64_t *prevr = malloc(n * sizeof(int64_t));
-  int64_t *lpf = calloc(n, sizeof(int64_t));
+  size_t *lpf = calloc(n, sizeof(int64_t));
   int64_t *lpfl = calloc(n, sizeof(int64_t));
   int64_t *lpfr = calloc(n, sizeof(int64_t));
   int64_t *prevOcc = malloc(n * sizeof(int64_t));
@@ -140,7 +140,7 @@ int64_t *computeLpf2(Esa *esa, int64_t **prevOccP) {
 Fact *computeLZFact(Esa *esa, bool alternative) {
   size_t n = esa->n;
   int64_t *prevOcc;
-  size_t *lpf = alternative ? computeLpf2(esa,&prevOcc) : computeLpf(esa, &prevOcc);
+  size_t *lpf = alternative ? computeLpf2(esa, &prevOcc) : computeLpf(esa, &prevOcc);
 
   Fact *lzf = (Fact *)emalloc(sizeof(Fact));
   lzf->fact = (size_t *)emalloc(n * sizeof(size_t));

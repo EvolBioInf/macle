@@ -1,10 +1,11 @@
 #include "minunit.h"
 #include <inttypes.h>
 #include <string.h>
+#include <time.h>
 
-#include "sequenceData.h"
 #include "esa.h"
 #include "lempelziv.h"
+#include "stringUtil.h"
 
 // hotspot paper example
 static char *seq = "GCACGCACGCACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA"
@@ -46,7 +47,7 @@ char *test_prevOcc() {
   Fact *lzf = computeLZFact(esa, false);
   Fact *lzfRef = computeLZFact(esa, true);
 
-  // other algorithm to get prevOcc, should be same as poResult[sa[i]]
+  // should be same as poResult[sa[i]]
   for (size_t i = 0; i < n; i++)
     mu_assert(lzf->prevOcc[i] == lzfRef->prevOcc[i], "wrong prevOcc array");
 
@@ -56,15 +57,19 @@ char *test_prevOcc() {
   return NULL;
 }
 
-char *test_againstReference() {
-  Sequence *s = readFastaFromFile("Data/rand10k.fa");
-  Esa *esa = getEsa(seqStr(s, 0), seqLen(s, 0) + 1);
+char *test_randomSequence() {
+  size_t n = 1000000;
+  char *s = randSeq(n);
+  fprintnf(stdout, s, 80);
+  printf("\n");
+  Esa *esa = getEsa(s, n + 1);
   Fact *lzf = computeLZFact(esa, false);
-  Fact *lzfRef = computeLZFact(esa, true); //using different algorithm
+  Fact *lzfRef = computeLZFact(esa, true); // using different algorithm
 
   for (size_t i = 0; i < esa->n; i++)
     mu_assert(lzf->prevOcc[i] == lzfRef->prevOcc[i], "incorrect prevOcc array");
-
+  for (size_t i = 0; i < esa->n; i++)
+    mu_assert(lzf->lpf[i] == lzfRef->lpf[i], "incorrect lpf array");
   mu_assert(lzf->n == lzfRef->n, "different number of factors");
   for (size_t i = 0; i < lzf->n; i++)
     mu_assert(lzf->fact[i] == lzfRef->fact[i], "incorrect factor positions");
@@ -83,15 +88,17 @@ char *test_againstReference() {
   freeFact(lzfRef);
   freeFact(lzf);
   freeEsa(esa);
-  freeSequence(s);
+  free(s);
   return NULL;
 }
 
 char *all_tests() {
+  srand(time(NULL));
   mu_suite_start();
   mu_run_test(test_LempelZiv);
   mu_run_test(test_prevOcc);
-  mu_run_test(test_againstReference);
+  for (size_t i = 0; i < 5; i++)
+    mu_run_test(test_randomSequence);
   return NULL;
 }
 RUN_TESTS(all_tests)

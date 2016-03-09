@@ -17,7 +17,7 @@ Periodicity *newPeriodicity(size_t b, size_t e, size_t l) {
 
 void printPeriodicity(Periodicity *p) { printf("(%zu,%zu,%zu)\n", p->b, p->e, p->l); }
 
-// TODO: efficient internal lcp, and lcs (longest common suffix) (Ohlebusch!)
+// TODO: maybe efficient internal lcp, and lcs (longest common suffix) (Ohlebusch!)
 
 // naive: length of lcp of suffixes i and j of given seq (1-indexed)
 size_t lcp2(char *str, size_t n, size_t i, size_t j) {
@@ -139,11 +139,11 @@ static inline int64_t getPrevOcc(Fact *lzf, size_t i) {
 // debugging -.-'
 void listInsert(List **l, Periodicity *p) {
   List *curr = *l;
-  if (!curr || ((Periodicity*)curr->value)->e >= p->e) {
+  if (!curr || ((Periodicity *)curr->value)->e >= p->e) {
     listPrepend(l, p);
     return;
   }
-  while (curr->next && ((Periodicity*)curr->next->value)->e < p->e)
+  while (curr->next && ((Periodicity *)curr->next->value)->e < p->e)
     curr = curr->next;
   List *item = newList();
   item->value = p;
@@ -152,7 +152,7 @@ void listInsert(List **l, Periodicity *p) {
 }
 
 // Algorithm 5.18 - calculate type 2 periodicities (proper substrings of LZ-factors)
-void calcType2Periodicities(List **Lt1, Fact *lzf, Esa *esa) {
+void calcType2Periodicities(List **Lt1, Fact *lzf) {
   for (size_t j = 1; j < lzf->n; j++) {
     size_t bj = factStart(lzf, j); // b_j
     size_t ej = factEnd(lzf, j);   // e_j
@@ -166,8 +166,8 @@ void calcType2Periodicities(List **Lt1, Fact *lzf, Esa *esa) {
             if (p->e + dj >= ej)
               break;
             Periodicity *newp = newPeriodicity(i, p->e + dj, p->l);
-            /* listPrepend(&Lt1[i], newp); */ // XXX: it does not work correctly with prepend!!!
-            listInsert(&Lt1[i], newp);        // need to sort into list correctly!!!!!!!!!!!!!!!
+            /* listPrepend(&Lt1[i], newp); */ // XXX: doesn't work with prepend!!!
+            listInsert(&Lt1[i], newp); // need to sort into list correctly!!!!!!!!!!!!!!!
             curr = curr->next;
           } while (curr);
       }
@@ -176,9 +176,9 @@ void calcType2Periodicities(List **Lt1, Fact *lzf, Esa *esa) {
 }
 
 // max. periodicities in O(n) using LZ-Factors
-Periodicity *getPeriodicities(bool runsOnly, Fact *lzf, Esa *esa, size_t *plen) {
+Periodicity *getPeriodicities(bool runsOnly, Fact *lzf, size_t *plen) {
   List **Lt1 = calcType1Periodicities(runsOnly, lzf);
-  calcType2Periodicities(Lt1, lzf, esa);
+  calcType2Periodicities(Lt1, lzf);
 
   // collect results from lists and cleanup
   // Theorem 5.3.[39,43] (upper bound for num. max. per. / runs for a string)

@@ -6,6 +6,8 @@
  *****************************************************************************/
 #pragma once
 
+char *randSeq(size_t n);
+
 char *chomp(char *line);
 char *cleanWord(char *word);
 char *cleanWordEdges(char *word);

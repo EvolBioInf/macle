@@ -1,6 +1,6 @@
 #include "minunit.h"
+#include <time.h>
 
-#include "sequenceData.h"
 #include "esa.h"
 #include "lempelziv.h"
 #include "periodicity.h"
@@ -27,7 +27,7 @@ char *test_knownExample() {
   Fact *lzf = computeLZFact(esa, false);
 
   size_t plen;
-  Periodicity *ps = getPeriodicities(false, lzf, esa, &plen);
+  Periodicity *ps = getPeriodicities(false, lzf, &plen);
   mu_assert(plen == 8, "wrong number of periodicities detected");
 
   free(ps);
@@ -43,7 +43,7 @@ char *test_onlyRuns() {
   Fact *lzf = computeLZFact(esa, false);
 
   size_t plen;
-  Periodicity *ps = getPeriodicities(false, lzf, esa, &plen);
+  Periodicity *ps = getPeriodicities(false, lzf, &plen);
   mu_assert(plen == 16, "wrong number of periodicities detected");
   free(ps);
 
@@ -51,7 +51,7 @@ char *test_onlyRuns() {
   mu_assert(plen == 16, "wrong number of periodicities detected (easy algorithm)");
   free(ps);
 
-  ps = getPeriodicities(true, lzf, esa, &plen);
+  ps = getPeriodicities(true, lzf, &plen);
   mu_assert(plen == 4, "wrong number of runs detected");
   free(ps);
 
@@ -60,15 +60,18 @@ char *test_onlyRuns() {
   return NULL;
 }
 
-char *test_compareWithReference() {
-  Sequence *seq = readFastaFromFile("Data/broken.fa");
-  Esa *esa = getEsa(seqStr(seq, 0), seqLen(seq, 0) + 1); // calculate esa, including $
+char *test_randomSequence() {
+  size_t n = 1000000;
+  char *s = randSeq(n);
+  fprintnf(stdout, s, 80);
+  printf("\n");
+  Esa *esa = getEsa(s, n + 1); // calculate esa, including $
   Fact *lzf = computeLZFact(esa, false);
 
   size_t plen, plen2;
   Periodicity *ps, *ps2;
 
-  ps = getPeriodicities(false, lzf, esa, &plen);
+  ps = getPeriodicities(false, lzf, &plen);
   qsort(ps, plen, sizeof(Periodicity), cmpPer);
   ps2 = getPeriodicities2(esa, &plen2);
   qsort(ps2, plen2, sizeof(Periodicity), cmpPer);
@@ -81,7 +84,8 @@ char *test_compareWithReference() {
       printPeriodicity(&ps[i]);
       printf("should: ");
       printPeriodicity(&ps2[i + missed]);
-      fprintnf(stdout, seq->seq + ps2[i + missed].b - 1, 80);
+
+      fprintnf(stdout, s + ps2[i + missed].b - 1, 80);
       printf("\nrelevant LZ-Factor:\n");
       size_t fact = 0;
       for (size_t j = 0; j < lzf->n; j++) {
@@ -110,16 +114,18 @@ char *test_compareWithReference() {
   free(ps2);
   freeFact(lzf);
   freeEsa(esa);
-  freeSequence(seq);
-  mu_assert(plen == plen2, "periodicities do not match");
+  free(s);
+  mu_assert(plen == plen2, "number of periodicities does not match");
   return NULL;
 }
 
 char *all_tests() {
+  srand(time(NULL));
   mu_suite_start();
   mu_run_test(test_knownExample);
   mu_run_test(test_onlyRuns);
-  mu_run_test(test_compareWithReference);
+  for (size_t i = 0; i < 5; i++)
+    mu_run_test(test_randomSequence);
   return NULL;
 }
 RUN_TESTS(all_tests)

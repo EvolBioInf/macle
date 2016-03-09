@@ -238,7 +238,7 @@ size_t minSeqLen(Sequence *seq) {
 
 // read sequence(s) from given file, if NULL, uses stdin
 Sequence *readFastaFromFile(char *file) {
-  int fd = file ? open(file, 0) : 0;
+  int fd = file ? eopen(file, 0) : 0;
   Sequence *seq = readFasta(fd);
   if (file)
     close(fd);

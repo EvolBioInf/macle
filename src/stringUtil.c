@@ -10,6 +10,17 @@
 #include "stringUtil.h"
 #include "eprintf.h"
 
+/* generate random sequence of given length */
+char *randSeq(size_t n) {
+  static char *alphabet = "ACGT";
+  char *s = emalloc((n + 2) * sizeof(char));
+  s[n] = '$';
+  s[n + 1] = '\0';
+  for (size_t i = 0; i < n; i++)
+    s[i] = alphabet[rand() % 4];
+  return s;
+}
+
 /* chomp: remove carriage return from string */
 char *chomp(char *line) {
   int i, l;

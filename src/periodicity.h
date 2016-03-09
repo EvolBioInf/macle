@@ -1,5 +1,6 @@
 #pragma once
 #include "esa.h"
+#include "list.h"
 
 typedef struct Periodicity {
   size_t b; // beginning index
@@ -9,5 +10,9 @@ typedef struct Periodicity {
 
 void printPeriodicity(Periodicity *p);
 
-Periodicity *getPeriodicities(bool runsOnly, Fact *lzf, size_t *plen);
-Periodicity *getPeriodicities2(Esa *esa, size_t *plen);
+Periodicity *getPeriodicities(bool runsOnly, Fact *lzf, size_t *pnum);
+
+List **getPeriodicityLists(bool runsOnly, Fact *lzf, size_t *pnum);
+Periodicity *collectPeriodicities(List **pl, size_t seqLen, size_t pnum);
+
+Periodicity *getPeriodicities2(Esa *esa, size_t *pnum);

@@ -36,12 +36,12 @@ void gnuplotCode(uint32_t w, uint32_t k, int n) {
   printf(";\n");
 }
 
-void printPlot(uint32_t w, uint32_t k, size_t n, Sequence *seq, double **ys) {
-  printf("i ");
+void printPlot(uint32_t k, size_t n, Sequence *seq, double **ys) {
+  printf("offset ");
   for (int i = 0; i < seq->numSeq; i++)
     printf("\"%s\" ", seq->headers[i] + 1);
   printf("\n");
-  for (size_t j = 0; j * k <= n - w; j++) {
+  for (size_t j = 0; j < n; j++) {
     printf("%zu ", j * k);
     for (int i = 0; i < seq->numSeq; i++)
       printf("%.4f ", ys[i][j]);
@@ -66,9 +66,10 @@ void scanFile(Sequence *seq) {
   k = MIN(k, w); // biggest interval = window size
 
   // array for results for all sequences in file
+  size_t entries = (maxlen-w) / k + 1;
   double **ys = malloc(seq->numSeq * sizeof(double *));
   for (int i = 0; i < seq->numSeq; i++)
-    ys[i] = calloc(maxlen, sizeof(double));
+    ys[i] = calloc(entries, sizeof(double));
 
   // TODO: use gc content of complete file or just current sequence?
   double gc = gcContent(seq);
@@ -82,12 +83,27 @@ void scanFile(Sequence *seq) {
     tock(b, "getEsa");
     if (args.p) {
       printf("%s\n", seq->headers[i]);
-      printEsa(esa);
+      /* printEsa(esa); */
     }
 
     tick();
     Fact *mlf = mlComplexity(esa, gc);
     tock(b, "mlComplexity");
+    if (args.p) {
+      printf("ML-Factors (%zu):\n", mlf->n);
+      printFact(mlf);
+    }
+
+    // calculate window complexity, TODO: does this make sense?
+    for (size_t j = 0; j < entries; j++) {
+      double facs = factorsFromTo(mlf, j * k, MIN(n, j * k + w) - 1);
+      ys[i][j] = (facs / w - mlf->cMin) / (mlf->cMax - mlf->cMin);
+    }
+    // TODO: window periodicity complexity?
+    // TODO: put this neatly in a different function?
+
+    freeFact(mlf);
+
     tick();
     Fact *lzf = computeLZFact(esa, false);
     tock(b, "computeLZFact");
@@ -98,24 +114,13 @@ void scanFile(Sequence *seq) {
     tick();
 
     if (args.p) {
-      printf("ML-Factors:\n");
-      printFact(mlf);
-      printf("LZ-Factors:\n");
+      printf("LZ-Factors (%zu):\n", lzf->n);
       printFact(lzf);
-      printf("Periodicities:\n");
+      printf("Periodicities (%zu):\n", plen);
       for (size_t j = 0; j < plen; j++)
         printPeriodicity(ps + j);
     }
 
-    // calculate window complexity, TODO: does this make sense?
-    for (size_t j = 0; j * k <= n - w; j++) {
-      double facs = factorsFromTo(mlf, j * k, MIN(n, j * k + w) - 1);
-      ys[i][j] = (facs / w - mlf->cMin) / (mlf->cMax - mlf->cMin);
-    }
-    // TODO: window periodicity complexity?
-    // TODO: put this neatly in a different function?
-
-    freeFact(mlf);
     freeFact(lzf);
     free(ps);
 
@@ -126,11 +131,11 @@ void scanFile(Sequence *seq) {
     if (args.g) { // print to be directly piped into gnuplot
       gnuplotCode(w, k, seq->numSeq);
       for (int i = 0; i < seq->numSeq; i++) {
-        printPlot(w, k, maxlen, seq, ys);
+        printPlot(k, entries, seq, ys);
         printf("e\n");
       }
     } else { // just print resulting data
-      printPlot(w, k, maxlen, seq, ys);
+      printPlot(k, entries, seq, ys);
     }
   }
 

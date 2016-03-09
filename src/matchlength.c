@@ -6,31 +6,9 @@
 #include "prelude.h"
 #include "matchlength.h"
 #include "eprintf.h"
-#include "sequenceData.h"
 #include "shulen.h"
 
-// Fenwick-Tree (log(n) access to any prefix sums, n*log(n) construction)
-void inc_ft(uint64_t *tree, size_t n, size_t i, uint64_t delta) {
-  for (; i < n; i |= i + 1)
-    tree[i] += delta;
-}
-
-int64_t sum_ft(uint64_t *tree, int64_t ind) {
-  uint64_t sum = 0;
-  while (ind >= 0) { // ind must be signed for it to work!!
-    sum += tree[ind];
-    ind &= ind + 1;
-    ind--;
-  }
-  return sum;
-}
-
-uint64_t getsum_ft(uint64_t *tree, int64_t left, int64_t right) {
-  return sum_ft(tree, right) - sum_ft(tree, left - 1);
-}
-//--------
-
-uint64_t factorsFromTo(Fact *f, int64_t l, int64_t r) { return getsum_ft(f->lpf, l, r); }
+uint64_t factorsFromTo(Fact *f, int64_t l, int64_t r) { return f->lpf[r]-(l?f->lpf[l-1]:0); }
 
 Fact *computeMLFact(Esa *esa) {
   Fact *mlf = (Fact *)emalloc(sizeof(Fact));
@@ -59,14 +37,20 @@ Fact *computeMLFact(Esa *esa) {
 
 // calculate number of factor start positions up to some given prefix length
 // -> allows to easily get number of factor start positions in any interval
-uint64_t *computeFactPrefixSum(Fact *f) {
+void computeFactPrefixSum(Fact *f) {
   size_t n = f->strLen;
   /* compute observed number of match factors for every prefix */
-  uint64_t *ft = (uint64_t *)ecalloc(n, sizeof(uint64_t));
-  for (size_t i = 0; i < f->n; i++) {
-    inc_ft(ft, n, f->fact[i], 1);
+  uint64_t *ps = (uint64_t *)emalloc(n * sizeof(uint64_t));
+  size_t nextfact = 1;
+  ps[0]=1;
+  for (size_t i = 1; i < n; i++) {
+    ps[i] = ps[i-1];
+    if (nextfact<f->n && i==f->fact[nextfact]) {
+      ps[i]++;
+      nextfact++;
+    }
   }
-  return ft;
+  f->lpf = ps; // use lpf field to store prefix sums for ML factors
 }
 
 /* mlComplexity: calculate match length factors */
@@ -75,13 +59,12 @@ Fact *mlComplexity(Esa *esa, double gc) {
   /* construct and fill array of match lengths, calculate factors */
   Fact *mlf = computeMLFact(esa);
   /* compute observed number of match factors for every prefix */
-  uint64_t *fl = computeFactPrefixSum(mlf);
-  mlf->lpf = fl; // use lpf field to store prefix sums for ML factors
+  computeFactPrefixSum(mlf);
 
   // calculation of global complexity value (for reference):
   // TODO: refactor this out
 
-  double c = (double)(sum_ft(fl, n - 1)); // total number of factors
+  double c = (double)(mlf->lpf[n-1]); // total number of factors
   double l = n;
   mlf->cObs = (c - 1) / l; // TODO: why c-1?
   mlf->cMin = 2. / l;

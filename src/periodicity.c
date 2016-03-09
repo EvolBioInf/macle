@@ -133,6 +133,24 @@ static inline int64_t getPrevOcc(Fact *lzf, size_t i) {
   return (tmp == -1 ? lzf->fact[i] : tmp) + 1;
 }
 
+// add given periodicity into corresponding same-beginning list
+// so that list remains sorted by end positions. This hack is necessary!
+// Ohlebusch/Algorithm 5.18 says "prepend". This is WRONG!!! Was a fun night
+// debugging -.-'
+void listInsert(List **l, Periodicity *p) {
+  List *curr = *l;
+  if (!curr || ((Periodicity*)curr->value)->e >= p->e) {
+    listPrepend(l, p);
+    return;
+  }
+  while (curr->next && ((Periodicity*)curr->next->value)->e < p->e)
+    curr = curr->next;
+  List *item = newList();
+  item->value = p;
+  item->next = curr->next;
+  curr->next = item;
+}
+
 // Algorithm 5.18 - calculate type 2 periodicities (proper substrings of LZ-factors)
 void calcType2Periodicities(List **Lt1, Fact *lzf, Esa *esa) {
   for (size_t j = 1; j < lzf->n; j++) {
@@ -148,7 +166,8 @@ void calcType2Periodicities(List **Lt1, Fact *lzf, Esa *esa) {
             if (p->e + dj >= ej)
               break;
             Periodicity *newp = newPeriodicity(i, p->e + dj, p->l);
-            listPrepend(&Lt1[i], newp);
+            /* listPrepend(&Lt1[i], newp); */ // XXX: it does not work correctly with prepend!!!
+            listInsert(&Lt1[i], newp);        // need to sort into list correctly!!!!!!!!!!!!!!!
             curr = curr->next;
           } while (curr);
       }

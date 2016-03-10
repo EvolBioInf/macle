@@ -75,14 +75,14 @@ size_t *computeLpf(Esa *esa, int64_t **prevOccP) {
 size_t *computeLpf2(Esa *esa, int64_t **prevOccP) {
   size_t n = esa->n;
   int64_t *sa = esa->sa;
-  int64_t *lprev = malloc(n * sizeof(int64_t));
-  int64_t *lnext = malloc(n * sizeof(int64_t));
-  int64_t *prevl = malloc(n * sizeof(int64_t));
-  int64_t *prevr = malloc(n * sizeof(int64_t));
-  size_t *lpf = calloc(n, sizeof(int64_t));
-  int64_t *lpfl = calloc(n, sizeof(int64_t));
-  int64_t *lpfr = calloc(n, sizeof(int64_t));
-  int64_t *prevOcc = malloc(n * sizeof(int64_t));
+  int64_t *lprev = emalloc(n * sizeof(int64_t));
+  int64_t *lnext = emalloc(n * sizeof(int64_t));
+  int64_t *prevl = emalloc(n * sizeof(int64_t));
+  int64_t *prevr = emalloc(n * sizeof(int64_t));
+  size_t *lpf = ecalloc(n, sizeof(int64_t));
+  int64_t *lpfl = ecalloc(n, sizeof(int64_t));
+  int64_t *lpfr = ecalloc(n, sizeof(int64_t));
+  int64_t *prevOcc = emalloc(n * sizeof(int64_t));
   for (size_t i = 0; i < esa->n; i++) {
     lprev[sa[i]] = i == 0 ? -1 : sa[i - 1];
     lnext[sa[i]] = i == esa->n - 1 ? -1 : sa[i + 1];

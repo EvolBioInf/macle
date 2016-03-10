@@ -14,6 +14,7 @@ extern "C" {
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 // 30+i foreground, 40+i background, bold->add ;1
 #define ANSI_CLR_BLACK "\x1b[30m"
@@ -26,15 +27,24 @@ extern "C" {
 #define ANSI_CLR_WHITE "\x1b[37m"
 #define ANSI_CLR_RESET "\x1b[0m"
 
-#define log_err(M) fprintf(stderr, "[ERROR] %s:%d: " M "\n", __FILE__, __LINE__)
-
 #define mu_suite_start() char *message = NULL
 
 #define mu_assert(test, message)                                                         \
   do {                                                                                   \
     if (!(test)) {                                                                       \
-      log_err(message);                                                                  \
+      fprintf(stderr, "[ERROR] %s:%d: " message "\n", __FILE__, __LINE__);               \
       return message;                                                                    \
+    }                                                                                    \
+  } while (0)
+
+#define mu_assert_eq(expected, observed, message)                                        \
+  do {                                                                                   \
+    int64_t e = (expected);                                                              \
+    int64_t o = (observed);                                                              \
+    if (e != o) {                                                                        \
+      fprintf(stderr, "[ERROR] %s:%d: %s\n\t(Expected: %ld, Observed: %ld)\n", __FILE__, \
+              __LINE__, (message), e, o);                                                \
+      return (message);                                                                  \
     }                                                                                    \
   } while (0)
 

@@ -51,7 +51,7 @@ Periodicity *getPeriodicities2(Esa *esa, size_t *plen) {
       size_t L = lcs2(str, i - 1 - l, i - 1);
       size_t R = lcp2(str, n, i - l, i);
       if (L + R >= l && R < l) {
-        ps[*plen].b = i - l - L - 1; //again 0-indexed
+        ps[*plen].b = i - l - L - 1; // again 0-indexed
         ps[*plen].e = i - 1 + R - 1;
         ps[*plen].l = l;
         (*plen)++;
@@ -72,7 +72,7 @@ static inline size_t factEnd(Fact *f, size_t i) {
 
 // Algorithm 5.17 - calculate type1 periodicities
 List **calcType1Periodicities(bool runsOnly, Fact *lzf, size_t **lens) {
-  *lens = ecalloc(lzf->strLen+1, sizeof(size_t));
+  *lens = ecalloc(lzf->strLen + 1, sizeof(size_t));
   // as required, array of lists of max. per. of type 1
   // indexed by start position, each sorted by end position
   List **Lt1 = ecalloc(lzf->strLen + 1, sizeof(List *));
@@ -162,12 +162,12 @@ void calcType2Periodicities(List **Lt1, Fact *lzf, size_t **lens) {
     size_t ej = factEnd(lzf, j);   // e_j
     if (factLen(lzf, j) >= 4) {
       int64_t dj = bj - getPrevOcc(lzf, j);
-      for (size_t i = bj; i < ej-1; i++) {
+      for (size_t i = bj; i < ej - 1; i++) {
         List *curr = Lt1[i - dj];
         if (curr)
           do {
             Periodicity *p = (Periodicity *)(curr->value);
-            if (p->e + dj >= ej-1)
+            if (p->e + dj >= ej - 1)
               break;
             Periodicity *newp = newPeriodicity(i, p->e + dj, p->l);
             /* listPrepend(&Lt1[i], newp); */ // XXX: doesn't work with prepend!!!
@@ -184,9 +184,9 @@ void calcType2Periodicities(List **Lt1, Fact *lzf, size_t **lens) {
 List **getPeriodicityLists(bool runsOnly, Fact *lzf, size_t **lens) {
   List **Lt1 = calcType1Periodicities(runsOnly, lzf, lens);
   calcType2Periodicities(Lt1, lzf, lens);
-  //make prefix sum out of it
-  for (size_t i=1; i<lzf->strLen; i++)
-    (*lens)[i] += (*lens)[i-1];
+  // make prefix sum out of it
+  for (size_t i = 1; i < lzf->strLen; i++)
+    (*lens)[i] += (*lens)[i - 1];
   return Lt1;
 }
 
@@ -211,12 +211,27 @@ Periodicity *collectPeriodicities(List **pl, size_t seqLen, size_t pnum) {
   return ps;
 }
 
+void freePeriodicityLists(List **pl, size_t seqLen, size_t *pnum) {
+  for (size_t i = 0; i < seqLen; i++) {
+    List *curr = pl[i];
+    List *tmp;
+    if (curr) {
+      do {
+        free((Periodicity *)(curr->value));
+        tmp = curr;
+        curr = curr->next;
+        free(tmp);
+      } while (curr);
+    }
+  }
+  free(pl);
+  free(pnum);
+}
+
 Periodicity *getPeriodicities(bool runsOnly, Fact *lzf, size_t *pnum) {
   size_t *lens;
   List **pl = getPeriodicityLists(runsOnly, lzf, &lens);
-  *pnum = lens[lzf->strLen-1];
+  *pnum = lens[lzf->strLen - 1];
   free(lens);
   return collectPeriodicities(pl, lzf->strLen, *pnum);
 }
-
-

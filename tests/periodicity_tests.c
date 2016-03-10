@@ -29,17 +29,14 @@ char *test_knownExample() {
 
   size_t plen;
   Periodicity *ps = getPeriodicities2(esa, &plen);
-  mu_assert(plen == 8, "wrong number of periodicities detected (easy algorithm)");
-  /* for (size_t i=0; i<plen; i++) */
-  /*   printPeriodicity(&ps[i]); */
+  mu_assert_eq(8, plen, "wrong number of periodicities detected (easy algorithm)");
   free(ps);
 
-  ps = getPeriodicities(false, lzf, &plen);
-  /* for (size_t i=0; i<plen; i++) */
-  /*   printPeriodicity(&ps[i]); */
-  mu_assert(plen == 8, "wrong number of periodicities detected");
+  size_t *lens;
+  List **pl = getPeriodicityLists(false, lzf, &lens);
+  mu_assert_eq(8, lens[n], "wrong number of periodicities detected");
+  freePeriodicityLists(pl, n + 1, lens);
 
-  free(ps);
   freeFact(lzf);
   freeEsa(esa);
   return NULL;
@@ -53,15 +50,15 @@ char *test_onlyRuns() {
 
   size_t plen;
   Periodicity *ps = getPeriodicities2(esa, &plen);
-  mu_assert(plen == 16, "wrong number of periodicities detected (easy algorithm)");
+  mu_assert_eq(16, plen, "wrong number of periodicities detected (easy algorithm)");
   free(ps);
 
   ps = getPeriodicities(false, lzf, &plen);
-  mu_assert(plen == 16, "wrong number of periodicities detected");
+  mu_assert_eq(16, plen, "wrong number of periodicities detected");
   free(ps);
 
   ps = getPeriodicities(true, lzf, &plen);
-  mu_assert(plen == 4, "wrong number of runs detected");
+  mu_assert_eq(4, plen, "wrong number of runs detected");
   free(ps);
 
   freeFact(lzf);
@@ -124,7 +121,7 @@ char *test_randomSequence() {
   freeFact(lzf);
   freeEsa(esa);
   free(s);
-  mu_assert(plen == plen2, "number of periodicities does not match");
+  mu_assert_eq(plen2, plen, "number of periodicities does not match");
   return NULL;
 }
 

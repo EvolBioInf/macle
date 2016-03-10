@@ -1,0 +1,68 @@
+#include "eprintf.h"
+#include "prelude.h"
+#include "matchlength.h"
+#include "periodicity.h"
+#include "shulen.h"
+
+// input: prefix-sum array, left and right bound (inclusive)
+#define sumFromTo(a, l, r) ((a)[(r)] - ((l) ? (a)[(l)-1] : 0))
+
+// calculate match length complexity for sliding windows
+// input: sane w and k, allocated array for results, match length factors, gc content
+void mlComplexity(size_t w, size_t k, double *y, Fact *mlf, double gc) {
+  size_t n = mlf->strLen;
+  size_t entries = (n - w) / k + 1;
+
+  // TODO: does this calculation make sense? (probably not)
+  double cMin = 2.0 / (double)n; // at least 2 factors an any sequence, like AAAAAA.A
+  double esl = expShulen(gc, w); // some wildly advanced estimation for avg. factor length
+  double cMax = 1. / (esl - 1.);
+
+  for (size_t j = 0; j < entries; j++) {
+    size_t l = j * k;
+    size_t r = MIN(n, l + w) - 1;
+    double cObs = sumFromTo(mlf->lpf, l, r);
+    y[j] = (cObs / w - cMin) / (cMax - cMin);
+  }
+}
+
+// TODO: better ideas for analysis of runs?
+void runComplexity(size_t w, size_t k, double *y, size_t n, List **ls, size_t *lens) {
+  size_t entries = (n - w) / k + 1;
+
+  // for each start point, calculate longest periodicity
+  size_t *maxpl = ecalloc(n, sizeof(size_t));
+  size_t absmax = 0;
+  for (size_t i = 0; i < n; i++) {
+    List *curr = ls[i];
+    size_t currmax = 0;
+    if (curr)
+      do {
+        Periodicity *p = (Periodicity *)curr->value;
+        size_t pl = p->e - p->b + 1;
+        if (pl > currmax)
+          currmax = pl;
+        curr = curr->next;
+      } while (curr);
+    if (currmax > absmax)
+      absmax = currmax;
+    maxpl[i] = currmax;
+  }
+
+  /* double rMax = 1.029*w; */
+  for (size_t j = 0; j < entries; j++) {
+    size_t l = j * k;
+    size_t r = MIN(n, l + w) - 1;
+
+    /* double rObs = sumFromTo(lens, l, r); */
+    /* y[j] = rObs / rMax; */
+
+    size_t rMax = 0;
+    for (size_t i = l; i <= r; i++)
+      if (maxpl[i] > rMax)
+        rMax = maxpl[i];
+    y[j] = (double)rMax / absmax;
+  }
+
+  free(maxpl);
+}

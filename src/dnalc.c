@@ -6,9 +6,10 @@
 
 #include "sequenceData.h"
 #include "matchlength.h"
-#include "periodicity.h"
 #include "lempelziv.h"
-#include "stringUtil.h"
+#include "list.h"
+#include "periodicity.h"
+#include "complexity.h"
 
 // ---- for benchmarking ----
 #include <sys/resource.h>
@@ -38,12 +39,14 @@ void gnuplotCode(uint32_t w, uint32_t k, int n) {
 
 void printPlot(uint32_t k, size_t n, Sequence *seq, double **ys) {
   printf("offset ");
-  for (int i = 0; i < seq->numSeq; i++)
+  for (int i = 0; i < seq->numSeq; i++) { // two columns for each seq
     printf("\"%s\" ", seq->headers[i] + 1);
+    printf("\"%s\" ", seq->headers[i] + 1);
+  }
   printf("\n");
   for (size_t j = 0; j < n; j++) {
     printf("%zu ", j * k);
-    for (int i = 0; i < seq->numSeq; i++)
+    for (int i = 0; i < 2 * seq->numSeq; i++)
       printf("%.4f ", ys[i][j]);
     printf("\n");
   }
@@ -66,10 +69,10 @@ void scanFile(Sequence *seq) {
   k = MIN(k, w); // biggest interval = window size
 
   // array for results for all sequences in file
-  size_t entries = (maxlen-w) / k + 1;
-  double **ys = malloc(seq->numSeq * sizeof(double *));
-  for (int i = 0; i < seq->numSeq; i++)
-    ys[i] = calloc(entries, sizeof(double));
+  size_t entries = (maxlen - w) / k + 1;
+  double **ys = emalloc(2 * seq->numSeq * sizeof(double *));
+  for (int i = 0; i < 2 * seq->numSeq; i++)
+    ys[i] = ecalloc(entries, sizeof(double));
 
   // TODO: use gc content of complete file or just current sequence?
   double gc = gcContent(seq);
@@ -87,50 +90,54 @@ void scanFile(Sequence *seq) {
     }
 
     tick();
-    Fact *mlf = mlComplexity(esa, gc);
-    tock(b, "mlComplexity");
+    Fact *mlf = computeMLFact(esa);
+    tock(b, "computeMLFact");
     if (args.p) {
       printf("ML-Factors (%zu):\n", mlf->n);
       printFact(mlf);
     }
 
-    // calculate window complexity, TODO: does this make sense?
-    for (size_t j = 0; j < entries; j++) {
-      double facs = factorsFromTo(mlf, j * k, MIN(n, j * k + w) - 1);
-      ys[i][j] = (facs / w - mlf->cMin) / (mlf->cMax - mlf->cMin);
-    }
-    // TODO: window periodicity complexity?
-    // TODO: put this neatly in a different function?
-
+    tick();
+    mlComplexity(w, k, ys[2 * i], mlf, gc);
+    tock(b, "mlComplexity");
     freeFact(mlf);
 
     tick();
     Fact *lzf = computeLZFact(esa, false);
     tock(b, "computeLZFact");
     tick();
-    size_t plen;
-    Periodicity *ps = getPeriodicities(false, lzf, &plen);
-    tock(b, "getPeriodicities");
+    size_t *lens;
+    List **ls = getPeriodicityLists(true, lzf, &lens);
+    tock(b, "getPeriodicityLists");
+
     tick();
+    runComplexity(w, k, ys[2 * i + 1], n + 1, ls, lens);
+    tock(b, "runComplexity");
 
     if (args.p) {
       printf("LZ-Factors (%zu):\n", lzf->n);
       printFact(lzf);
-      printf("Periodicities (%zu):\n", plen);
-      for (size_t j = 0; j < plen; j++)
-        printPeriodicity(ps + j);
+      printf("Periodicities (%zu):\n", lens[n]);
+      for (size_t j = 0; j < n + 1; j++) {
+        List *curr = ls[j];
+        if (curr)
+          do {
+            printPeriodicity((Periodicity *)curr->value);
+            curr = curr->next;
+          } while (curr);
+      }
     }
 
     freeFact(lzf);
-    free(ps);
+    freePeriodicityLists(ls, n + 1, lens);
 
     freeEsa(esa);
   }
 
   if (!args.p) {
     if (args.g) { // print to be directly piped into gnuplot
-      gnuplotCode(w, k, seq->numSeq);
-      for (int i = 0; i < seq->numSeq; i++) {
+      gnuplotCode(w, k, 2 * seq->numSeq);
+      for (int i = 0; i < 2 * seq->numSeq; i++) {
         printPlot(k, entries, seq, ys);
         printf("e\n");
       }

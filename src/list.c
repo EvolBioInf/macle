@@ -29,6 +29,7 @@ void listPrepend(List **l, void *val) {
   *l = item;
 }
 
+// frees the list structure itself, NOT the memory at the value pointers
 void freeList(List **l) {
   List *curr = *l;
   List *tmp = NULL;

@@ -1,4 +1,5 @@
 #include "minunit.h"
+#include <string.h>
 #include <time.h>
 
 #include "esa.h"
@@ -27,7 +28,15 @@ char *test_knownExample() {
   Fact *lzf = computeLZFact(esa, false);
 
   size_t plen;
-  Periodicity *ps = getPeriodicities(false, lzf, &plen);
+  Periodicity *ps = getPeriodicities2(esa, &plen);
+  mu_assert(plen == 8, "wrong number of periodicities detected (easy algorithm)");
+  /* for (size_t i=0; i<plen; i++) */
+  /*   printPeriodicity(&ps[i]); */
+  free(ps);
+
+  ps = getPeriodicities(false, lzf, &plen);
+  /* for (size_t i=0; i<plen; i++) */
+  /*   printPeriodicity(&ps[i]); */
   mu_assert(plen == 8, "wrong number of periodicities detected");
 
   free(ps);
@@ -43,12 +52,12 @@ char *test_onlyRuns() {
   Fact *lzf = computeLZFact(esa, false);
 
   size_t plen;
-  Periodicity *ps = getPeriodicities(false, lzf, &plen);
-  mu_assert(plen == 16, "wrong number of periodicities detected");
+  Periodicity *ps = getPeriodicities2(esa, &plen);
+  mu_assert(plen == 16, "wrong number of periodicities detected (easy algorithm)");
   free(ps);
 
-  ps = getPeriodicities2(esa, &plen);
-  mu_assert(plen == 16, "wrong number of periodicities detected (easy algorithm)");
+  ps = getPeriodicities(false, lzf, &plen);
+  mu_assert(plen == 16, "wrong number of periodicities detected");
   free(ps);
 
   ps = getPeriodicities(true, lzf, &plen);

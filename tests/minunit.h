@@ -8,15 +8,12 @@
  */
 #pragma once
 
-#undef NDEBUG
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "dbg.h"
 
 // 30+i foreground, 40+i background, bold->add ;1
 #define ANSI_CLR_BLACK "\x1b[30m"
@@ -28,6 +25,8 @@ extern "C" {
 #define ANSI_CLR_CYAN "\x1b[36m"
 #define ANSI_CLR_WHITE "\x1b[37m"
 #define ANSI_CLR_RESET "\x1b[0m"
+
+#define log_err(M) fprintf(stderr, "[ERROR] %s:%d: " M "\n", __FILE__, __LINE__)
 
 #define mu_suite_start() char *message = NULL
 
@@ -41,7 +40,7 @@ extern "C" {
 
 #define mu_run_test(test)                                                                \
   do {                                                                                   \
-    debug("\n-----%s ", " " #test);                                                      \
+    fprintf(stderr, "-----  " #test "\n");                                               \
     message = test();                                                                    \
     tests_run++;                                                                         \
     if (message) {                                                                       \
@@ -52,12 +51,12 @@ extern "C" {
 #define RUN_TESTS(name)                                                                  \
   int main(int argc, char *argv[]) {                                                     \
     tests_run = 0;                                                                       \
-    argc = 1;                                                                            \
-    debug("---- RUNNING: %s", argv[0]);                                                  \
+    argc = argc;                                                                         \
+    fprintf(stderr, "RUNNING: %s\n", argv[0]);                                           \
     printf("----\nRUNNING: %s\n", argv[0]);                                              \
     char *result = name();                                                               \
     if (result != 0) {                                                                   \
-      fprintf(stderr, ANSI_CLR_RED "FAILED:" ANSI_CLR_RESET " %s\n", result);            \
+      printf(ANSI_CLR_RED "FAILED:" ANSI_CLR_RESET " %s\n", result);                     \
     } else {                                                                             \
       printf(ANSI_CLR_GREEN "ALL TESTS PASSED\n" ANSI_CLR_RESET);                        \
     }                                                                                    \

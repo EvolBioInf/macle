@@ -51,8 +51,8 @@ Periodicity *getPeriodicities2(Esa *esa, size_t *plen) {
       size_t L = lcs2(str, i - 1 - l, i - 1);
       size_t R = lcp2(str, n, i - l, i);
       if (L + R >= l && R < l) {
-        ps[*plen].b = i - l - L;
-        ps[*plen].e = i - 1 + R;
+        ps[*plen].b = i - l - L - 1; //again 0-indexed
+        ps[*plen].e = i - 1 + R - 1;
         ps[*plen].l = l;
         (*plen)++;
       }
@@ -89,7 +89,7 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, size_t **lens) {
       size_t L = lcs2(lzf->str, ejm1 - l, ejm1);
       size_t R = lcp2(lzf->str, lzf->strLen, bj - l, bj);
       if (L + R >= l && (R >= 1 || bj - l - L > bjm1)) {
-        Periodicity *p = newPeriodicity(bj - l - L, ejm1 + R, l);
+        Periodicity *p = newPeriodicity(bj - l - L - 1, ejm1 + R - 1, l);
         listAppend(&Lt1[p->b], p);
         (*lens)[p->b]++;
       }
@@ -99,7 +99,7 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, size_t **lens) {
       size_t L = lcs2(lzf->str, ejm1, ejm1 + l);
       size_t R = lcp2(lzf->str, lzf->strLen, bj, bj + l);
       if (L + R >= l && bj + l - 1 + R <= ej && L < l) {
-        Periodicity *p = newPeriodicity(bj - L, ejm1 + l + R, l);
+        Periodicity *p = newPeriodicity(bj - L - 1, ejm1 + l + R - 1, l);
         listAppend(&Lt1[p->b], p);
         (*lens)[p->b]++;
       }
@@ -134,7 +134,7 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, size_t **lens) {
 // prevOcc conforming to algorithm - 1-indexed and current value instead of -1
 static inline int64_t getPrevOcc(Fact *lzf, size_t i) {
   int64_t tmp = lzf->prevOcc[lzf->fact[i]];
-  return (tmp == -1 ? lzf->fact[i] : tmp) + 1;
+  return (tmp == -1 ? (int64_t)lzf->fact[i] : tmp) + 1;
 }
 
 // add given periodicity into corresponding same-beginning list
@@ -162,12 +162,12 @@ void calcType2Periodicities(List **Lt1, Fact *lzf, size_t **lens) {
     size_t ej = factEnd(lzf, j);   // e_j
     if (factLen(lzf, j) >= 4) {
       int64_t dj = bj - getPrevOcc(lzf, j);
-      for (size_t i = bj + 1; i < ej; i++) {
+      for (size_t i = bj; i < ej-1; i++) {
         List *curr = Lt1[i - dj];
         if (curr)
           do {
             Periodicity *p = (Periodicity *)(curr->value);
-            if (p->e + dj >= ej)
+            if (p->e + dj >= ej-1)
               break;
             Periodicity *newp = newPeriodicity(i, p->e + dj, p->l);
             /* listPrepend(&Lt1[i], newp); */ // XXX: doesn't work with prepend!!!
@@ -185,7 +185,7 @@ List **getPeriodicityLists(bool runsOnly, Fact *lzf, size_t **lens) {
   List **Lt1 = calcType1Periodicities(runsOnly, lzf, lens);
   calcType2Periodicities(Lt1, lzf, lens);
   //make prefix sum out of it
-  for (size_t i=1; i<=lzf->strLen; i++)
+  for (size_t i=1; i<lzf->strLen; i++)
     (*lens)[i] += (*lens)[i-1];
   return Lt1;
 }
@@ -214,7 +214,7 @@ Periodicity *collectPeriodicities(List **pl, size_t seqLen, size_t pnum) {
 Periodicity *getPeriodicities(bool runsOnly, Fact *lzf, size_t *pnum) {
   size_t *lens;
   List **pl = getPeriodicityLists(runsOnly, lzf, &lens);
-  *pnum = lens[lzf->strLen];
+  *pnum = lens[lzf->strLen-1];
   free(lens);
   return collectPeriodicities(pl, lzf->strLen, *pnum);
 }

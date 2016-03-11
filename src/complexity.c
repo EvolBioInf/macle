@@ -99,12 +99,13 @@ void runComplexity(size_t w, size_t k, double *y, size_t n, List **ls) {
   for (size_t i = 0; i < n; i++) {
     size_t len = 0;
     for (eachListItem(curr, ls[i])) {
-      len++;
       Periodicity *p = (Periodicity *)curr->value;
+      size_t num = persFromRun(p); //# of period. corresponding to this run
+      len += num;
       if (p->e + 1 < n)
-        fw_add(ft, n, p->e + 1, -1);
+        fw_add(ft, n, p->e + 1, -num);
     }
-    fw_add(ft, n, i, len); //all in same list have same beginning
+    fw_add(ft, n, i, len); // all in same list have same beginning
   }
 
   // collect result for each position from fenwick tree, sum up

@@ -107,7 +107,7 @@ void scanFile(Sequence *seq) {
     tock(b, "computeLZFact");
     tick();
     size_t pnum;
-    List **ls = getPeriodicityLists(false, lzf, &pnum);
+    List **ls = getPeriodicityLists(true, lzf, &pnum);
     tock(b, "getPeriodicityLists");
 
     tick();

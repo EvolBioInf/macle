@@ -32,10 +32,9 @@ char *test_knownExample() {
   mu_assert_eq(8, plen, "wrong number of periodicities detected (easy algorithm)");
   free(ps);
 
-  size_t *lens;
-  List **pl = getPeriodicityLists(false, lzf, &lens);
-  mu_assert_eq(8, lens[n], "wrong number of periodicities detected");
-  freePeriodicityLists(pl, n + 1, lens);
+  List **pl = getPeriodicityLists(false, lzf, &plen);
+  mu_assert_eq(8, plen, "wrong number of periodicities detected");
+  freePeriodicityLists(pl, n + 1);
 
   freeFact(lzf);
   freeEsa(esa);

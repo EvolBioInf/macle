@@ -41,3 +41,10 @@ void freeList(List **l) {
     } while (curr);
   *l = NULL;
 }
+
+size_t listLength(List *l) {
+  size_t len = 0;
+  for (eachListItem(curr, l))
+    len++;
+  return len;
+}

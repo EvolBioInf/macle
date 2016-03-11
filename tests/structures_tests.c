@@ -10,13 +10,13 @@ char *test_list() {
   for (int64_t i = 499; i >= 0; i--)
     listPrepend(&l, (void *)i);
 
-  List *curr = l;
   size_t i = 0;
-  do {
+  for (eachListItem(curr, l)) {
     mu_assert(curr->value == (void *)i, "wrong list value");
     i++;
-    curr = curr->next;
-  } while (curr);
+  }
+
+  mu_assert_eq(1000, listLength(l), "wrong list length");
 
   freeList(&l);
   mu_assert(l == NULL, "list pointer not NULL after free");

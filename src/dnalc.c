@@ -72,7 +72,7 @@ void scanFile(Sequence *seq) {
   size_t entries = (maxlen - w) / k + 1;
   double **ys = emalloc(2 * seq->numSeq * sizeof(double *));
   for (int i = 0; i < 2 * seq->numSeq; i++)
-    ys[i] = ecalloc(entries, sizeof(double));
+    ys[i] = ecalloc(entries + 1, sizeof(double));
 
   // TODO: use gc content of complete file or just current sequence?
   double gc = gcContent(seq);
@@ -106,30 +106,25 @@ void scanFile(Sequence *seq) {
     Fact *lzf = computeLZFact(esa, false);
     tock(b, "computeLZFact");
     tick();
-    size_t *lens;
-    List **ls = getPeriodicityLists(true, lzf, &lens);
+    size_t pnum;
+    List **ls = getPeriodicityLists(false, lzf, &pnum);
     tock(b, "getPeriodicityLists");
 
     tick();
-    runComplexity(w, k, ys[2 * i + 1], n + 1, ls, lens);
+    runComplexity(w, k, ys[2 * i + 1], n + 1, ls);
     tock(b, "runComplexity");
 
     if (args.p) {
       printf("LZ-Factors (%zu):\n", lzf->n);
       printFact(lzf);
-      printf("Periodicities (%zu):\n", lens[n]);
-      for (size_t j = 0; j < n + 1; j++) {
-        List *curr = ls[j];
-        if (curr)
-          do {
-            printPeriodicity((Periodicity *)curr->value);
-            curr = curr->next;
-          } while (curr);
-      }
+      printf("Periodicities (%zu):\n", pnum);
+      for (size_t j = 0; j < n + 1; j++)
+        for (eachListItem(curr, ls[j]))
+          printPeriodicity((Periodicity *)curr->value);
     }
 
     freeFact(lzf);
-    freePeriodicityLists(ls, n + 1, lens);
+    freePeriodicityLists(ls, n + 1);
 
     freeEsa(esa);
   }
@@ -146,7 +141,7 @@ void scanFile(Sequence *seq) {
     }
   }
 
-  for (int i = 0; i < seq->numSeq; i++)
+  for (int i = 0; i < 2 * seq->numSeq; i++)
     free(ys[i]);
   free(ys);
 }

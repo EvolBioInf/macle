@@ -124,6 +124,50 @@ char *test_randomSequence() {
   return NULL;
 }
 
+// compare: getting all, then filtering afterwards (as proposed in book)
+// vs. getting only runs directly (for better performance)
+char *test_randomOnlyRuns() {
+  size_t n = 1000000;
+  char *s = randSeq(n);
+  n++; //$ border
+  fprintnf(stdout, s, 80);
+  printf("\n");
+  Esa *esa = getEsa(s, n); // calculate esa
+  Fact *lzf = computeLZFact(esa, false);
+
+  size_t plen, plen2;
+  // get all, then remove non-runs
+  List **pl = getPeriodicityLists(false, lzf, &plen);
+  for (size_t i = 0; i < lzf->strLen; i++) {
+    Periodicity *lastp = NULL;
+    List *last = NULL;
+    for (eachListItem(curr, pl[i])) {
+      Periodicity *currp = (Periodicity *)curr->value;
+      if (lastp && lastp->b == currp->b && lastp->e == currp->e) {
+        last->next = curr->next;
+        free(currp);
+        free(curr);
+        plen--;
+        curr = last;
+      } else {
+        last = curr;
+        lastp = currp;
+      }
+    }
+  }
+  freePeriodicityLists(pl, n);
+
+  // get just runs
+  Periodicity *ps = getPeriodicities(true, lzf, &plen2);
+  free(ps);
+
+  freeFact(lzf);
+  freeEsa(esa);
+  free(s);
+  mu_assert_eq(plen2, plen, "number of runs does not match");
+  return NULL;
+}
+
 char *all_tests() {
   srand(time(NULL));
   mu_suite_start();
@@ -131,6 +175,8 @@ char *all_tests() {
   mu_run_test(test_onlyRuns);
   for (size_t i = 0; i < 5; i++)
     mu_run_test(test_randomSequence);
+  for (size_t i = 0; i < 5; i++)
+    mu_run_test(test_randomOnlyRuns);
   return NULL;
 }
 RUN_TESTS(all_tests)

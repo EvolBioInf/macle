@@ -70,6 +70,22 @@ static inline size_t factEnd(Fact *f, size_t i) {
   return (i < f->n - 1 ? f->fact[i + 1] : f->strLen);
 }
 
+// helper to avoid duplication
+static inline bool addPeriodicity(bool runsOnly, List **Lt1, size_t b, size_t e,
+                                  size_t l) {
+  if (Lt1[b] && runsOnly) { // if we want only runs,
+    List *last = listLast(Lt1[b]);
+    if (((Periodicity *)last->value)->e != e) { // add only if prev. is not same interval
+      listAppend(&last, newPeriodicity(b, e, l));
+      return true;
+    }
+  } else { // otherwise, add in any case
+    listAppend(&Lt1[b], newPeriodicity(b, e, l));
+    return true;
+  }
+  return false;
+}
+
 // Algorithm 5.17 - calculate type1 periodicities
 List **calcType1Periodicities(bool runsOnly, Fact *lzf, size_t *pnum) {
   (*pnum) = 0;
@@ -89,9 +105,10 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, size_t *pnum) {
       size_t L = lcs2(lzf->str, ejm1 - l, ejm1);
       size_t R = lcp2(lzf->str, lzf->strLen, bj - l, bj);
       if (L + R >= l && (R >= 1 || bj - l - L > bjm1)) {
-        Periodicity *p = newPeriodicity(bj - l - L - 1, ejm1 + R - 1, l);
-        listAppend(&Lt1[p->b], p);
-        (*pnum)++;
+        size_t b = bj - l - L - 1;
+        size_t e = ejm1 + R - 1;
+        if (addPeriodicity(runsOnly, Lt1, b, e, l))
+          (*pnum)++;
       }
     }
 
@@ -99,36 +116,18 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, size_t *pnum) {
       size_t L = lcs2(lzf->str, ejm1, ejm1 + l);
       size_t R = lcp2(lzf->str, lzf->strLen, bj, bj + l);
       if (L + R >= l && bj + l - 1 + R <= ej && L < l) {
-        Periodicity *p = newPeriodicity(bj - L - 1, ejm1 + l + R - 1, l);
-        listAppend(&Lt1[p->b], p);
-        (*pnum)++;
+        size_t b = bj - L - 1;
+        size_t e = ejm1 + l + R - 1;
+        if (addPeriodicity(runsOnly, Lt1, b, e, l))
+          (*pnum)++;
       }
     }
   }
 
-  if (runsOnly) { // remove out non-minimal periodicities -> keep "runs"
-    for (size_t i = 0; i < lzf->strLen; i++) {
-      Periodicity *lastp = NULL;
-      List *last = NULL;
-      for (eachListItem(curr, Lt1[i])) {
-        Periodicity *currp = (Periodicity *)curr->value;
-        if (lastp && lastp->b == currp->b && lastp->e == currp->e) {
-          last->next = curr->next;
-          free(currp);
-          free(curr);
-          (*pnum)--;
-          curr = last;
-        } else {
-          last = curr;
-          lastp = currp;
-        }
-      }
-    }
-  }
   return Lt1;
 }
 
-// prevOcc conforming to algorithm - 1-indexed and current value instead of -1
+// prevOcc conforming to algorithm: 1-indexed and current value instead of -1
 static inline int64_t getPrevOcc(Fact *lzf, size_t i) {
   int64_t tmp = lzf->prevOcc[lzf->fact[i]];
   return (tmp == -1 ? (int64_t)lzf->fact[i] : tmp) + 1;

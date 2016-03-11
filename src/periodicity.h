@@ -17,3 +17,8 @@ Periodicity *collectPeriodicities(List **pl, size_t seqLen, size_t pnum);
 void freePeriodicityLists(List **pl, size_t seqLen);
 
 Periodicity *getPeriodicities2(Esa *esa, size_t *pnum);
+
+/* number of periodicities corresponding to a run */
+static inline size_t persFromRun(Periodicity *p) {
+  return (p->e - p->b + 1) / (2 * p->l);
+}

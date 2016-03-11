@@ -48,3 +48,12 @@ size_t listLength(List *l) {
     len++;
   return len;
 }
+
+// returns last element, or null
+List *listLast(List *l) {
+  List *last = NULL;
+  for (eachListItem(curr, l))
+    if (!curr->next)
+      last = curr;
+  return last;
+}

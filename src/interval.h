@@ -14,10 +14,11 @@ typedef struct interval {
 Interval *newInterval(int lcp, int lb, int rb);
 void addChild(Interval *parent, Interval *child);
 void printInterval(Interval *in);
+void printLcpTree(Interval *in);
 
 bool getSubInterval(Interval *ret, Esa *esa, Interval iv, char c);
 Interval getInterval(Esa *esa, char *query, size_t n);
 
-// TODO: fix these
 Interval *getLcpTree(Esa *esa);
-int64_t getLcp(Interval *tree, size_t i, size_t j);
+void freeLcpTree(Interval *iv);
+int64_t getLcp(Esa *esa, Interval *tree, size_t i, size_t j);

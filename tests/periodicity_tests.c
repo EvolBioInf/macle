@@ -24,7 +24,7 @@ int cmpPer(const void *a, const void *b) {
 char *test_knownExample() {
   char *s = "AACCAACCAACCAA$"; // from Ohlebusch book
   size_t n = strlen(s);
-  Esa *esa = getEsa(s, n + 1); // calculate esa, including $
+  Esa *esa = getEsa(s, n); // calculate esa, including $
   Fact *lzf = computeLZFact(esa, false);
 
   size_t plen;
@@ -32,9 +32,9 @@ char *test_knownExample() {
   mu_assert_eq(8, plen, "wrong number of periodicities detected (easy algorithm)");
   free(ps);
 
-  List **pl = getPeriodicityLists(false, lzf, &plen);
+  List **pl = getPeriodicityLists(false, lzf, esa, &plen);
   mu_assert_eq(8, plen, "wrong number of periodicities detected");
-  freePeriodicityLists(pl, n + 1);
+  freePeriodicityLists(pl, n);
 
   freeFact(lzf);
   freeEsa(esa);
@@ -52,11 +52,11 @@ char *test_onlyRuns() {
   mu_assert_eq(16, plen, "wrong number of periodicities detected (easy algorithm)");
   free(ps);
 
-  ps = getPeriodicities(false, lzf, &plen);
+  ps = getPeriodicities(false, lzf, esa, &plen);
   mu_assert_eq(16, plen, "wrong number of periodicities detected");
   free(ps);
 
-  ps = getPeriodicities(true, lzf, &plen);
+  ps = getPeriodicities(true, lzf, esa, &plen);
   mu_assert_eq(4, plen, "wrong number of runs detected");
   free(ps);
 
@@ -76,7 +76,7 @@ char *test_randomSequence() {
   size_t plen, plen2;
   Periodicity *ps, *ps2;
 
-  ps = getPeriodicities(false, lzf, &plen);
+  ps = getPeriodicities(false, lzf, esa, &plen);
   qsort(ps, plen, sizeof(Periodicity), cmpPer);
   ps2 = getPeriodicities2(esa, &plen2);
   qsort(ps2, plen2, sizeof(Periodicity), cmpPer);
@@ -137,7 +137,7 @@ char *test_randomOnlyRuns() {
 
   size_t plen, plen2;
   // get all, then remove non-runs
-  List **pl = getPeriodicityLists(false, lzf, &plen);
+  List **pl = getPeriodicityLists(false, lzf, esa, &plen);
   for (size_t i = 0; i < lzf->strLen; i++) {
     Periodicity *lastp = NULL;
     List *last = NULL;
@@ -158,7 +158,7 @@ char *test_randomOnlyRuns() {
   freePeriodicityLists(pl, n);
 
   // get just runs
-  Periodicity *ps = getPeriodicities(true, lzf, &plen2);
+  Periodicity *ps = getPeriodicities(true, lzf, esa, &plen2);
   free(ps);
 
   freeFact(lzf);
@@ -173,9 +173,9 @@ char *all_tests() {
   mu_suite_start();
   mu_run_test(test_knownExample);
   mu_run_test(test_onlyRuns);
-  for (size_t i = 0; i < 5; i++)
+  for (size_t i = 0; i < 3; i++)
     mu_run_test(test_randomSequence);
-  for (size_t i = 0; i < 5; i++)
+  for (size_t i = 0; i < 3; i++)
     mu_run_test(test_randomOnlyRuns);
   return NULL;
 }

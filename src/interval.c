@@ -6,13 +6,22 @@
 #include "interval.h"
 
 Interval *newInterval(int lcp, int lb, int rb) {
-  Interval *dummy = malloc(sizeof(Interval));
+  Interval *dummy = emalloc(sizeof(Interval));
   dummy->lcp = lcp;
   dummy->lb = lb;
   dummy->rb = rb;
   dummy->numChildren = 0;
   dummy->childList = NULL;
   return dummy;
+}
+
+void freeLcpTree(Interval *iv) {
+  for (size_t i = 0; i < iv->numChildren; i++) {
+    freeLcpTree(iv->childList[i]);
+  }
+  if (iv->childList)
+    free(iv->childList);
+  free(iv);
 }
 
 void addChild(Interval *parent, Interval *child) {
@@ -27,7 +36,7 @@ void printInterval(Interval *in) {
   if (in->numChildren)
     for (size_t i = 0; i < in->numChildren; i++) {
       Interval *child = in->childList[i];
-      printf(": %ld-[%ld..%ld]", child->lcp, child->lb, child->rb);
+      printf(", %ld-[%ld..%ld]", child->lcp, child->lb, child->rb);
     }
   printf("\n");
 }
@@ -103,8 +112,6 @@ Interval getInterval(Esa *esa, char *query, size_t n) {
   return iv;
 }
 
-// TODO: fix lcp tree stuff or implement other solution
-
 Interval *getLcpTree(Esa *esa) {
   esa->lcp[0] = esa->lcp[esa->n] = -1;
   Interval *dummy = newInterval(-2, 0, esa->n - 1);
@@ -116,7 +123,7 @@ Interval *getLcpTree(Esa *esa) {
   stackPush(s, root);
 
   for (size_t i = 1; i <= esa->n; i++) {
-    int lb = i - 1;
+    int64_t lb = i - 1;
     while (esa->lcp[i] < ((Interval *)stackTop(s))->lcp) {
       ((Interval *)stackTop(s))->rb = i - 1;
       last = (Interval *)stackPop(s);
@@ -128,30 +135,41 @@ Interval *getLcpTree(Esa *esa) {
     }
     if (esa->lcp[i] > ((Interval *)stackTop(s))->lcp) {
       Interval *iv = newInterval(esa->lcp[i], lb, -1);
-      if (last != NULL)
+      if (last != NULL) {
         addChild(iv, last);
+        last = NULL; // was missing in course book!!
+      }
       stackPush(s, iv);
     }
   }
-  last = (Interval *)stackPop(s); // pop (dummy) root
+  // pop and free fake root
+  last = (Interval *)stackPop(s);
+  free(last->childList);
+  free(last);
+
   free(dummy);
   freeStack(s);
   return root;
 }
 
 // get lcp between two arbitrary suffixes
-int64_t getLcp(Interval *tree, size_t i, size_t j) {
+int64_t getLcp(Esa *esa, Interval *tree, size_t i, size_t j) {
+  if (i == j)
+    return esa->n - esa->sa[i];
   size_t l = MIN(i, j);
   size_t r = MAX(i, j);
+  if (r - l == 1)
+    return esa->lcp[r];
   Interval *curr = tree;
   Interval *better;
-  printf("look for %zu-%zu\n", l, r);
+  /* printf("look for %zu-%zu\n", l, r); */
   do {
-    printf("(lb=%zu, rb=%zu, lcp=%zu)\n", curr->lb, curr->rb, curr->lcp);
+    /* printf("(lb=%zu, rb=%zu, lcp=%zu)\n", curr->lb, curr->rb, curr->lcp); */
     better = NULL;
     for (size_t k = 0; k < curr->numChildren; k++) {
       Interval *child = curr->childList[k];
-      printf("look at (lb=%zu, rb=%zu, lcp=%zu)\n", child->lb, child->rb, child->lcp);
+      /* printf("look at (lb=%zu, rb=%zu, lcp=%zu)\n", child->lb, child->rb, child->lcp);
+       */
       if (child->lb <= l && child->rb >= r && (!better || better->lcp < child->lcp)) {
         better = child;
       }

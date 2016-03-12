@@ -28,8 +28,14 @@ static char *str = "abbaabbbaaabab";
 char *test_LempelZiv() {
   size_t n = strlen(seq);
   Esa *esa = getEsa(seq, n); // calculate esa, including $
+  int64_t *oldlcp = malloc((esa->n + 1) * sizeof(int64_t));
+  memcpy(oldlcp, esa->lcp, (esa->n + 1) * sizeof(int64_t));
+
   Fact *lzf = computeLZFact(esa, false);
-  mu_assert(lzf->n == 20, "wrong number of LZ factors");
+  for (size_t i = 0; i < esa->n + 1; i++) // this was actually a bug!
+    mu_assert_eq(oldlcp[i], esa->lcp[i], "old lcp values were changed!");
+
+  mu_assert_eq(20, lzf->n, "wrong number of LZ factors");
 
   for (size_t i = 0; i < lzf->n; i++) {
     mu_assert(!strncmp(lzf->str + lzf->fact[i], factors[i], factLen(lzf, i)),
@@ -37,6 +43,7 @@ char *test_LempelZiv() {
   }
 
   freeFact(lzf);
+  free(oldlcp);
   freeEsa(esa);
   return NULL;
 }

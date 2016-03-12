@@ -36,36 +36,45 @@ size_t *computeLpf(Esa *esa, int64_t **prevOccP) {
   int64_t *sa = esa->sa;
   int64_t *lcp = esa->lcp;
   sa[n] = -1;
-  lcp[0] = 0;
-  lcp[n] = 0;
+  int64_t lcpn = lcp[n];
+  lcp[n] = 0; // required for algorithm
+
   lpf[n] = 0;
   Stack *s = newStack(1);
+  Stack *sLcp = newStack(1);
   stackPush(s, 0);
+  stackPush(sLcp, 0);
 
   for (size_t i = 1; i <= n; i++) {
+    int64_t currLcp = lcp[i];
     while (
         !stackEmpty(s) &&
         (sa[i] <
          sa[(size_t)stackTop(s)] /* ||  //TODO: clarify - this or-branch seems wrong?
             (sa[i] > sa[(size_t)stackTop(s)] && lcp[i] <= lcp[(size_t)stackTop(s)]) */)) {
       if (sa[i] < sa[(size_t)stackTop(s)]) {
-        lpf[sa[(size_t)stackTop(s)]] = MAX(lcp[(size_t)stackTop(s)], lcp[i]);
-        lcp[i] = MIN(lcp[(size_t)stackTop(s)], lcp[i]);
+        lpf[sa[(size_t)stackTop(s)]] = MAX((int64_t)stackTop(sLcp), currLcp);
+        currLcp = MIN((int64_t)stackTop(sLcp), currLcp);
       } else
-        lpf[sa[(size_t)stackTop(s)]] = lcp[(size_t)stackTop(s)];
+        lpf[sa[(size_t)stackTop(s)]] = (int64_t)stackTop(sLcp);
       int64_t v = (int64_t)stackPop(s);
+      int64_t vLcp = (int64_t)stackPop(sLcp);
       // fill prevOcc
       if (lpf[sa[v]] == 0)
         prevOcc[sa[v]] = -1;
-      else if (lcp[v] > lcp[i])
+      else if (vLcp > currLcp)
         prevOcc[sa[v]] = sa[(size_t)stackTop(s)];
       else
         prevOcc[sa[v]] = sa[i];
     }
-    if (i < n)
+    if (i < n) {
       stackPush(s, (void *)i);
+      stackPush(sLcp, (void *)currLcp);
+    }
   }
   freeStack(s);
+  freeStack(sLcp);
+  lcp[n] = lcpn; // restore last value
 
   *prevOccP = prevOcc;
   return lpf;

@@ -22,3 +22,6 @@ Esa *getEsa(char *seq, size_t n);
 void freeEsa(Esa *esa);
 
 void printEsa(Esa *esa);
+
+int64_t *precomputeLcp(Esa *esa);
+int64_t getLcp(Esa *esa, int64_t *lcptab, size_t sai, size_t saj);

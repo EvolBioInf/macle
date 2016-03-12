@@ -153,7 +153,7 @@ Interval *getLcpTree(Esa *esa) {
 }
 
 // get lcp between two arbitrary suffixes
-int64_t getLcp(Esa *esa, Interval *tree, size_t i, size_t j) {
+int64_t getLcpWithTree(Esa *esa, Interval *tree, size_t i, size_t j) {
   if (i == j)
     return esa->n - esa->sa[i];
   size_t l = MIN(i, j);

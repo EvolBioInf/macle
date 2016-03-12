@@ -60,7 +60,7 @@ char *test_lcpTreeSmall() {
   for (size_t i = 0; i < n; i++)
     for (size_t j = 0; j < n; j++) {
       int64_t exp = lcpNaive(seq2, n, esa->sa[i], esa->sa[j]);
-      int64_t obs = getLcp(esa, tree, i, j);
+      int64_t obs = getLcpWithTree(esa, tree, i, j);
       if (exp != obs)
         printf("tried %zu and %zu", i, j);
       mu_assert_eq(exp, obs, "wrong lcp value");
@@ -81,7 +81,7 @@ char *test_lcpTree() {
     size_t a = rand() % (n - 10) + 5;
     size_t b = a + (rand() % 10) - 5;
     size_t exp = lcpNaive(s, n + 1, a, b);
-    size_t obs = getLcp(esa, tree, esa->isa[a], esa->isa[b]);
+    size_t obs = getLcpWithTree(esa, tree, esa->isa[a], esa->isa[b]);
     if (exp != obs)
       fprintf(stderr, "tried %zu and %zu...\n", a, b);
     mu_assert_eq(exp, obs, "lcp not correct");

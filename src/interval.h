@@ -21,4 +21,4 @@ Interval getInterval(Esa *esa, char *query, size_t n);
 
 Interval *getLcpTree(Esa *esa);
 void freeLcpTree(Interval *iv);
-int64_t getLcp(Esa *esa, Interval *tree, size_t i, size_t j);
+int64_t getLcpWithTree(Esa *esa, Interval *tree, size_t i, size_t j);

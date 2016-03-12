@@ -44,7 +44,7 @@ char *test_knownExample() {
 char *test_onlyRuns() {
   char *s = "AAAAAAAAGCGCGCGCGCGCGCGTTTTTTTTTTTTACTACTACTACTACTACTA$";
   size_t n = strlen(s);
-  Esa *esa = getEsa(s, n + 1); // calculate esa, including $
+  Esa *esa = getEsa(s, n); // calculate esa, including $
   Fact *lzf = computeLZFact(esa, false);
 
   size_t plen;

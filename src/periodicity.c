@@ -1,5 +1,6 @@
 #include "prelude.h"
 #include "eprintf.h"
+#include "bench.h"
 
 #include "lempelziv.h"
 #include "periodicity.h"
@@ -17,10 +18,26 @@ Periodicity *newPeriodicity(size_t b, size_t e, size_t l) {
 
 void printPeriodicity(Periodicity *p) { printf("(%zu,%zu,%zu)\n", p->b, p->e, p->l); }
 
-// TODO: maybe efficient internal lcp, and lcs (longest common suffix) (Ohlebusch!)
+// TODO: lcs (longest common suffix) (Ohlebusch!), or try via reverse sequence ESA?
 
-static inline int64_t lcp(Esa *esa, Interval *tree, size_t i, size_t j) {
-  return getLcp(esa, tree, esa->isa[i - 1], esa->isa[j - 1]);
+// for small lcps naive is faster -> try naive, then fall back to efficient RMQ
+static inline int64_t lcp(Esa *esa, int64_t *lcptab, size_t i, size_t j) {
+  if (i>esa->n || j>esa->n)
+    return 0;
+  i--;
+  j--;
+  uint64_t k = 0;
+  bool lazy=false;
+  while (MAX(i, j) + k < esa->n && esa->str[k + i] == esa->str[k + j]) {
+    k++;
+    if (k>20) {
+      lazy=true;
+      break;
+    }
+  }
+  if (!lazy)
+    return k;
+  return MAX(0,getLcp(esa, lcptab, i - 1, j - 1));
 }
 
 // naive: length of lcp of suffixes i and j of given seq (1-indexed)
@@ -93,6 +110,9 @@ static inline bool addPeriodicity(bool runsOnly, List **Lt1, size_t b, size_t e,
 // Algorithm 5.17 - calculate type1 periodicities
 List **calcType1Periodicities(bool runsOnly, Fact *lzf, Esa *esa, size_t *pnum) {
   /* Interval *tree = getLcpTree(esa); */
+  tick();
+  int64_t *lcptab = precomputeLcp(esa);
+  tock("precomputeLcp");
   (*pnum) = 0;
   // as required, array of lists of max. per. of type 1
   // indexed by start position, each sorted by end position
@@ -108,8 +128,9 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, Esa *esa, size_t *pnum) 
     size_t max = MIN(sjLen + sjm1Len - 1, ejm1);
     for (size_t l = 1; l <= max; l++) {
       size_t L = lcs2(lzf->str, ejm1 - l, ejm1);
-      size_t R = lcp2(lzf->str, lzf->strLen, bj - l, bj);
+      /* size_t R = lcp2(lzf->str, lzf->strLen, bj - l, bj); */
       /* size_t R = lcp(esa, tree, bj - l, bj); */
+      size_t R = lcp(esa, lcptab, bj - l, bj);
       if (L + R >= l && (R >= 1 || bj - l - L > bjm1)) {
         size_t b = bj - l - L - 1;
         size_t e = ejm1 + R - 1;
@@ -120,8 +141,9 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, Esa *esa, size_t *pnum) 
 
     for (size_t l = 1; l <= sjLen; l++) {
       size_t L = lcs2(lzf->str, ejm1, ejm1 + l);
-      size_t R = lcp2(lzf->str, lzf->strLen, bj, bj + l);
+      /* size_t R = lcp2(lzf->str, lzf->strLen, bj, bj + l); */
       /* size_t R = lcp(esa, tree, bj, bj + l); */
+      size_t R = lcp(esa, lcptab, bj, bj + l);
       if (L + R >= l && bj + l - 1 + R <= ej && L < l) {
         size_t b = bj - L - 1;
         size_t e = ejm1 + l + R - 1;
@@ -132,6 +154,7 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, Esa *esa, size_t *pnum) 
   }
 
   /* freeLcpTree(tree); */
+  free(lcptab);
   return Lt1;
 }
 

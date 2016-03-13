@@ -1,6 +1,7 @@
 #include "prelude.h"
 
 #include "args.h"
+#include "bench.h"
 #include "eprintf.h"
 #include "gsl_rng.h"
 
@@ -10,21 +11,6 @@
 #include "list.h"
 #include "periodicity.h"
 #include "complexity.h"
-
-// ---- for benchmarking ----
-#include <sys/resource.h>
-struct rusage ruse;
-double last_tick_time = 0;
-#define CPU_TIME                                                                         \
-  (getrusage(RUSAGE_SELF, &ruse),                                                        \
-   ruse.ru_utime.tv_sec + ruse.ru_stime.tv_sec +                                         \
-       1e-6 * (ruse.ru_utime.tv_usec + ruse.ru_stime.tv_usec))
-void tick() { last_tick_time = CPU_TIME; }
-void tock(bool b, char *str) {
-  if (b)
-    fprintf(stderr, "[BENCH] %s: %.2fs\n", str, CPU_TIME - last_tick_time);
-}
-// ---------------------------
 
 void gnuplotCode(uint32_t w, uint32_t k, int n) {
   printf( //"set terminal png; "
@@ -54,7 +40,6 @@ void printPlot(uint32_t k, size_t n, Sequence *seq, double **ys) {
 
 // read sequence, do stuff
 void scanFile(Sequence *seq) {
-  bool b = args.b;
   size_t maxlen = maxSeqLen(seq); // this implies the domain of the plot
   size_t minlen = minSeqLen(seq); // this restricts the reasonable window sizes
 
@@ -83,7 +68,7 @@ void scanFile(Sequence *seq) {
 
     tick();
     Esa *esa = getEsa(t, n + 1); // esa for sequence+$
-    tock(b, "getEsa");
+    tock("getEsa");
     if (args.p) {
       printf("%s\n", seq->headers[i]);
       /* printEsa(esa); */
@@ -91,7 +76,7 @@ void scanFile(Sequence *seq) {
 
     tick();
     Fact *mlf = computeMLFact(esa);
-    tock(b, "computeMLFact");
+    tock("computeMLFact");
     if (args.p) {
       printf("ML-Factors (%zu):\n", mlf->n);
       printFact(mlf);
@@ -99,20 +84,20 @@ void scanFile(Sequence *seq) {
 
     tick();
     mlComplexity(w, k, ys[2 * i], mlf, gc);
-    tock(b, "mlComplexity");
+    tock("mlComplexity");
     freeFact(mlf);
 
     tick();
     Fact *lzf = computeLZFact(esa, false);
-    tock(b, "computeLZFact");
+    tock("computeLZFact");
     tick();
     size_t pnum;
     List **ls = getPeriodicityLists(true, lzf, esa, &pnum);
-    tock(b, "getPeriodicityLists");
+    tock("getPeriodicityLists");
 
     tick();
     runComplexity(w, k, ys[2 * i + 1], n + 1, ls);
-    tock(b, "runComplexity");
+    tock("runComplexity");
 
     if (args.p) {
       printf("LZ-Factors (%zu):\n", lzf->n);

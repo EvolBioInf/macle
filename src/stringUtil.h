@@ -5,6 +5,7 @@
  * File created on Wed Dec  6 17:19:12 2006.
  *****************************************************************************/
 #pragma once
+#include "prelude.h"
 
 char *randSeq(size_t n);
 
@@ -17,7 +18,7 @@ char *strdup2(char *s);
 void strtolower(char *s, size_t l);
 void strtoupper(char *s, size_t l);
 
-void reverse(char *s);
+void reverse(char *s, size_t n);
 void replace(char *string, char original, char replacement);
 void split(char *line, char *splitC, char **splitArray, int *arrayLen);
 

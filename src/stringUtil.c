@@ -160,9 +160,9 @@ char *cleanWord(char *word) {
 }
 
 /* reverse: reverse stirng s in place */
-void reverse(char *s) {
+void reverse(char *s, size_t n) {
   int c, i, j;
-  for (i = 0, j = strlen(s) - 1; i < j; i++, j--) {
+  for (i = 0, j = n - 1; i < j; i++, j--) {
     c = s[i];
     s[i] = s[j];
     s[j] = c;

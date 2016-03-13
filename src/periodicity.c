@@ -2,6 +2,7 @@
 #include "eprintf.h"
 #include "bench.h"
 
+#include "stringUtil.h"
 #include "lempelziv.h"
 #include "periodicity.h"
 #include "esa.h"
@@ -18,26 +19,29 @@ Periodicity *newPeriodicity(size_t b, size_t e, size_t l) {
 
 void printPeriodicity(Periodicity *p) { printf("(%zu,%zu,%zu)\n", p->b, p->e, p->l); }
 
-// TODO: lcs (longest common suffix) (Ohlebusch!), or try via reverse sequence ESA?
+#define LAZY_CONST 0
 
 // for small lcps naive is faster -> try naive, then fall back to efficient RMQ
 static inline int64_t lcp(Esa *esa, int64_t *lcptab, size_t i, size_t j) {
-  if (i>esa->n || j>esa->n)
-    return 0;
   i--;
   j--;
+  if (i>=esa->n || j>=esa->n)
+    return 0;
   uint64_t k = 0;
   bool lazy=false;
-  while (MAX(i, j) + k < esa->n && esa->str[k + i] == esa->str[k + j]) {
-    k++;
-    if (k>20) {
+  while (MAX(i, j) + k < esa->n && esa->str[k + i] == esa->str[k + j])
+    if (++k>LAZY_CONST)
       lazy=true;
-      break;
-    }
-  }
   if (!lazy)
     return k;
-  return MAX(0,getLcp(esa, lcptab, i - 1, j - 1));
+  k = getLcp(esa, lcptab, i, j);
+  return MAX(k,0);
+}
+
+// TODO: lcs (longest common suffix) (Ohlebusch!), or fix this variant?
+static inline int64_t lcs(Esa *resa, int64_t *rlcptab, size_t i, size_t j) {
+  int64_t max = lcp(resa, rlcptab, resa->n-i+1, resa->n-j+1);
+  return MAX(0,max);
 }
 
 // naive: length of lcp of suffixes i and j of given seq (1-indexed)
@@ -109,10 +113,18 @@ static inline bool addPeriodicity(bool runsOnly, List **Lt1, size_t b, size_t e,
 
 // Algorithm 5.17 - calculate type1 periodicities
 List **calcType1Periodicities(bool runsOnly, Fact *lzf, Esa *esa, size_t *pnum) {
-  /* Interval *tree = getLcpTree(esa); */
   tick();
   int64_t *lcptab = precomputeLcp(esa);
   tock("precomputeLcp");
+  /*
+  tick();
+  char *srev = strdup2(esa->str);
+  reverse(srev, esa->n);
+  Esa *revesa = getEsa(srev, esa->n);
+  int64_t *revlcptab = precomputeLcp(esa);
+  tock("prepare reverse seq");
+  */
+
   (*pnum) = 0;
   // as required, array of lists of max. per. of type 1
   // indexed by start position, each sorted by end position
@@ -128,8 +140,8 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, Esa *esa, size_t *pnum) 
     size_t max = MIN(sjLen + sjm1Len - 1, ejm1);
     for (size_t l = 1; l <= max; l++) {
       size_t L = lcs2(lzf->str, ejm1 - l, ejm1);
+      /* size_t L = lcs(revesa, revlcptab, ejm1 - l, ejm1); */
       /* size_t R = lcp2(lzf->str, lzf->strLen, bj - l, bj); */
-      /* size_t R = lcp(esa, tree, bj - l, bj); */
       size_t R = lcp(esa, lcptab, bj - l, bj);
       if (L + R >= l && (R >= 1 || bj - l - L > bjm1)) {
         size_t b = bj - l - L - 1;
@@ -141,8 +153,8 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, Esa *esa, size_t *pnum) 
 
     for (size_t l = 1; l <= sjLen; l++) {
       size_t L = lcs2(lzf->str, ejm1, ejm1 + l);
+      /* size_t L = lcs(revesa, revlcptab, ejm1, ejm1 + l); */
       /* size_t R = lcp2(lzf->str, lzf->strLen, bj, bj + l); */
-      /* size_t R = lcp(esa, tree, bj, bj + l); */
       size_t R = lcp(esa, lcptab, bj, bj + l);
       if (L + R >= l && bj + l - 1 + R <= ej && L < l) {
         size_t b = bj - L - 1;
@@ -153,8 +165,10 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, Esa *esa, size_t *pnum) 
     }
   }
 
-  /* freeLcpTree(tree); */
   free(lcptab);
+  /* free(revlcptab); */
+  /* freeEsa(revesa); */
+  /* free(srev); */
   return Lt1;
 }
 

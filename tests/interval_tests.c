@@ -5,6 +5,7 @@
 #include "stringUtil.h"
 #include "esa.h"
 #include "interval.h"
+#include "periodicity.h"
 
 // hotspot paper example
 static char *seq = "GCACGCACGCACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA"
@@ -75,6 +76,41 @@ char *test_lcpSmall() {
   return NULL;
 }
 
+char *test_lcplcs1Indexed() {
+  size_t n = 1000;
+  char *s = randSeq(n++);
+
+  Esa *esa = getEsa(s, n); // calculate esa, including $
+  int64_t *lcptab = precomputeLcp(esa);
+
+  char *srev = strdup2(s);
+  reverse(srev, n);
+  Esa *resa = getEsa(srev, n);
+  int64_t *rlcptab = precomputeLcp(resa);
+
+  for (size_t i = 0; i <= n; i++)
+    for (size_t j = 0; j <= n; j++) {
+      int64_t exp = lcp2(s, n, i, j);
+      int64_t obs = lcp(esa, lcptab, i, j);
+      if (exp != obs)
+        printf("tried %zu and %zu", i, j);
+      mu_assert_eq(exp, obs, "wrong tree lcp value");
+      exp = lcs2(s, i, j);
+      obs = lcs(resa, rlcptab, i, j);
+      if (exp != obs)
+        printf("tried %zu and %zu", i, j);
+      mu_assert_eq(exp, obs, "wrong tree lcs value");
+    }
+
+  free(rlcptab);
+  free(lcptab);
+  freeEsa(resa);
+  freeEsa(esa);
+  free(srev);
+  free(s);
+  return NULL;
+}
+
 char *test_lcpRand() {
   size_t n = 1000000;
   char *s = randSeq(n);
@@ -106,6 +142,7 @@ char *all_tests() {
   mu_suite_start();
   mu_run_test(test_intervals);
   mu_run_test(test_lcpSmall);
+  mu_run_test(test_lcplcs1Indexed);
   mu_run_test(test_lcpRand);
   return NULL;
 }

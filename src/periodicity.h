@@ -1,5 +1,6 @@
 #pragma once
 #include "esa.h"
+#include "factors.h"
 #include "list.h"
 
 typedef struct Periodicity {
@@ -9,6 +10,10 @@ typedef struct Periodicity {
 } Periodicity;
 
 void printPeriodicity(Periodicity *p);
+
+//these two only exported for test cases
+size_t lcs2(char *str, int64_t i, int64_t j);
+size_t lcp2(char *str, size_t n, size_t i, size_t j);
 
 Periodicity *getPeriodicities(bool runsOnly, Fact *lzf, Esa *esa, size_t *pnum);
 

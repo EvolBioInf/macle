@@ -94,6 +94,8 @@ int64_t *precomputeLcp(Esa *esa) {
 }
 
 int64_t getLcp(Esa *esa, int64_t *lcptab, size_t sai, size_t saj) {
+  if (sai==saj)
+    return esa->n-sai;
   size_t l = MIN(esa->isa[sai], esa->isa[saj])+1;
   size_t r = MAX(esa->isa[sai], esa->isa[saj]);
   return RMQ(esa->lcp, esa->n+1, lcptab, l, r);

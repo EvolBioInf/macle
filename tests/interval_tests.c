@@ -52,42 +52,50 @@ size_t lcpNaive(char *str, size_t n, size_t i, size_t j) {
   return k;
 }
 
-char *test_lcpTreeSmall() {
+char *test_lcpSmall() {
   size_t n = strlen(seq2);
   Esa *esa = getEsa(seq2, n); // calculate esa, including $
   Interval *tree = getLcpTree(esa);
+  int64_t *lcptab = precomputeLcp(esa);
 
   for (size_t i = 0; i < n; i++)
     for (size_t j = 0; j < n; j++) {
       int64_t exp = lcpNaive(seq2, n, esa->sa[i], esa->sa[j]);
       int64_t obs = getLcpWithTree(esa, tree, i, j);
-      if (exp != obs)
+      int64_t obs2 = getLcp(esa, lcptab, esa->sa[i], esa->sa[j]);
+      if (exp != obs || exp != obs2)
         printf("tried %zu and %zu", i, j);
-      mu_assert_eq(exp, obs, "wrong lcp value");
+      mu_assert_eq(exp, obs, "wrong tree lcp value");
+      mu_assert_eq(exp, obs2, "wrong RMQ lcp value");
     }
 
+  free(lcptab);
   freeLcpTree(tree);
   freeEsa(esa);
   return NULL;
 }
 
-char *test_lcpTree() {
+char *test_lcpRand() {
   size_t n = 1000000;
   char *s = randSeq(n);
   Esa *esa = getEsa(s, n + 1);
   Interval *tree = getLcpTree(esa);
+  int64_t *lcptab = precomputeLcp(esa);
 
   for (size_t i = 0; i < 50; i++) {
     size_t a = rand() % (n - 10) + 5;
     size_t b = a + (rand() % 10) - 5;
     size_t exp = lcpNaive(s, n + 1, a, b);
     size_t obs = getLcpWithTree(esa, tree, esa->isa[a], esa->isa[b]);
-    if (exp != obs)
+    size_t obs2 = getLcp(esa, lcptab, a, b);
+    if (exp != obs || exp != obs2)
       fprintf(stderr, "tried %zu and %zu...\n", a, b);
-    mu_assert_eq(exp, obs, "lcp not correct");
+    mu_assert_eq(exp, obs, "lcp via tree not correct");
+    mu_assert_eq(exp, obs2, "lcp via RMQ not correct");
   }
 
   freeLcpTree(tree);
+  free(lcptab);
   freeEsa(esa);
   free(s);
   return NULL;
@@ -97,8 +105,8 @@ char *all_tests() {
   srand(time(NULL));
   mu_suite_start();
   mu_run_test(test_intervals);
-  mu_run_test(test_lcpTreeSmall);
-  mu_run_test(test_lcpTree);
+  mu_run_test(test_lcpSmall);
+  mu_run_test(test_lcpRand);
   return NULL;
 }
 RUN_TESTS(all_tests)

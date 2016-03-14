@@ -1,4 +1,4 @@
-CC := gcc
+CC ?= gcc
 CFLAGS := -std=gnu99 -Isrc -Wall -Wextra -Wshadow -pedantic-errors -O2 -g # -pg
 LDFLAGS := -lm -lz -lgsl -lgslcblas -lblas -ldivsufsort # -pg
 TARGET := dnalc

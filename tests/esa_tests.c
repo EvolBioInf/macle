@@ -49,13 +49,13 @@ char *test_revEsaRnd() {
   /* printEsa(esa); */
   /* printEsa(resa); */
 
-  for (size_t i=0; i<n-1; i++)
-    for (size_t j=i+1; j<n; j++) {
+  for (size_t i = 0; i < n - 1; i++)
+    for (size_t j = i + 1; j < n; j++) {
       int64_t exp = lcsNaive(s, i, j);
       /* printf("%zu %zu -> %zu %zu\n", i,j, n-i-2, n-j-2); */
-      int64_t obs = getLcp(resa, revlcptab, n-i-1, n-j-1);
-      if (exp!=obs)
-        printf("%zu %zu -> %zu %zu\n", i,j, n-i-1, n-j-1);
+      int64_t obs = getLcp(resa, revlcptab, n - i - 1, n - j - 1);
+      if (exp != obs)
+        printf("%zu %zu -> %zu %zu\n", i, j, n - i - 1, n - j - 1);
       mu_assert_eq(exp, obs, "lcs does not match");
     }
 

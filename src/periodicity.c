@@ -19,30 +19,30 @@ Periodicity *newPeriodicity(size_t b, size_t e, size_t l) {
 
 void printPeriodicity(Periodicity *p) { printf("(%zu,%zu,%zu)\n", p->b, p->e, p->l); }
 
-//after some LCP is above this constant, the RMQ method is used
+// after some LCP is above this constant, the RMQ method is used
 #define LAZY_CONST 20
 
 // for small lcps naive is faster -> try naive, then fall back to efficient RMQ
 int64_t lcp(Esa *esa, int64_t *lcptab, size_t i, size_t j) {
   i--;
   j--;
-  if (i>=esa->n || j>=esa->n)
+  if (i >= esa->n || j >= esa->n)
     return 0;
   uint64_t k = 0;
-  bool lazy=false;
+  bool lazy = false;
   while (!lazy && MAX(i, j) + k < esa->n && esa->str[k + i] == esa->str[k + j])
-    if (++k>LAZY_CONST)
-      lazy=true;
+    if (++k > LAZY_CONST)
+      lazy = true;
   if (!lazy)
     return k;
   k = getLcp(esa, lcptab, i, j);
-  return MAX(k,0);
+  return MAX(k, 0);
 }
 
 // TODO: is this the best way? (use lcp on reverse string)
 int64_t lcs(Esa *resa, int64_t *rlcptab, size_t i, size_t j) {
-  int64_t max = lcp(resa, rlcptab, resa->n-i+1, resa->n-j+1);
-  return MAX(0,max);
+  int64_t max = lcp(resa, rlcptab, resa->n - i + 1, resa->n - j + 1);
+  return MAX(0, max);
 }
 
 // naive: length of lcp of suffixes i and j of given seq (1-indexed)

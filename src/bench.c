@@ -9,4 +9,3 @@ void tock(char *str) {
   if (args.b)
     fprintf(stderr, "[BENCH] %s: %.2fs\n", str, CPU_TIME - last_tick_time);
 }
-

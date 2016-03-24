@@ -19,19 +19,14 @@
 #include "rmq.h"
 
 // calculate suffix array using divsufsort
-int64_t *getSa(char *seq, size_t n) {
+saidx_t *getSa(char *seq, size_t n) {
   sauchar_t *t = (sauchar_t *)seq;
-  saidx_t *sa1 = (saidx_t *)emalloc(n * sizeof(saidx_t));
-  if (divsufsort(t, sa1, (saidx_t)n) != 0) {
+  saidx_t *sa = (saidx_t *)emalloc(n * sizeof(saidx_t));
+  if (divsufsort(t, sa, (saidx_t)n) != 0) {
     printf("ERROR[esa]: suffix sorting failed.\n");
     exit(-1);
   }
-
-  int64_t *sa2 = (int64_t *)emalloc(n * sizeof(int64_t));
-  for (size_t i = 0; i < n; i++)
-    sa2[i] = (long)sa1[i];
-  free(sa1);
-  return sa2;
+  return sa;
 }
 
 /* calcLcp: compute LCP array using the algorithm in Figure 3
@@ -42,9 +37,9 @@ int64_t *getSa(char *seq, size_t n) {
 void calcLcp(Esa *esa) {
   char *t = esa->str;
   size_t n = esa->n;
-  int64_t *sa = esa->sa;
+  saidx_t *sa = esa->sa;
 
-  int64_t *rank = (int64_t *)emalloc(n * sizeof(int64_t)); // isa
+  saidx_t *rank = (saidx_t *)emalloc(n * sizeof(saidx_t)); // isa
   for (size_t i = 0; i < n; i++)
     rank[sa[i]] = i;
   esa->isa = rank;
@@ -85,7 +80,7 @@ void freeEsa(Esa *esa) {
 void printEsa(Esa *esa) {
   printf("i\tSA\tLCP\tSuffix\n");
   for (size_t i = 0; i < esa->n; i++)
-    printf("%zu\t%zu\t%ld\t%s\n", i, esa->sa[i], esa->lcp[i], esa->str + esa->sa[i]);
+    printf("%zu\t%d\t%ld\t%s\n", i, esa->sa[i], esa->lcp[i], esa->str + esa->sa[i]);
   printf("\t\t%ld\n", esa->lcp[esa->n]);
 }
 

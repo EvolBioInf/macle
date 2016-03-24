@@ -20,7 +20,7 @@ Periodicity *newPeriodicity(size_t b, size_t e, size_t l) {
 void printPeriodicity(Periodicity *p) { printf("(%zu,%zu,%zu)\n", p->b, p->e, p->l); }
 
 // after some LCP is above this constant, the RMQ method is used
-#define LAZY_CONST 20
+#define LAZY_CONST 10
 
 // for small lcps naive is faster -> try naive, then fall back to efficient RMQ
 int64_t lcp(Esa *esa, int64_t *lcptab, size_t i, size_t j) {

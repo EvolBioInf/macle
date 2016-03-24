@@ -33,7 +33,7 @@ size_t *computeLpf(Esa *esa, int64_t **prevOccP) {
   size_t *lpf = (size_t *)emalloc((n + 1) * sizeof(size_t));
   int64_t *prevOcc = (int64_t *)emalloc(n * sizeof(int64_t));
 
-  int64_t *sa = esa->sa;
+  saidx_t *sa = esa->sa;
   int64_t *lcp = esa->lcp;
   sa[n] = -1;
   int64_t lcpn = lcp[n];
@@ -83,7 +83,7 @@ size_t *computeLpf(Esa *esa, int64_t **prevOccP) {
 // alternative prevOcc calculation (from same paper)
 size_t *computeLpf2(Esa *esa, int64_t **prevOccP) {
   size_t n = esa->n;
-  int64_t *sa = esa->sa;
+  saidx_t *sa = esa->sa;
   int64_t *lprev = emalloc(n * sizeof(int64_t));
   int64_t *lnext = emalloc(n * sizeof(int64_t));
   int64_t *prevl = emalloc(n * sizeof(int64_t));

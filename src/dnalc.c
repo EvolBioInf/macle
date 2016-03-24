@@ -143,7 +143,9 @@ int main(int argc, char *argv[]) {
     freeSequence(seq);
   } else {
     for (size_t i = 0; i < args.num_files; i++) {
+      tick();
       Sequence *seq = readFastaFromFile(args.files[i]);
+      tock("readFastaFromFile");
       scanFile(seq);
       freeSequence(seq);
     }

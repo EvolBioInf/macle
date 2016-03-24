@@ -8,11 +8,12 @@
 #pragma once
 
 #include "prelude.h"
+#include <divsufsort.h>
 
 /* define data container */
 typedef struct esa {
-  int64_t *sa;  /* suffix array */
-  int64_t *isa; /* inverse suffix array */
+  saidx_t *sa;  /* suffix array */
+  saidx_t *isa; /* inverse suffix array */
   int64_t *lcp; /* longest common prefix array */
   char *str;    /* pointer to underlying string */
   size_t n;     /* length of sa and lcp */

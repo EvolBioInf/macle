@@ -28,16 +28,11 @@
  */
 size_t *computeLpf(Esa *esa, int64_t **prevOccP) {
   size_t n = esa->n;
-  esa->sa = erealloc(esa->sa, (n + 1) * sizeof(int64_t));
-  esa->lcp = erealloc(esa->lcp, (n + 1) * sizeof(int64_t));
-  size_t *lpf = (size_t *)emalloc((n + 1) * sizeof(size_t));
-  int64_t *prevOcc = (int64_t *)emalloc(n * sizeof(int64_t));
-
   saidx_t *sa = esa->sa;
   int64_t *lcp = esa->lcp;
-  sa[n] = -1;
-  int64_t lcpn = lcp[n];
-  lcp[n] = 0; // required for algorithm
+
+  size_t *lpf = (size_t *)emalloc((n + 1) * sizeof(size_t));
+  int64_t *prevOcc = (int64_t *)emalloc(n * sizeof(int64_t));
 
   lpf[n] = 0;
   Stack *s = newStack(1);
@@ -46,26 +41,20 @@ size_t *computeLpf(Esa *esa, int64_t **prevOccP) {
   stackPush(sLcp, 0);
 
   for (size_t i = 1; i <= n; i++) {
-    int64_t currLcp = lcp[i];
-    while (
-        !stackEmpty(s) &&
-        (sa[i] <
-         sa[(size_t)stackTop(s)] /* ||  //TODO: clarify - this or-branch seems wrong?
-            (sa[i] > sa[(size_t)stackTop(s)] && lcp[i] <= lcp[(size_t)stackTop(s)]) */)) {
-      if (sa[i] < sa[(size_t)stackTop(s)]) {
-        lpf[sa[(size_t)stackTop(s)]] = MAX((int64_t)stackTop(sLcp), currLcp);
-        currLcp = MIN((int64_t)stackTop(sLcp), currLcp);
-      } else
-        lpf[sa[(size_t)stackTop(s)]] = (int64_t)stackTop(sLcp);
+    int64_t currLcp = i == n ? 0 : lcp[i];
+    int64_t sai = i == n ? -1 : sa[i];
+    while (!stackEmpty(s) && sai < sa[(size_t)stackTop(s)]) {
       int64_t v = (int64_t)stackPop(s);
       int64_t vLcp = (int64_t)stackPop(sLcp);
+      lpf[sa[v]] = MAX(vLcp, currLcp);
+      currLcp = MIN(vLcp, currLcp);
       // fill prevOcc
       if (lpf[sa[v]] == 0)
         prevOcc[sa[v]] = -1;
       else if (vLcp > currLcp)
         prevOcc[sa[v]] = sa[(size_t)stackTop(s)];
       else
-        prevOcc[sa[v]] = sa[i];
+        prevOcc[sa[v]] = sai;
     }
     if (i < n) {
       stackPush(s, (void *)i);
@@ -74,7 +63,6 @@ size_t *computeLpf(Esa *esa, int64_t **prevOccP) {
   }
   freeStack(s);
   freeStack(sLcp);
-  lcp[n] = lcpn; // restore last value
 
   *prevOccP = prevOcc;
   return lpf;

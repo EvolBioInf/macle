@@ -5,12 +5,22 @@
 #include "eprintf.h"
 #include "gsl_rng.h"
 
-#include "sequenceData.h"
+#include "fastafile.h"
 #include "matchlength.h"
 #include "lempelziv.h"
 #include "list.h"
 #include "periodicity.h"
 #include "complexity.h"
+
+// calculate the GC content
+double gcContent(const pfasta_seq *ps) {
+  size_t gc = 0;
+  const char *ptr = ps->seq;
+  for (; *ptr; ptr++)
+    if (*ptr == 'g' || *ptr == 'G' || *ptr == 'c' || *ptr == 'C')
+      gc++;
+  return (double)gc / (ptr - ps->seq);
+}
 
 void gnuplotCode(uint32_t w, uint32_t k, int n) {
   printf( //"set terminal png; "
@@ -23,25 +33,32 @@ void gnuplotCode(uint32_t w, uint32_t k, int n) {
   printf(";\n");
 }
 
-void printPlot(uint32_t k, size_t n, Sequence *seq, double **ys) {
+void printPlot(uint32_t k, size_t n, FastaFile *ff, double **ys) {
   printf("offset ");
-  for (int i = 0; i < seq->numSeq; i++) { // two columns for each seq
-    printf("\"%s\" ", seq->headers[i] + 1);
-    printf("\"%s\" ", seq->headers[i] + 1);
+  for (size_t i = 0; i < ff->n; i++) { // two columns for each seq
+    printf("\"%s %s\" ", ff->seq[i].name, ff->seq[i].comment);
+    printf("\"%s %s\" ", ff->seq[i].name, ff->seq[i].comment);
   }
   printf("\n");
   for (size_t j = 0; j < n; j++) {
     printf("%zu ", j * k);
-    for (int i = 0; i < 2 * seq->numSeq; i++)
+    for (size_t i = 0; i < 2 * ff->n; i++)
       printf("%.4f ", ys[i][j]);
     printf("\n");
   }
 }
 
 // read sequence, do stuff
-void scanFile(Sequence *seq) {
-  size_t maxlen = maxSeqLen(seq); // this implies the domain of the plot
-  size_t minlen = minSeqLen(seq); // this restricts the reasonable window sizes
+void scanFile(FastaFile *ff) {
+  size_t maxlen = 0;        // max implies the domain of the plot
+  size_t minlen = SIZE_MAX; // min restricts the reasonable window sizes
+  for (size_t i = 0; i < ff->n; i++) {
+    size_t len = ff->seq[i].len;
+    if (len > maxlen)
+      maxlen = len;
+    if (len < minlen)
+      minlen = len;
+  }
 
   // adapt window size and interval
   size_t w = args.w;
@@ -55,22 +72,22 @@ void scanFile(Sequence *seq) {
 
   // array for results for all sequences in file
   size_t entries = (maxlen - w) / k + 1;
-  double **ys = emalloc(2 * seq->numSeq * sizeof(double *));
-  for (int i = 0; i < 2 * seq->numSeq; i++)
+  double **ys = emalloc(2 * ff->n * sizeof(double *));
+  for (size_t i = 0; i < 2 * ff->n; i++)
     ys[i] = ecalloc(entries + 1, sizeof(double));
 
   // TODO: use gc content of complete file or just current sequence?
-  double gc = gcContent(seq);
 
-  for (int i = 0; i < seq->numSeq; i++) {
-    char *t = seqStr(seq, i);
-    size_t n = seqLen(seq, i);
+  for (size_t i = 0; i < ff->n; i++) {
+    double gc = gcContent(&(ff->seq[i]));
+    char *t = ff->seq[i].seq;
+    size_t n = ff->seq[i].len;
 
     tick();
     Esa *esa = getEsa(t, n + 1); // esa for sequence+$
     tock("getEsa");
     if (args.p) {
-      printf("%s\n", seq->headers[i]);
+      printf("%s %s\n", ff->seq[i].name, ff->seq[i].comment);
       /* printEsa(esa); */
     }
 
@@ -116,17 +133,17 @@ void scanFile(Sequence *seq) {
 
   if (!args.p) {
     if (args.g) { // print to be directly piped into gnuplot
-      gnuplotCode(w, k, 2 * seq->numSeq);
-      for (int i = 0; i < 2 * seq->numSeq; i++) {
-        printPlot(k, entries, seq, ys);
+      gnuplotCode(w, k, 2 * ff->n);
+      for (size_t i = 0; i < 2 * ff->n; i++) {
+        printPlot(k, entries, ff, ys);
         printf("e\n");
       }
     } else { // just print resulting data
-      printPlot(k, entries, seq, ys);
+      printPlot(k, entries, ff, ys);
     }
   }
 
-  for (int i = 0; i < 2 * seq->numSeq; i++)
+  for (size_t i = 0; i < 2 * ff->n; i++)
     free(ys[i]);
   free(ys);
 }
@@ -138,16 +155,20 @@ int main(int argc, char *argv[]) {
 
   // process files (or stdin, if none given)
   if (!args.num_files) {
-    Sequence *seq = readFastaFromFile(NULL);
-    scanFile(seq);
-    freeSequence(seq);
+    FastaFile *ff = read_fasta_file(NULL);
+    scanFile(ff);
+    free_fasta_file(ff);
   } else {
     for (size_t i = 0; i < args.num_files; i++) {
       tick();
-      Sequence *seq = readFastaFromFile(args.files[i]);
+      FastaFile *ff = read_fasta_file(args.files[i]);
       tock("readFastaFromFile");
-      scanFile(seq);
-      freeSequence(seq);
+      if (!ff) {
+        fprintf(stderr, "Skipping invalid FASTA file...\n");
+        continue;
+      }
+      scanFile(ff);
+      free_fasta_file(ff);
     }
   }
 

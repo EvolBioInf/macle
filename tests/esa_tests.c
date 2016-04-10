@@ -2,7 +2,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "sequenceData.h"
+#include "fastafile.h"
 #include "stringUtil.h"
 #include "esa.h"
 
@@ -15,10 +15,10 @@ size_t lcsNaive(char *str, int64_t i, int64_t j) {
 }
 
 char *test_getEsa() {
-  Sequence *seq = readFastaFromFile("Data/hotspotExample2.fasta");
+  FastaFile *ff = read_fasta_file("Data/hotspotExample2.fasta");
 
-  char *s = seqStr(seq, 0);
-  size_t n = seqLen(seq, 0);
+  char *s = ff->seq[0].seq;
+  size_t n = ff->seq[0].len;
   Esa *esa = getEsa(s, n + 1); // calculate esa, including $
 
   mu_assert(esa->str == s, "ESA does not point to original sequence");
@@ -31,7 +31,7 @@ char *test_getEsa() {
   mu_assert(esa->lcp[esa->n] == -1, "last LCP not -1");
 
   freeEsa(esa);
-  freeSequence(seq);
+  free_fasta_file(ff);
   return NULL;
 }
 

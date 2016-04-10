@@ -1,7 +1,6 @@
 #include "minunit.h"
 #include <string.h>
 
-#include "sequenceData.h"
 #include "esa.h"
 #include "matchlength.h"
 

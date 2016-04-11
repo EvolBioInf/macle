@@ -2,7 +2,7 @@
 #include "eprintf.h"
 
 #include "esa.h"
-#include "stack.h"
+#include "kvec.h"
 #include "interval.h"
 
 Interval *newInterval(int lcp, int lb, int rb) {
@@ -118,37 +118,38 @@ Interval *getLcpTree(Esa *esa) {
   Interval *root = newInterval(0, 0, esa->n - 1);
   Interval *last = NULL;
 
-  Stack *s = newStack(esa->n);
-  stackPush(s, dummy);
-  stackPush(s, root);
+  kvec_t(Interval *)s;
+  kv_init(s);
+  kv_push(Interval *, s, dummy);
+  kv_push(Interval *, s, root);
 
   for (size_t i = 1; i <= esa->n; i++) {
     int64_t lb = i - 1;
-    while (esa->lcp[i] < ((Interval *)stackTop(s))->lcp) {
-      ((Interval *)stackTop(s))->rb = i - 1;
-      last = (Interval *)stackPop(s);
+    while (esa->lcp[i] < (kv_top(s))->lcp) {
+      kv_top(s)->rb = i - 1;
+      last = kv_pop(s);
       lb = last->lb;
-      if (esa->lcp[i] <= ((Interval *)stackTop(s))->lcp) {
-        addChild((Interval *)stackTop(s), last);
+      if (esa->lcp[i] <= kv_top(s)->lcp) {
+        addChild(kv_top(s), last);
         last = NULL;
       }
     }
-    if (esa->lcp[i] > ((Interval *)stackTop(s))->lcp) {
+    if (esa->lcp[i] > kv_top(s)->lcp) {
       Interval *iv = newInterval(esa->lcp[i], lb, -1);
       if (last != NULL) {
         addChild(iv, last);
         last = NULL; // was missing in course book!!
       }
-      stackPush(s, iv);
+      kv_push(Interval *, s, iv);
     }
   }
   // pop and free fake root
-  last = (Interval *)stackPop(s);
+  last = kv_pop(s);
   free(last->childList);
   free(last);
 
   free(dummy);
-  freeStack(s);
+  kv_destroy(s);
   return root;
 }
 

@@ -1,6 +1,6 @@
 #include "minunit.h"
 
-#include "stack.h"
+#include "kvec.h"
 #include "list.h"
 
 char *test_list() {
@@ -25,21 +25,20 @@ char *test_list() {
 }
 
 char *test_stack() {
-  Stack *s = newStack(10);
-  mu_assert(stackEmpty(s), "new stack not empty!");
-  mu_assert(stackTop(s) == (void *)-1, "top of empty stack wrong");
-  mu_assert(stackPop(s) == (void *)-1, "pop of empty stack wrong");
+  kvec_t(int64_t) s;
+  kv_init(s);
+  mu_assert(kv_empty(s), "new stack not empty!");
   for (int64_t i = 0; i < 1000; i++)
-    stackPush(s, (stackel)i);
-  mu_assert(s->n == 1000, "stack size wrong");
-  mu_assert((int64_t)stackTop(s) == 999, "top element wrong");
-  mu_assert((int64_t)stackTop(s) == 999, "top element changed after stackTop");
+    kv_push(int64_t, s, i);
+  mu_assert(kv_size(s) == 1000, "stack size wrong");
+  mu_assert(kv_top(s) == 999, "top element wrong");
+  mu_assert(kv_top(s) == 999, "top element changed after stackTop");
 
   for (int64_t i = 999; i >= 0; i--)
-    mu_assert((int64_t)stackPop(s) == i, "pop of stack wrong");
-  mu_assert(stackEmpty(s), "stack still not empty");
+    mu_assert(kv_pop(s) == i, "pop of stack wrong");
+  mu_assert(kv_empty(s), "stack still not empty");
 
-  freeStack(s);
+  kv_destroy(s);
   return NULL;
 }
 

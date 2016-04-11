@@ -14,8 +14,14 @@
 #include "prelude.h"
 
 #include "lempelziv.h"
-#include "stack.h"
+#include "kvec.h"
 #include "eprintf.h"
+
+// sum type used in lpf algorithm
+typedef struct elem {
+  int64_t i;
+  int64_t lcp;
+} Elem;
 
 /*
  * computeLpf: Compute longest previous factor
@@ -35,34 +41,29 @@ size_t *computeLpf(Esa *esa, int64_t **prevOccP) {
   int64_t *prevOcc = (int64_t *)emalloc(n * sizeof(int64_t));
 
   lpf[n] = 0;
-  Stack *s = newStack(1);
-  Stack *sLcp = newStack(1);
-  stackPush(s, 0);
-  stackPush(sLcp, 0);
+  kvec_t(Elem) s;
+  kv_init(s);
+  kv_push(Elem, s, ((Elem){0, 0}));
 
   for (size_t i = 1; i <= n; i++) {
     int64_t currLcp = i == n ? 0 : lcp[i];
     int64_t sai = i == n ? -1 : sa[i];
-    while (!stackEmpty(s) && sai < sa[(size_t)stackTop(s)]) {
-      int64_t v = (int64_t)stackPop(s);
-      int64_t vLcp = (int64_t)stackPop(sLcp);
-      lpf[sa[v]] = MAX(vLcp, currLcp);
-      currLcp = MIN(vLcp, currLcp);
+    while (!kv_empty(s) && sai < sa[kv_top(s).i]) {
+      Elem v = kv_pop(s);
+      lpf[sa[v.i]] = MAX(v.lcp, currLcp);
+      currLcp = MIN(v.lcp, currLcp);
       // fill prevOcc
-      if (lpf[sa[v]] == 0)
-        prevOcc[sa[v]] = -1;
-      else if (vLcp > currLcp)
-        prevOcc[sa[v]] = sa[(size_t)stackTop(s)];
+      if (lpf[sa[v.i]] == 0)
+        prevOcc[sa[v.i]] = -1;
+      else if (v.lcp > currLcp)
+        prevOcc[sa[v.i]] = sa[kv_top(s).i];
       else
-        prevOcc[sa[v]] = sai;
+        prevOcc[sa[v.i]] = sai;
     }
-    if (i < n) {
-      stackPush(s, (void *)i);
-      stackPush(sLcp, (void *)currLcp);
-    }
+    if (i < n)
+      kv_push(Elem, s, ((Elem){i, currLcp}));
   }
-  freeStack(s);
-  freeStack(sLcp);
+  kv_destroy(s);
 
   *prevOccP = prevOcc;
   return lpf;

@@ -24,8 +24,8 @@ tests/%.o: tests/%.c
 	@echo " $(CC) $(CFLAGS) -c -o $@ $<"; $(CC) $(CFLAGS) -c -o $@ $<
 
 $(TESTS): $(OBJECTS) $(TEST_OBJ)
-	@echo " $(CC) $(filter-out src/dnalc.o,$(OBJECTS)) $@.o -o $@ $(LDFLAGS)"
-	$(CC) $(filter-out src/dnalc.o,$(OBJECTS)) $(@:build/%=tests/%).o -o $@ $(LDFLAGS)
+	@echo " $(CC) $(filter-out src/$(TARGET).o,$(OBJECTS)) $@.o -o $@ $(LDFLAGS)"
+	$(CC) $(filter-out src/$(TARGET).o,$(OBJECTS)) $(@:build/%=tests/%).o -o $@ $(LDFLAGS)
 
 clean:
 	@echo " $(RM) -r build"; $(RM) -r build

@@ -29,6 +29,26 @@ int64_t fw_from_to(int64_t *a, size_t l, size_t r) {
   return fw_sum(a, r) - (l ? fw_sum(a, l - 1) : 0);
 }
 
+// input: alphabet size, string length
+// output: upper bound (not exact) on number of ML factors
+uint64_t maxFacts(uint64_t g, uint64_t n) {
+  uint64_t fact = 0; // counted possible ML Factors
+  uint64_t sum = 0;  // current length of string
+  uint64_t l = 1;    // current factor length
+  while (1) {
+    uint64_t num = pow(g, l);
+    uint64_t result = sum + l * num;
+    if (result > n)
+      break;
+    sum = result;
+    fact += num;
+    l++;
+  }
+  if (sum < n)
+    fact += (n - sum) / l; // estimate remaining length left to fill
+  return fact;
+}
+
 // calculate match length complexity for sliding windows
 // input: sane w and k, allocated array for results, match length factors, gc content
 void mlComplexity(size_t w, size_t k, double *y, Fact *mlf, double gc) {
@@ -36,15 +56,19 @@ void mlComplexity(size_t w, size_t k, double *y, Fact *mlf, double gc) {
   size_t entries = (n - w) / k + 1;
 
   // TODO: does this calculation make sense? (probably not)
+  /*
   double cMin = 2.0 / (double)n; // at least 2 factors an any sequence, like AAAAAA.A
   double esl = expShulen(gc, w); // some wildly advanced estimation for avg. factor length
   double cMax = 1. / (esl - 1.);
+  */
+  double cMax = maxFacts(4, w); // worst case upper bound
 
   for (size_t j = 0; j < entries; j++) {
     size_t l = j * k;
     size_t r = MIN(n, l + w) - 1;
     double cObs = sumFromTo(mlf->lpf, l, r);
-    y[j] = (cObs / w - cMin) / (cMax - cMin);
+    /* y[j] = (cObs / w - cMin) / (cMax - cMin); */
+    y[j] = cObs / cMax;
   }
 }
 

@@ -12,8 +12,8 @@
 
 /* generate random sequence of given length */
 char *randSeq(size_t n) {
-  static char *alphabet = "ACGT";
-  char *s = emalloc((n + 2) * sizeof(char));
+  static char const *alphabet = "ACGT";
+  char *s = (char*)emalloc((n + 2) * sizeof(char));
   s[n] = '$';
   s[n + 1] = '\0';
   for (size_t i = 0; i < n; i++)
@@ -37,7 +37,7 @@ char *chomp(char *line) {
 /* fprintnf: print max of n characters of str onto fp; add ... if
  *   str was truncated
  */
-void fprintnf(FILE *fp, char *str, int n) {
+void fprintnf(FILE *fp, char const *str, int n) {
   int i, l, m;
   l = strlen(str);
   m = n < l ? n : l;
@@ -58,7 +58,7 @@ void strtoupper(char *s, size_t l) {
 }
 
 /* strdup: make a duplicate of s */
-char *strdup2(char *s) {
+char *strdup2(char const *s) {
   char *p;
   p = (char *)malloc(strlen(s) + 1); /* +1 for '\0' */
   if (p != NULL)

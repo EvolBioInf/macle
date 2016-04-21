@@ -16,10 +16,10 @@ void free_fasta_file(FastaFile *ff) {
 
 // input: filename of fasta file (or 0 for STDIN), reference to an empty number
 // output: either successfully parsed file, or NULL
-FastaFile *read_fasta_file(char *file) {
+FastaFile *read_fasta_file(char const *file) {
   // open file
   int fd = file ? eopen(file, O_RDONLY) : STDIN_FILENO;
-  char *filename = file ? file : "stdin";
+  char const *filename = file ? file : "stdin";
   if (fd < 0)
     err(1, "%s", file);
 
@@ -36,7 +36,7 @@ FastaFile *read_fasta_file(char *file) {
   pfasta_seq *ps = NULL;
   pfasta_seq seq;
   while ((l = pfasta_read(&pf, &seq)) == 0) {
-    ps = erealloc(ps, (++n) * sizeof(pfasta_seq));
+    ps = (pfasta_seq*)erealloc(ps, (++n) * sizeof(pfasta_seq));
     ps[n - 1] = seq;
   }
 
@@ -54,7 +54,7 @@ FastaFile *read_fasta_file(char *file) {
   if (file)
     close(fd);
 
-  FastaFile *ff = emalloc(sizeof(FastaFile));
+  FastaFile *ff = (FastaFile*)emalloc(sizeof(FastaFile));
   ff->seq = ps;
   ff->n = n;
   for (size_t i = 0; i < n; i++)

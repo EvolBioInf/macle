@@ -15,11 +15,11 @@ typedef struct esa {
   saidx_t *sa;  /* suffix array */
   saidx_t *isa; /* inverse suffix array */
   int64_t *lcp; /* longest common prefix array */
-  char *str;    /* pointer to underlying string */
+  char const *str;    /* pointer to underlying string */
   size_t n;     /* length of sa and lcp */
 } Esa;
 
-Esa *getEsa(char *seq, size_t n);
+Esa *getEsa(char const *seq, size_t n);
 void freeEsa(Esa *esa);
 
 void printEsa(Esa *esa);

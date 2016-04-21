@@ -1,5 +1,5 @@
-CC ?= gcc
-CFLAGS := -std=gnu99 -Isrc -Wall -Wextra -Wshadow -pedantic-errors -O2 -g # -pg
+CC ?= g++
+CFLAGS := -std=c++11 -Isrc -Wall -Wextra -Wshadow -O2 -g # -pg
 LDFLAGS := -lm -lz -lgsl -lgslcblas -lblas -ldivsufsort # -pg
 TARGET := dnalc
 VERSION=0.1

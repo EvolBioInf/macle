@@ -21,8 +21,8 @@ int cmpPer(const void *a, const void *b) {
   return dl;
 }
 
-char *test_knownExample() {
-  char *s = "AACCAACCAACCAA$"; // from Ohlebusch book
+char const *test_knownExample() {
+  char const *s = "AACCAACCAACCAA$"; // from Ohlebusch book
   size_t n = strlen(s);
   Esa *esa = getEsa(s, n); // calculate esa, including $
   Fact *lzf = computeLZFact(esa, false);
@@ -41,8 +41,8 @@ char *test_knownExample() {
   return NULL;
 }
 
-char *test_onlyRuns() {
-  char *s = "AAAAAAAAGCGCGCGCGCGCGCGTTTTTTTTTTTTACTACTACTACTACTACTA$";
+char const *test_onlyRuns() {
+  char const *s = "AAAAAAAAGCGCGCGCGCGCGCGTTTTTTTTTTTTACTACTACTACTACTACTA$";
   size_t n = strlen(s);
   Esa *esa = getEsa(s, n); // calculate esa, including $
   Fact *lzf = computeLZFact(esa, false);
@@ -65,7 +65,7 @@ char *test_onlyRuns() {
   return NULL;
 }
 
-char *test_randomSequence() {
+char const *test_randomSequence() {
   size_t n = 1000000;
   char *s = randSeq(n);
   fprintnf(stdout, s, 80);
@@ -126,7 +126,7 @@ char *test_randomSequence() {
 
 // compare: getting all, then filtering afterwards (as proposed in book)
 // vs. getting only runs directly (for better performance)
-char *test_randomOnlyRuns() {
+char const *test_randomOnlyRuns() {
   size_t n = 1000000;
   char *s = randSeq(n);
   n++; //$ border
@@ -168,7 +168,7 @@ char *test_randomOnlyRuns() {
   return NULL;
 }
 
-char *all_tests() {
+char const *all_tests() {
   srand(time(NULL));
   mu_suite_start();
   mu_run_test(test_knownExample);

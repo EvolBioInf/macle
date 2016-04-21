@@ -3,7 +3,7 @@
 #include "kvec.h"
 #include "list.h"
 
-char *test_list() {
+char const *test_list() {
   List *l = NULL;
   for (int64_t i = 500; i < 1000; i++)
     listAppend(&l, (void *)i);
@@ -24,7 +24,7 @@ char *test_list() {
   return NULL;
 }
 
-char *test_stack() {
+char const *test_stack() {
   kvec_t(int64_t) s;
   kv_init(s);
   mu_assert(kv_empty(s), "new stack not empty!");
@@ -42,7 +42,7 @@ char *test_stack() {
   return NULL;
 }
 
-char *all_tests() {
+char const *all_tests() {
   mu_suite_start();
 
   mu_run_test(test_list);

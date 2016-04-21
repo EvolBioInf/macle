@@ -61,7 +61,7 @@ size_t *computeLpf(Esa *esa, int64_t **prevOccP) {
         prevOcc[sa[v.i]] = sai;
     }
     if (i < n)
-      kv_push(Elem, s, ((Elem){i, currLcp}));
+      kv_push(Elem, s, ((Elem){(int64_t)i, currLcp}));
   }
   kv_destroy(s);
 
@@ -73,14 +73,14 @@ size_t *computeLpf(Esa *esa, int64_t **prevOccP) {
 size_t *computeLpf2(Esa *esa, int64_t **prevOccP) {
   size_t n = esa->n;
   saidx_t *sa = esa->sa;
-  int64_t *lprev = emalloc(n * sizeof(int64_t));
-  int64_t *lnext = emalloc(n * sizeof(int64_t));
-  int64_t *prevl = emalloc(n * sizeof(int64_t));
-  int64_t *prevr = emalloc(n * sizeof(int64_t));
-  size_t *lpf = ecalloc(n, sizeof(int64_t));
-  int64_t *lpfl = ecalloc(n, sizeof(int64_t));
-  int64_t *lpfr = ecalloc(n, sizeof(int64_t));
-  int64_t *prevOcc = emalloc(n * sizeof(int64_t));
+  int64_t *lprev = (int64_t*)emalloc(n * sizeof(int64_t));
+  int64_t *lnext = (int64_t*)emalloc(n * sizeof(int64_t));
+  int64_t *prevl = (int64_t*)emalloc(n * sizeof(int64_t));
+  int64_t *prevr = (int64_t*)emalloc(n * sizeof(int64_t));
+  size_t *lpf = (size_t*)ecalloc(n, sizeof(int64_t));
+  int64_t *lpfl = (int64_t*)ecalloc(n, sizeof(int64_t));
+  int64_t *lpfr = (int64_t*)ecalloc(n, sizeof(int64_t));
+  int64_t *prevOcc = (int64_t*)emalloc(n * sizeof(int64_t));
   for (size_t i = 0; i < esa->n; i++) {
     lprev[sa[i]] = i == 0 ? -1 : sa[i - 1];
     lnext[sa[i]] = i == esa->n - 1 ? -1 : sa[i + 1];
@@ -122,10 +122,6 @@ size_t *computeLpf2(Esa *esa, int64_t **prevOccP) {
     else
       prevOcc[i] = prevr[i];
   }
-
-  /* for (size_t i = 0; i < esa->n; i++) */
-  /*   printf("i:%zu sai:%ld prevl:%ld prevr:%ld lpf:%ld po:%ld\n", */
-  /*       i, sa[i], prevl[sa[i]], prevr[sa[i]], lpf[sa[i]],prevOcc[sa[i]]); */
 
   free(prevl);
   free(prevr);

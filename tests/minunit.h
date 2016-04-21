@@ -27,7 +27,7 @@ extern "C" {
 #define ANSI_CLR_WHITE "\x1b[37m"
 #define ANSI_CLR_RESET "\x1b[0m"
 
-#define mu_suite_start() char *message = NULL
+#define mu_suite_start() char const *message = NULL
 
 #define mu_assert(test, message)                                                         \
   do {                                                                                   \
@@ -64,7 +64,7 @@ extern "C" {
     argc = argc;                                                                         \
     fprintf(stderr, "RUNNING: %s\n", argv[0]);                                           \
     printf("----\nRUNNING: %s\n", argv[0]);                                              \
-    char *result = name();                                                               \
+    char const *result = name();                                                               \
     if (result != 0) {                                                                   \
       printf(ANSI_CLR_RED "FAILED:" ANSI_CLR_RESET " %s\n", result);                     \
     } else {                                                                             \

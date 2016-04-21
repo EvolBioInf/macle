@@ -15,7 +15,7 @@
 // calculate the GC content
 double gcContent(const pfasta_seq *ps) {
   size_t gc = 0;
-  const char *ptr = ps->seq;
+  char const *ptr = ps->seq;
   for (; *ptr; ptr++)
     if (*ptr == 'g' || *ptr == 'G' || *ptr == 'c' || *ptr == 'C')
       gc++;
@@ -36,8 +36,8 @@ void gnuplotCode(uint32_t w, uint32_t k, int n) {
 void printPlot(uint32_t k, size_t n, FastaFile *ff, double **ys) {
   printf("offset ");
   for (size_t i = 0; i < ff->n; i++) { // two columns for each seq
-    printf("\"%s %s\" ", ff->seq[i].name, ff->seq[i].comment);
-    printf("\"%s %s\" ", ff->seq[i].name, ff->seq[i].comment);
+    printf("\"%s %s\" ", ff->seq[i].name, "(ML)");
+    printf("\"%s %s\" ", ff->seq[i].name, "(Per)");
   }
   printf("\n");
   for (size_t j = 0; j < n; j++) {
@@ -72,11 +72,9 @@ void scanFile(FastaFile *ff) {
 
   // array for results for all sequences in file
   size_t entries = (maxlen - w) / k + 1;
-  double **ys = emalloc(2 * ff->n * sizeof(double *));
+  double **ys = (double**)emalloc(2 * ff->n * sizeof(double *));
   for (size_t i = 0; i < 2 * ff->n; i++)
-    ys[i] = ecalloc(entries + 1, sizeof(double));
-
-  // TODO: use gc content of complete file or just current sequence?
+    ys[i] = (double*)ecalloc(entries + 1, sizeof(double));
 
   for (size_t i = 0; i < ff->n; i++) {
     double gc = gcContent(&(ff->seq[i]));
@@ -133,10 +131,18 @@ void scanFile(FastaFile *ff) {
 
   if (!args.p) {
     if (args.g) { // print to be directly piped into gnuplot
-      gnuplotCode(w, k, 2 * ff->n);
-      for (size_t i = 0; i < 2 * ff->n; i++) {
-        printPlot(k, entries, ff, ys);
-        printf("e\n");
+      if (args.gf==0) {
+        for (size_t i = 0; i < 2 * ff->n; i++) {
+          for (size_t j = 0; j < entries; j++)
+            printf("%zu %.4f\n", j * k, ys[i][j]);
+          printf("\n");
+        }
+      } else if (args.gf==1) {
+        gnuplotCode(w, k, 2 * ff->n);
+        for (size_t i = 0; i < 2 * ff->n; i++) {
+          printPlot(k, entries, ff, ys);
+          printf("e\n");
+        }
       }
     } else { // just print resulting data
       printPlot(k, entries, ff, ys);
@@ -149,7 +155,7 @@ void scanFile(FastaFile *ff) {
 }
 
 int main(int argc, char *argv[]) {
-  setprogname2(PROGNAME);
+  progname = PROGNAME;
   parseArgs(argc, argv);
   gsl_rng *rng = ini_gsl_rng(args.s); // init seed, if provided
 

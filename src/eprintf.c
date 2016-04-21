@@ -14,20 +14,14 @@
 #include <fcntl.h>
 #include "eprintf.h"
 
-static char *name = NULL; /* program name for messages */
-
-/* setprogname2: set stored name of program */
-void setprogname2(char *str) { name = str; }
-
-/* progname: return stured name of program */
-char *progname(void) { return name; }
+char const *progname = NULL; /* program name for messages */
 
 /* eprintf: print error message and exit */
-void eprintf(char *fmt, ...) {
+void eprintf(char const *fmt, ...) {
   va_list args;
   fflush(stdout);
-  if (progname() != NULL)
-    fprintf(stderr, "%s: ", progname());
+  if (progname != NULL)
+    fprintf(stderr, "%s: ", progname);
 
   va_start(args, fmt);
   vfprintf(stderr, fmt, args);
@@ -40,7 +34,7 @@ void eprintf(char *fmt, ...) {
 }
 
 /* efopen: open file and report if error */
-FILE *efopen(char *fname, char *mode) {
+FILE *efopen(char const *fname, char const *mode) {
   FILE *fp = fopen(fname, mode);
   if (fp == NULL)
     eprintf("efopen(%s, %s) failed:", fname, mode);
@@ -48,10 +42,10 @@ FILE *efopen(char *fname, char *mode) {
 }
 
 /* eopen: open file on system level and report if error */
-int eopen(char *fname, int flag) {
+int eopen(char const *fname, int flag) {
   int fd = open(fname, flag, 0);
   if (fd < 0)
-    eprintf("eopen(%s, %s) failed:", fname, flag);
+    eprintf("eopen(%s, %d) failed:", fname, flag);
   return fd;
 }
 
@@ -76,7 +70,7 @@ void *emalloc(size_t n) {
 void *ecalloc(size_t n, size_t sz) {
   void *p = calloc(n, sz);
   if (p == NULL)
-    eprintf("calloc of %u bytes failed:", n);
+    eprintf("calloc of %u bytes failed:", n*sz);
   return p;
 }
 

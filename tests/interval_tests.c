@@ -8,12 +8,12 @@
 #include "periodicity.h"
 
 // hotspot paper example
-static char *seq = "GCACGCACGCACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA"
+static char const *seq = "GCACGCACGCACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA"
                    "CACATATGCTAACTCTCAGTCTGTGTGTGCA$";
 
-static char *seq2 = "AACCAACCAACCAA$"; // from Ohlebusch book
+static char const *seq2 = "AACCAACCAACCAA$"; // from Ohlebusch book
 
-char *test_intervals() {
+char const *test_intervals() {
   Esa *esa = getEsa(seq, strlen(seq)); // calculate esa, including $
 
   Interval iv;
@@ -46,14 +46,14 @@ char *test_intervals() {
 }
 
 // naive: length of lcp of suffixes i and j of given seq (1-indexed)
-size_t lcpNaive(char *str, size_t n, size_t i, size_t j) {
+size_t lcpNaive(char const *str, size_t n, size_t i, size_t j) {
   size_t k = 0;
   while (MAX(i, j) + k < n && str[k + i] == str[k + j])
     k++;
   return k;
 }
 
-char *test_lcpSmall() {
+char const *test_lcpSmall() {
   size_t n = strlen(seq2);
   Esa *esa = getEsa(seq2, n); // calculate esa, including $
   Interval *tree = getLcpTree(esa);
@@ -76,7 +76,7 @@ char *test_lcpSmall() {
   return NULL;
 }
 
-char *test_lcplcs1Indexed() {
+char const *test_lcplcs1Indexed() {
   size_t n = 1000;
   char *s = randSeq(n++);
 
@@ -111,7 +111,7 @@ char *test_lcplcs1Indexed() {
   return NULL;
 }
 
-char *test_lcpRand() {
+char const *test_lcpRand() {
   size_t n = 1000000;
   char *s = randSeq(n);
   Esa *esa = getEsa(s, n + 1);
@@ -137,7 +137,7 @@ char *test_lcpRand() {
   return NULL;
 }
 
-char *all_tests() {
+char const *all_tests() {
   srand(time(NULL));
   mu_suite_start();
   mu_run_test(test_intervals);

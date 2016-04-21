@@ -2,9 +2,9 @@
 #include "minunit.h"
 #include "rmq.h"
 
-char *test_rmqSmall() {
+char const *test_rmqSmall() {
   size_t n = 25;
-  int64_t *array = malloc(n * sizeof(int64_t));
+  int64_t *array = (int64_t*)malloc(n * sizeof(int64_t));
   for (size_t i = 0; i < n; i++) {
     array[i] = rand() % n;
     /* printf("%ld ", array[i]); */
@@ -31,9 +31,9 @@ char *test_rmqSmall() {
   return NULL;
 }
 
-char *test_rmqRand() {
+char const *test_rmqRand() {
   size_t n = 10000;
-  int64_t *array = malloc(n * sizeof(int64_t));
+  int64_t *array = (int64_t*)malloc(n * sizeof(int64_t));
   for (size_t i = 0; i < n; i++) {
     array[i] = rand() % n;
   }
@@ -59,7 +59,7 @@ char *test_rmqRand() {
   return NULL;
 }
 
-char *all_tests() {
+char const *all_tests() {
   srand(time(NULL));
   mu_suite_start();
   mu_run_test(test_rmqSmall);

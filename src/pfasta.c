@@ -124,7 +124,7 @@ int pfasta_read_seq(pfasta_file *pf, pfasta_seq *ps);
  * @returns 0 iff successful.
  */
 static int buffer_init(pfasta_file *pf) {
-  char *buffer = malloc(BUFFERSIZE);
+  char *buffer = (char*)malloc(BUFFERSIZE);
   if (!buffer)
     PF_EXIT_ERRNO();
 
@@ -224,10 +224,11 @@ int pfasta_parse(pfasta_file *pf, int file_descriptor) {
   pf->line = 1;
   pf->unexpected_char = '\0';
 
+  int c;
   if (buffer_init(pf) != 0)
     PF_FAIL_FORWARD();
 
-  int c = buffer_peek(pf);
+  c = buffer_peek(pf);
   if (c == EOF)
     PF_FAIL_STR("Empty file");
   if (c != '>')
@@ -439,7 +440,7 @@ const char *pfasta_strerror(const pfasta_file *pf) {
  */
 static inline int dynstr_init(dynstr *ds) {
   *ds = (dynstr){NULL, 0, 0};
-  ds->str = malloc(61);
+  ds->str = (char*)malloc(61);
   if (!ds->str)
     return -1;
   ds->str[0] = '\0';
@@ -456,7 +457,7 @@ static inline int dynstr_init(dynstr *ds) {
  */
 static inline int dynstr_put(dynstr *ds, char c) {
   if (ds->count >= ds->capacity - 1) {
-    char *neu = reallocarray(ds->str, ds->capacity / 2, 3);
+    char *neu = (char*)reallocarray(ds->str, ds->capacity / 2, 3);
     if (!neu) {
       dynstr_free(ds);
       return -1;

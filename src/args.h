@@ -13,7 +13,8 @@ typedef struct Args {
   uint32_t w; // sliding window size
   uint32_t k; // sliding interval
   bool p;     // print match length decomposition?
-  bool g;     // gnuplot output?
+  bool g;     // output for plotting
+  uint32_t gf; // plot output format
   bool b;     // benchmark run
 
   // non-parameter arguments

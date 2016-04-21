@@ -8,11 +8,11 @@
 
 #include <stdio.h>
 
-void setprogname2(char *);
-void eprintf(char *, ...);
+extern char const * progname;
+void eprintf(char const *, ...);
 
-FILE *efopen(char *fname, char *mode);
-int eopen(char *fname, int flag);
+FILE *efopen(char const *fname, char const *mode);
+int eopen(char const *fname, int flag);
 char *estrdup(char *);
 void *emalloc(size_t);
 void *ecalloc(size_t, size_t);

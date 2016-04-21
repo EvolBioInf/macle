@@ -7,7 +7,7 @@ typedef struct Fact {
   size_t *lpf;      /* lpf in case of Lempel-Ziv, otherwise unset */
   size_t n;         /* number of factors */
 
-  char *str;     /* string */
+  char const *str;     /* string */
   size_t strLen; /* string length */
 
   double cObs, cMax, cMin, cNor;

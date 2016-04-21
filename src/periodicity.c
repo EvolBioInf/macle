@@ -10,7 +10,7 @@
 #include "list.h"
 
 Periodicity *newPeriodicity(size_t b, size_t e, size_t l) {
-  Periodicity *p = emalloc(sizeof(Periodicity));
+  Periodicity *p = (Periodicity*)emalloc(sizeof(Periodicity));
   p->b = b;
   p->e = e;
   p->l = l;
@@ -39,14 +39,13 @@ int64_t lcp(Esa *esa, int64_t *lcptab, size_t i, size_t j) {
   return MAX(k, 0);
 }
 
-// TODO: is this the best way? (use lcp on reverse string)
 int64_t lcs(Esa *resa, int64_t *rlcptab, size_t i, size_t j) {
   int64_t max = lcp(resa, rlcptab, resa->n - i + 1, resa->n - j + 1);
   return MAX(0, max);
 }
 
 // naive: length of lcp of suffixes i and j of given seq (1-indexed)
-size_t lcp2(char *str, size_t n, size_t i, size_t j) {
+size_t lcp2(char const *str, size_t n, size_t i, size_t j) {
   i--;
   j--;
   uint64_t k = 0;
@@ -56,7 +55,7 @@ size_t lcp2(char *str, size_t n, size_t i, size_t j) {
 }
 
 // naive: length of lcs of prefixes 1..i and 1..j of given seq (input 1-indexed)
-size_t lcs2(char *str, int64_t i, int64_t j) {
+size_t lcs2(char const *str, int64_t i, int64_t j) {
   i--;
   j--;
   int64_t k = 0;
@@ -68,8 +67,8 @@ size_t lcs2(char *str, int64_t i, int64_t j) {
 // max. periodicities in O(nlog(n)) (Algorithm 5.16), mainly for reference / comparison
 Periodicity *getPeriodicities2(Esa *esa, size_t *plen) {
   size_t n = esa->n;
-  char *str = esa->str;
-  Periodicity *ps = emalloc(((size_t)2.05 * n) * sizeof(Periodicity));
+  char const *str = esa->str;
+  Periodicity *ps = (Periodicity*)emalloc(((size_t)2.05 * n) * sizeof(Periodicity));
   *plen = 0;
   for (size_t l = 1; l <= n / 2; l++) {
     size_t i = 2 * l + 1;
@@ -127,7 +126,7 @@ List **calcType1Periodicities(bool runsOnly, Fact *lzf, Esa *esa, size_t *pnum) 
   (*pnum) = 0;
   // as required, array of lists of max. per. of type 1
   // indexed by start position, each sorted by end position
-  List **Lt1 = ecalloc(lzf->strLen + 1, sizeof(List *));
+  List **Lt1 = (List**)ecalloc(lzf->strLen + 1, sizeof(List *));
   for (size_t j = 1; j < lzf->n; j++) {
     size_t sjLen = factLen(lzf, j);       // |s_j|
     size_t sjm1Len = factLen(lzf, j - 1); // |s_(j-1)|
@@ -225,7 +224,7 @@ List **getPeriodicityLists(bool runsOnly, Fact *lzf, Esa *esa, size_t *pnum) {
 }
 
 Periodicity *collectPeriodicities(List **pl, size_t seqLen, size_t pnum) {
-  Periodicity *ps = emalloc(pnum * sizeof(Periodicity));
+  Periodicity *ps = (Periodicity*)emalloc(pnum * sizeof(Periodicity));
   size_t ind = 0;
   for (size_t i = 0; i < seqLen; i++) {
     List *curr = pl[i];

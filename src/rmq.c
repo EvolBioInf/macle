@@ -59,7 +59,7 @@ int64_t *precomputeRMQ(int64_t *A, size_t n) {
   size_t bNum = BLOCKNUM(n);
   size_t tRow = log2(bNum) + 1;
   size_t tNum = bNum * tRow;
-  int64_t *B = ecalloc(bNum + tNum, sizeof(int64_t));
+  int64_t *B = (int64_t*)ecalloc(bNum + tNum, sizeof(int64_t));
   precomputeBlockRMQ(A, n, B);
   precomputePow2RMQ(B, bNum, &B[bNum]);
   return B;

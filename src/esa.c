@@ -19,7 +19,7 @@
 #include "rmq.h"
 
 // calculate suffix array using divsufsort
-saidx_t *getSa(char *seq, size_t n) {
+saidx_t *getSa(char const *seq, size_t n) {
   sauchar_t *t = (sauchar_t *)seq;
   saidx_t *sa = (saidx_t *)emalloc(n * sizeof(saidx_t));
   if (divsufsort(t, sa, (saidx_t)n) != 0) {
@@ -35,7 +35,7 @@ saidx_t *getSa(char *seq, size_t n) {
  *   p. 191-192.
  */
 void calcLcp(Esa *esa) {
-  char *t = esa->str;
+  char const *t = esa->str;
   size_t n = esa->n;
   saidx_t *sa = esa->sa;
 
@@ -61,7 +61,7 @@ void calcLcp(Esa *esa) {
   esa->lcp = lcp;
 }
 
-Esa *getEsa(char *seq, size_t n) {
+Esa *getEsa(char const *seq, size_t n) {
   Esa *esa = (Esa *)emalloc(sizeof(Esa));
   esa->sa = getSa(seq, n);
   esa->str = seq;

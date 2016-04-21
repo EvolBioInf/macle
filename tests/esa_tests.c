@@ -14,7 +14,7 @@ size_t lcsNaive(char *str, int64_t i, int64_t j) {
   return k;
 }
 
-char *test_getEsa() {
+char const *test_getEsa() {
   FastaFile *ff = read_fasta_file("Data/hotspotExample2.fasta");
 
   char *s = ff->seq[0].seq;
@@ -35,7 +35,7 @@ char *test_getEsa() {
   return NULL;
 }
 
-char *test_revEsaRnd() {
+char const *test_revEsaRnd() {
   /* char *s = "AACCGGTTGGTT$"; // from Ohlebusch book */
   size_t n = 100;
   char *s = randSeq(n++);
@@ -67,7 +67,7 @@ char *test_revEsaRnd() {
   return NULL;
 }
 
-char *all_tests() {
+char const *all_tests() {
   srand(time(NULL));
   mu_suite_start();
   mu_run_test(test_getEsa);

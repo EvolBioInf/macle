@@ -8,11 +8,11 @@
 #include "stringUtil.h"
 
 // hotspot paper example
-static char *seq = "GCACGCACGCACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA"
+static char const *seq = "GCACGCACGCACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA"
                    "CACATATGCTAACTCTCAGTCTGTGTGTGCA$";
 
 // correct factorization
-static char *factors[] = {
+static char const *factors[] = {
     "G",   "C",        "A",
     "C",   "GCACGCAC", "ACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA",
     "T",   "AT",       "GC",
@@ -22,13 +22,13 @@ static char *factors[] = {
     "CA",  "$"};
 
 // prevOcc example from Crochemore/Ilie paper
-static char *str = "abbaabbbaaabab";
+static char const *str = "abbaabbbaaabab";
 /* static int64_t poResult[] = {3,3,0,10,0,-1,0,7,2,1,2,1,-1,1}; //prevOcc[sa[i]] */
 
-char *test_LempelZiv() {
+char const *test_LempelZiv() {
   size_t n = strlen(seq);
   Esa *esa = getEsa(seq, n); // calculate esa, including $
-  int64_t *oldlcp = malloc((esa->n + 1) * sizeof(int64_t));
+  int64_t *oldlcp = (int64_t*)malloc((esa->n + 1) * sizeof(int64_t));
   memcpy(oldlcp, esa->lcp, (esa->n + 1) * sizeof(int64_t));
 
   Fact *lzf = computeLZFact(esa, false);
@@ -48,7 +48,7 @@ char *test_LempelZiv() {
   return NULL;
 }
 
-char *test_prevOcc() {
+char const *test_prevOcc() {
   size_t n = strlen(str);
   Esa *esa = getEsa(str, n);
   Fact *lzf = computeLZFact(esa, false);
@@ -64,7 +64,7 @@ char *test_prevOcc() {
   return NULL;
 }
 
-char *test_randomSequence() {
+char const *test_randomSequence() {
   size_t n = 1000000;
   char *s = randSeq(n);
   fprintnf(stdout, s, 80);
@@ -99,7 +99,7 @@ char *test_randomSequence() {
   return NULL;
 }
 
-char *all_tests() {
+char const *all_tests() {
   srand(time(NULL));
   mu_suite_start();
   mu_run_test(test_LempelZiv);

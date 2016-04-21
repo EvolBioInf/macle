@@ -8,5 +8,5 @@ typedef struct fastafile {
   size_t n;        /* number of sequences */
 } FastaFile;
 
-FastaFile *read_fasta_file(char *file);
+FastaFile *read_fasta_file(char const *file);
 void free_fasta_file(FastaFile *fastafile);

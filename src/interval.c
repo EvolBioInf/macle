@@ -6,7 +6,7 @@
 #include "interval.h"
 
 Interval *newInterval(int lcp, int lb, int rb) {
-  Interval *dummy = emalloc(sizeof(Interval));
+  Interval *dummy = (Interval*)emalloc(sizeof(Interval));
   dummy->lcp = lcp;
   dummy->lb = lb;
   dummy->rb = rb;
@@ -98,8 +98,7 @@ bool getSubInterval(Interval *ret, Esa *esa, Interval iv, char c) {
 }
 
 // get interval of longest prefix matches of query using iterated binary search in ESA
-// TODO: more efficient? this is very slow
-Interval getInterval(Esa *esa, char *query, size_t n) {
+Interval getInterval(Esa *esa, char const *query, size_t n) {
   Interval iv = {0, 0, esa->n - 1, 0, 0};
   Interval tmp = {0, 0, 0, 0, 0};
   size_t i = 0;

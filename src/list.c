@@ -3,7 +3,7 @@
 
 #include "list.h"
 
-List *newList() { return ecalloc(1, sizeof(List)); }
+List *newList() { return (List*)ecalloc(1, sizeof(List)); }
 
 void listAppend(List **l, void *val) {
   List *item = newList();

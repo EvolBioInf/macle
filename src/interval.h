@@ -17,7 +17,7 @@ void printInterval(Interval *in);
 void printLcpTree(Interval *in);
 
 bool getSubInterval(Interval *ret, Esa *esa, Interval iv, char c);
-Interval getInterval(Esa *esa, char *query, size_t n);
+Interval getInterval(Esa *esa, char const *query, size_t n);
 
 Interval *getLcpTree(Esa *esa);
 void freeLcpTree(Interval *iv);

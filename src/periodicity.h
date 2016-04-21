@@ -14,8 +14,8 @@ void printPeriodicity(Periodicity *p);
 // these only exported for test cases
 int64_t lcp(Esa *esa, int64_t *lcptab, size_t i, size_t j);
 int64_t lcs(Esa *resa, int64_t *rlcptab, size_t i, size_t j);
-size_t lcs2(char *str, int64_t i, int64_t j);
-size_t lcp2(char *str, size_t n, size_t i, size_t j);
+size_t lcs2(char const *str, int64_t i, int64_t j);
+size_t lcp2(char const *str, size_t n, size_t i, size_t j);
 
 Periodicity *getPeriodicities(bool runsOnly, Fact *lzf, Esa *esa, size_t *pnum);
 

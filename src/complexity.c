@@ -56,19 +56,17 @@ void mlComplexity(size_t w, size_t k, double *y, Fact *mlf, double gc) {
   size_t entries = (n - w) / k + 1;
 
   // TODO: does this calculation make sense? (probably not)
-  /*
-  double cMin = 2.0 / (double)n; // at least 2 factors an any sequence, like AAAAAA.A
+  double cMin = 2.0 / (double)w; // at least 2 factors an any sequence, like AAAAAA.A
   double esl = expShulen(gc, w); // some wildly advanced estimation for avg. factor length
   double cMax = 1. / (esl - 1.);
-  */
-  double cMax = maxFacts(4, w); // worst case upper bound
+  /* double cMax = maxFacts(4, w); // worst case upper bound */
 
   for (size_t j = 0; j < entries; j++) {
     size_t l = j * k;
     size_t r = MIN(n, l + w) - 1;
     double cObs = sumFromTo(mlf->lpf, l, r);
-    /* y[j] = (cObs / w - cMin) / (cMax - cMin); */
-    y[j] = cObs / cMax;
+    y[j] = (cObs/w /*-cMin*/) / (cMax - cMin);
+    /* y[j] = cObs / cMax; */
   }
 }
 
@@ -119,7 +117,7 @@ void runComplexity(size_t w, size_t k, double *y, size_t n, List **ls) {
   size_t entries = (n - w) / k + 1;
 
   // for each position, get number of periodicities it is part of
-  int64_t *ft = ecalloc(n, sizeof(int64_t));
+  int64_t *ft = (int64_t*)ecalloc(n, sizeof(int64_t));
   for (size_t i = 0; i < n; i++) {
     size_t len = 0;
     for (eachListItem(curr, ls[i])) {
@@ -134,7 +132,7 @@ void runComplexity(size_t w, size_t k, double *y, size_t n, List **ls) {
 
   // collect result for each position from fenwick tree, sum up
   int64_t ppnMax = 0; // maximum observed periodicities per nucleotide
-  int64_t *ps = ecalloc(n, sizeof(int64_t));
+  int64_t *ps = (int64_t*)ecalloc(n, sizeof(int64_t));
   for (size_t i = 0; i < n; i++) {
     ps[i] = fw_sum(ft, i);
     if (ps[i] > ppnMax)

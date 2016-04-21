@@ -4,16 +4,16 @@
 #include "args.h"
 
 // globally accessible arguments for convenience
-Args args = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+Args args = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-char opts_short[] = "hs:w:k:pgb";
+char opts_short[] = "hs:w:k:pg::b";
 static struct option opts[] = {
     {"help", no_argument, NULL, 'h'},
     {"seed", required_argument, NULL, 's'},
     {"window-size", required_argument, NULL, 'w'},
     {"window-interval", required_argument, NULL, 'k'},
     {"print-factors", no_argument, NULL, 'p'},
-    {"gnuplot", no_argument, NULL, 'g'},
+    {"graph", optional_argument, NULL, 'g'},
     {"benchmark", no_argument, NULL, 'b'},
     {0, 0, 0, 0} // <- required
 };
@@ -27,8 +27,10 @@ char usage[] = PROGNAME
     "\t-w <NUM>: size of sliding window\n"
     "\t-k <NUM>: interval between sliding windows\n"
     "\t-p: print match-length and Lempel-Ziv factors and periodicities\n"
-    "\t-g: output with gnuplot commands (to pipe directly into 'gnuplot -p')\n"
-    "\t-b: print benchmarking information\n";
+    "\t-b: print benchmarking information\n"
+    "\t-gN: output pipe-ready to plot with:\n"
+    "\t\tN=0 -> graph -T X (part of plotutils)\n"
+    "\t\tN=1 -> gnuplot -p\n";
 
 void parseArgs(int argc, char *argv[]) {
   int c = 0;       // getopt stores value returned (last struct component) here
@@ -43,6 +45,7 @@ void parseArgs(int argc, char *argv[]) {
       break;
     case 'g':
       args.g = true;
+      args.gf = optarg == NULL ? 0 : atoi(optarg);
       break;
     case 'b':
       args.b = true;

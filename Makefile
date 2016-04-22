@@ -4,12 +4,12 @@ LDFLAGS := -lm -lz -lgsl -lgslcblas -lblas -ldivsufsort # -pg
 TARGET := dnalc
 VERSION=0.1
 
-SOURCES := $(wildcard src/*.c)
-OBJECTS := $(SOURCES:.c=.o)
+SOURCES := $(wildcard src/*.cpp)
+OBJECTS := $(SOURCES:.cpp=.o)
 
-TEST_SRC=$(wildcard tests/*.c)
-TEST_OBJ=$(TEST_SRC:.c=.o)
-TESTS=$(patsubst tests/%.c,build/%,$(TEST_SRC))
+TEST_SRC=$(wildcard tests/*.cpp)
+TEST_OBJ=$(TEST_SRC:.cpp=.o)
+TESTS=$(patsubst tests/%.cpp,build/%,$(TEST_SRC))
 
 all: build/$(TARGET) tests
 
@@ -17,10 +17,10 @@ build/$(TARGET): $(OBJECTS)
 	@echo " mkdir -p build"; mkdir -p build
 	@echo " $(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o build/$(TARGET) $(LDFLAGS)
 
-src/%.o: src/%.c
+src/%.o: src/%.cpp
 	@echo " $(CC) $(CFLAGS) -c -o $@ $<"; $(CC) $(CFLAGS) -c -o $@ $<
 
-tests/%.o: tests/%.c
+tests/%.o: tests/%.cpp
 	@echo " $(CC) $(CFLAGS) -c -o $@ $<"; $(CC) $(CFLAGS) -c -o $@ $<
 
 $(TESTS): $(OBJECTS) $(TEST_OBJ)
@@ -38,6 +38,6 @@ valgrind:
 	VALGRIND="valgrind --leak-check=full" $(MAKE)
 
 format:
-	clang-format -i src/*.[ch] tests/*.[ch]
+	clang-format -i src/*.cpp src/*.h tests/*.cpp tests/*.h
 
 .PHONY: all clean lint tests valgrind

@@ -1,6 +1,6 @@
 CC ?= g++
-CFLAGS := -std=c++11 -Isrc -Wall -Wextra -Wshadow -O2 -g # -pg
-LDFLAGS := -lm -lz -lgsl -lgslcblas -lblas -ldivsufsort # -pg
+CFLAGS := -std=c++11 -Isrc -Isdsl/include -Wall -Wextra -O2 -msse4.2 -g # -pg -Wshadow 
+LDFLAGS := -lm -lz -lgsl -lgslcblas -lblas -Lsdsl/lib -ldivsufsort # -ldivsufsort64 -lsdsl -pg
 TARGET := dnalc
 VERSION=0.1
 
@@ -39,5 +39,10 @@ valgrind:
 
 format:
 	clang-format -i src/*.cpp src/*.h tests/*.cpp tests/*.h
+
+sdsl:
+	git clone https://github.com/simongog/sdsl-lite.git
+	cd sdsl-lite
+	sdsl-lite/install.sh sdsl
 
 .PHONY: all clean lint tests valgrind

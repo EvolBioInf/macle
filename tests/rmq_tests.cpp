@@ -1,17 +1,17 @@
-#include <time.h>
+#include <ctime>
 #include "minunit.h"
 #include "rmq.h"
 
 char const *test_rmqSmall() {
   size_t n = 25;
-  int64_t *array = (int64_t*)malloc(n * sizeof(int64_t));
+  int64_t *array = new int64_t[n];
   for (size_t i = 0; i < n; i++) {
     array[i] = rand() % n;
     /* printf("%ld ", array[i]); */
   }
   /* printf("\n\n"); */
 
-  int64_t *B = precomputeRMQ(array, n);
+  RMQ rmq(array, n);
 
   for (size_t i = 0; i < n; i++)
     for (size_t j = i; j < n; j++) {
@@ -20,25 +20,24 @@ char const *test_rmqSmall() {
         if (array[k] < exp)
           exp = array[k];
 
-      int64_t obs = RMQ(array, n, B, i, j);
+      int64_t obs = rmq.get(i, j);
       if (exp != obs)
         printf("tried %zu and %zu\n", i, j);
       mu_assert_eq(exp, obs, "wrong range minimum");
     }
 
-  free(B);
-  free(array);
+  delete[] array;
   return NULL;
 }
 
 char const *test_rmqRand() {
   size_t n = 10000;
-  int64_t *array = (int64_t*)malloc(n * sizeof(int64_t));
+  int64_t *array = new int64_t[n];
   for (size_t i = 0; i < n; i++) {
     array[i] = rand() % n;
   }
 
-  int64_t *B = precomputeRMQ(array, n);
+  RMQ rmq(array, n);
 
   for (size_t i = 0; i < 1000; i++) {
     size_t l = rand() % n;
@@ -48,14 +47,13 @@ char const *test_rmqRand() {
       if (array[k] < exp)
         exp = array[k];
 
-    int64_t obs = RMQ(array, n, B, l, r);
+    int64_t obs = rmq.get(l, r);
     if (exp != obs)
       printf("tried %zu and %zu\n", l, r);
     mu_assert_eq(exp, obs, "wrong range minimum");
   }
 
-  free(B);
-  free(array);
+  delete[] array;
   return NULL;
 }
 

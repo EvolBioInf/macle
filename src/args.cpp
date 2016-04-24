@@ -1,13 +1,13 @@
-#include "prelude.h"
-
+#include <cstdio>
+#include <cstdlib>
 #include <getopt.h>
 #include "args.h"
 
 // globally accessible arguments for convenience
-Args args = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+Args args;
 
-char opts_short[] = "hs:w:k:pg::b";
-static struct option opts[] = {
+static char const opts_short[] = "hs:w:k:pg::b";
+static const struct option opts[] = {
     {"help", no_argument, NULL, 'h'},
     {"seed", required_argument, NULL, 's'},
     {"window-size", required_argument, NULL, 'w'},
@@ -18,7 +18,7 @@ static struct option opts[] = {
     {0, 0, 0, 0} // <- required
 };
 
-char usage[] = PROGNAME
+static char const usage[] = PROGNAME
     " " VERSION " - " DESCRIPTION "\n" COPYRIGHT "\n"
     "Usage: " PROGNAME " [OPTIONS] [FILES]\n"
     "OPTIONS:\n"
@@ -32,7 +32,7 @@ char usage[] = PROGNAME
     "\t\tN=0 -> graph -T X (part of plotutils)\n"
     "\t\tN=1 -> gnuplot -p\n";
 
-void parseArgs(int argc, char *argv[]) {
+void Args::parse(int argc, char *argv[]) {
   int c = 0;       // getopt stores value returned (last struct component) here
   int opt_idx = 0; // getopt stores the option index here.
   while ((c = getopt_long(argc, argv, opts_short, opts, &opt_idx)) != -1) {

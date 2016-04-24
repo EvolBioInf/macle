@@ -1,6 +1,6 @@
 CC := g++
-CFLAGS := -std=c++11 -Isrc -Isdsl/include -Wall -Wextra -O2 -msse4.2 -g # -pg -Wshadow 
-LDFLAGS := -lm -lz -lgsl -lgslcblas -lblas -Lsdsl/lib -ldivsufsort # -ldivsufsort64 -lsdsl -pg
+CFLAGS := -std=c++11 -Isrc -Wall -Wextra -Wshadow -O2 -g # -Isdsl/include -msse4.2 -pg
+LDFLAGS := -lm -lgsl -lgslcblas -lblas -ldivsufsort -ldivsufsort64 # -Lsdsl/lib -lsdsl -pg
 TARGET := dnalc
 
 SOURCES := $(wildcard src/*.cpp)
@@ -44,4 +44,4 @@ sdsl:
 	cd sdsl-lite
 	sdsl-lite/install.sh sdsl
 
-.PHONY: all clean lint tests valgrind
+.PHONY: all clean lint tests valgrind format sdsl

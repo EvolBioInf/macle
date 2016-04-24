@@ -64,7 +64,7 @@ extern "C" {
     argc = argc;                                                                         \
     fprintf(stderr, "RUNNING: %s\n", argv[0]);                                           \
     printf("----\nRUNNING: %s\n", argv[0]);                                              \
-    char const *result = name();                                                               \
+    char const *result = name();                                                         \
     if (result != 0) {                                                                   \
       printf(ANSI_CLR_RED "FAILED:" ANSI_CLR_RESET " %s\n", result);                     \
     } else {                                                                             \

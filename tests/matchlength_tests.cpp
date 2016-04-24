@@ -7,8 +7,9 @@
 // hotspot paper example 1
 static char const *seq1 = "CCCCGCTCTCCA$";
 // hotspot paper example 2
-static char const *seq2 = "GCACGCACGCACACACACACACACACACACACACACACACACACACACACACACACACACACACACAC"
-                    "ACACATATGCTAACTCTCAGTCTGTGTGTGCA$";
+static char const *seq2 =
+    "GCACGCACGCACACACACACACACACACACACACACACACACACACACACACACACACACACACACAC"
+    "ACACATATGCTAACTCTCAGTCTGTGTGTGCA$";
 
 static char const *factors1[] = {"CCC", "C", "G", "CTC", "TC", "C", "A", "$"};
 static char const *factors2[] = {
@@ -19,18 +20,15 @@ static char const *factors2[] = {
     "TGC",      "A",    "$"};
 
 char const *checkML(char const *seq, char const *facts[], size_t num) {
-  Esa *esa = getEsa(seq, strlen(seq)); // calculate esa, including $
+  Esa esa(seq, strlen(seq)); // calculate esa, including $
 
-  Fact *mlf = computeMLFact(esa);
-  mu_assert(mlf->n == num, "wrong number of ML factors");
+  Fact mlf = computeMLFact(esa);
+  mu_assert(mlf.n == num, "wrong number of ML factors");
 
-  for (size_t i = 0; i < mlf->n; i++) {
-    mu_assert(!strncmp(mlf->str + mlf->fact[i], facts[i], factLen(mlf, i)),
-              "wrong factor");
+  for (size_t i = 0; i < mlf.n; i++) {
+    mu_assert(!strncmp(mlf.str + mlf.fact[i], facts[i], factLen(mlf, i)), "wrong factor");
   }
 
-  freeFact(mlf);
-  freeEsa(esa);
   return NULL;
 }
 

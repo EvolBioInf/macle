@@ -6,7 +6,8 @@
  * Date: Sun Jun 20 13:03:03 2004.
  * License: GNU General Public
  *****************************************************************/
-#include "prelude.h"
+#include <cmath>
+#include <cfloat>
 #include <gsl/gsl_sf_gamma.h>
 
 bool thresholdReached = false;

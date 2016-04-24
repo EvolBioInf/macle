@@ -1,7 +1,9 @@
 *.o
 build/
 sdsl*/
+tests/scratchpad*
 tags
 randomSeed.dat
 gmon.out
+vgcore.*
 

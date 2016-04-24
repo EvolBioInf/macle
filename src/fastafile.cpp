@@ -1,24 +1,41 @@
-#include "prelude.h"
-#include "eprintf.h"
-#include "pfasta.h"
 #include "fastafile.h"
-#include <string.h>
-#include <err.h>
-#include <fcntl.h>
-#include <unistd.h>
 
-void free_fasta_file(FastaFile *ff) {
-  for (size_t i = 0; i < ff->n; i++)
-    pfasta_seq_free(&(ff->seq[i]));
-  free(ff->seq);
-  free(ff);
+#include <err.h>
+#include "pfasta.h"
+
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+#include <cstring>
+#include <vector>
+using namespace std;
+
+FastaFile::~FastaFile() {
+  if (failed)
+    return;
+  for (auto it = seqs.begin(); it != seqs.end(); it++)
+    pfasta_seq_free(&(*it));
+  seqs.clear();
+}
+
+/* eopen: open file on system level and report on error */
+int open_or_fail(char const *fname, int flag) {
+  int fd = open(fname, flag, 0);
+  if (fd < 0) {
+    fprintf(stderr, "open(\"%s\", %d) failed: %s\n", fname, flag, strerror(errno));
+    exit(EXIT_FAILURE);
+  }
+  return fd;
 }
 
 // input: filename of fasta file (or 0 for STDIN), reference to an empty number
 // output: either successfully parsed file, or NULL
-FastaFile *read_fasta_file(char const *file) {
+FastaFile::FastaFile(char const *file) : failed(false) {
+  seqs = vector<pfasta_seq>();
+
   // open file
-  int fd = file ? eopen(file, O_RDONLY) : STDIN_FILENO;
+  int fd = file ? open_or_fail(file, O_RDONLY) : STDIN_FILENO;
   char const *filename = file ? file : "stdin";
   if (fd < 0)
     err(1, "%s", file);
@@ -28,51 +45,31 @@ FastaFile *read_fasta_file(char const *file) {
   pfasta_file pf;
   if ((l = pfasta_parse(&pf, fd)) != 0) {
     warnx("%s: %s", filename, pfasta_strerror(&pf));
-    return NULL;
+    this->failed = true;
+    pfasta_free(&pf);
+    return;
   }
 
   // read sequences
-  size_t n = 0;
-  pfasta_seq *ps = NULL;
   pfasta_seq seq;
-  while ((l = pfasta_read(&pf, &seq)) == 0) {
-    ps = (pfasta_seq*)erealloc(ps, (++n) * sizeof(pfasta_seq));
-    ps[n - 1] = seq;
-  }
+  while ((l = pfasta_read(&pf, &seq)) == 0)
+    seqs.push_back(seq);
 
   if (l < 0) {
     pfasta_seq_free(&seq);
     warnx("%s: %s", filename, pfasta_strerror(&pf));
-    for (size_t i = 0; i < n; i++)
-      pfasta_seq_free(&ps[i]);
-    free(ps);
+    for (auto it = seqs.begin(); it != seqs.end(); it++)
+      pfasta_seq_free(&(*it));
+    seqs.clear();
     pfasta_free(&pf);
-    return NULL;
+    this->failed = true;
+    return;
   }
 
   pfasta_free(&pf);
   if (file)
     close(fd);
 
-  FastaFile *ff = (FastaFile*)emalloc(sizeof(FastaFile));
-  ff->seq = ps;
-  ff->n = n;
-  for (size_t i = 0; i < n; i++)
-    ps[i].len = strlen(ps[i].seq) - 1;
-  return ff;
+  for (auto it = seqs.begin(); it != seqs.end(); it++)
+    it->len = strlen(it->seq) - 1;
 }
-
-/*
-int main(int argc, char *argv[]) {
-  FastaFile *ff = read_fasta_file(argv[1]);
-  if (!ff) {
-    printf("error while reading file\n");
-    return 1;
-  }
-
-  printf("Read %ld sequences from %s:\n", ff->n, argv[1]);
-  for (size_t i=0; i<ff->n; i++) {
-    printf("%ld: %s -> %s\n", ff->seq[i].len, ff->seq[i].name, ff->seq[i].seq);
-  }
-}
-*/

@@ -1,9 +1,10 @@
 #include "minunit.h"
-#include <string.h>
-#include <time.h>
+#include "util.h"
+#include <cstring>
+#include <ctime>
+#include <algorithm>
 
 #include "fastafile.h"
-#include "stringUtil.h"
 #include "esa.h"
 
 // naive: length of lcs of prefixes 1..i and 1..j of given seq (input 1-indexed)
@@ -15,23 +16,21 @@ size_t lcsNaive(char *str, int64_t i, int64_t j) {
 }
 
 char const *test_getEsa() {
-  FastaFile *ff = read_fasta_file("Data/hotspotExample2.fasta");
+  FastaFile ff("Data/hotspotExample2.fasta");
 
-  char *s = ff->seq[0].seq;
-  size_t n = ff->seq[0].len;
-  Esa *esa = getEsa(s, n + 1); // calculate esa, including $
+  char *s = ff.seqs[0].seq;
+  size_t n = ff.seqs[0].len;
+  Esa esa(s, n + 1); // calculate esa, including $
 
-  mu_assert(esa->str == s, "ESA does not point to original sequence");
-  mu_assert(esa->n == n + 1, "ESA size not correct");
-  mu_assert(esa->str[esa->sa[0]] == '$', "first ESA entry not $");
-  mu_assert(esa->sa[0] == (int64_t)n, "wrong SA index");
-  mu_assert(esa->isa[esa->sa[0]] == 0, "isa incorrect");
-  mu_assert(esa->isa[esa->sa[n]] == (int64_t)n, "isa incorrect");
-  mu_assert(esa->lcp[0] == -1, "first LCP not -1");
-  mu_assert(esa->lcp[esa->n] == -1, "last LCP not -1");
+  mu_assert(esa.str == s, "ESA does not point to original sequence");
+  mu_assert(esa.n == n + 1, "ESA size not correct");
+  mu_assert(esa.str[esa.sa[0]] == '$', "first ESA entry not $");
+  mu_assert(esa.sa[0] == (int64_t)n, "wrong SA index");
+  mu_assert(esa.isa[esa.sa[0]] == 0, "isa incorrect");
+  mu_assert(esa.isa[esa.sa[n]] == (int64_t)n, "isa incorrect");
+  mu_assert(esa.lcp[0] == -1, "first LCP not -1");
+  mu_assert(esa.lcp[esa.n] == -1, "last LCP not -1");
 
-  freeEsa(esa);
-  free_fasta_file(ff);
   return NULL;
 }
 
@@ -39,12 +38,14 @@ char const *test_revEsaRnd() {
   /* char *s = "AACCGGTTGGTT$"; // from Ohlebusch book */
   size_t n = 100;
   char *s = randSeq(n++);
-  Esa *esa = getEsa(s, n); // calculate esa, including $
+  Esa esa(s, n); // calculate esa, including $
 
-  char *srev = strdup2(esa->str);
-  reverse(srev, n);
-  Esa *resa = getEsa(srev, n);
-  int64_t *revlcptab = precomputeLcp(resa);
+  char *srev = new char[n + 1];
+  memcpy(srev, s, (n + 1) * sizeof(char));
+  std::reverse(srev, srev + n);
+
+  Esa resa(srev, n);
+  RMQ rmq = resa.precomputeLcp();
 
   /* printEsa(esa); */
   /* printEsa(resa); */
@@ -53,17 +54,14 @@ char const *test_revEsaRnd() {
     for (size_t j = i + 1; j < n; j++) {
       int64_t exp = lcsNaive(s, i, j);
       /* printf("%zu %zu -> %zu %zu\n", i,j, n-i-2, n-j-2); */
-      int64_t obs = getLcp(resa, revlcptab, n - i - 1, n - j - 1);
+      int64_t obs = resa.getLcp(rmq, n - i - 1, n - j - 1);
       if (exp != obs)
         printf("%zu %zu -> %zu %zu\n", i, j, n - i - 1, n - j - 1);
       mu_assert_eq(exp, obs, "lcs does not match");
     }
 
-  freeEsa(resa);
-  freeEsa(esa);
-  free(revlcptab);
-  free(srev);
-  free(s);
+  delete[] srev;
+  delete[] s;
   return NULL;
 }
 

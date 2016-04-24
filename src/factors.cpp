@@ -1,26 +1,25 @@
-#include "prelude.h"
+#include <cstdio>
 #include "factors.h"
 
-void freeFact(Fact *f) {
-  free(f->fact);
-  if (f->lpf)
-    free(f->lpf);
-  if (f->prevOcc)
-    free(f->prevOcc);
-  free(f);
+Fact::~Fact() {
+  delete[] this->fact;
+  if (this->lpf)
+    delete[] this->lpf;
+  if (this->prevOcc)
+    delete[] this->prevOcc;
 }
 
-void printFact(Fact *mlf) {
+void Fact::print() const {
   char tmp;
-  char* str = (char*)mlf->str; //we write there, but restore it back!
-  for (size_t i = 0; i < mlf->n; i++) {
-    size_t start = mlf->fact[i];
-    size_t end = i < mlf->n - 1 ? mlf->fact[i + 1] : mlf->strLen;
-    tmp = mlf->str[end];
-    str[end] = '\0';
-    printf("%s%s", &(mlf->str[start]), i < mlf->n - 1 ? "." : "\n");
-    str[end] = tmp;
+  char *s = (char *)this->str; // we write there, but restore it back!
+  for (size_t i = 0; i < this->n; i++) {
+    size_t start = this->fact[i];
+    size_t end = i < this->n - 1 ? this->fact[i + 1] : this->strLen;
+    tmp = this->str[end];
+    s[end] = '\0';
+    printf("%s%s", &(this->str[start]), i < this->n - 1 ? "." : "\n");
+    s[end] = tmp;
   }
 }
 
-extern inline size_t factLen(Fact *f, size_t i);
+extern inline size_t factLen(Fact &f, size_t i);

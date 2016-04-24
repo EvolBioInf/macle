@@ -1,5 +1,5 @@
 #include "prelude.h"
-#include "eprintf.h"
+#include "rmq.h"
 
 #define BLOCKSIZE(n) ((size_t)(log2(n) / 4) + 1)
 #define BLOCKNUM(n) (n / BLOCKSIZE(n) + 1)
@@ -24,7 +24,7 @@ void precomputePow2RMQ(int64_t *A, size_t n, int64_t *B) {
   }
 }
 
-int64_t getRMQwithPow2(int64_t *A, size_t n, int64_t *B, size_t l, size_t r) {
+int64_t getRMQwithPow2(int64_t const *A, size_t n, int64_t const *B, size_t l, size_t r) {
   assert(l <= r);
   size_t row = log2(n) + 1;
   size_t diff = r - l + 1;
@@ -55,17 +55,22 @@ void precomputeBlockRMQ(int64_t *A, size_t n, int64_t *B) {
   }
 }
 
-int64_t *precomputeRMQ(int64_t *A, size_t n) {
+RMQ::RMQ(int64_t *A, size_t len) : arr(A), n(len) {
   size_t bNum = BLOCKNUM(n);
   size_t tRow = log2(bNum) + 1;
   size_t tNum = bNum * tRow;
-  int64_t *B = (int64_t*)ecalloc(bNum + tNum, sizeof(int64_t));
-  precomputeBlockRMQ(A, n, B);
-  precomputePow2RMQ(B, bNum, &B[bNum]);
-  return B;
+  this->tab = new int64_t[bNum + tNum];
+  precomputeBlockRMQ(A, n, this->tab);
+  precomputePow2RMQ(this->tab, bNum, &(this->tab[bNum]));
 }
 
-int64_t RMQ(int64_t *A, size_t n, int64_t *B, size_t l, size_t r) {
+RMQ::~RMQ() { delete[] this->tab; }
+
+int64_t RMQ::get(size_t l, size_t r) const {
+  return RMQuery(this->arr, this->n, this->tab, l, r);
+}
+
+int64_t RMQuery(int64_t const *A, size_t n, int64_t const *B, size_t l, size_t r) {
   assert(l <= r);
   if (l == r)
     return A[l];

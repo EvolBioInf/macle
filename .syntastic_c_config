@@ -2,4 +2,4 @@
 -Wall
 -Wextra
 -pedantic
-.I../src
+-Isrc

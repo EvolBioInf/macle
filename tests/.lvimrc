@@ -1,2 +1,0 @@
-let g:neomake_c_gcc_args = ['-Isrc']
-let g:neomake_c_clang_args = ['-Isrc']

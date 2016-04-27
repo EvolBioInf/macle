@@ -31,7 +31,7 @@ clean:
 	@echo " $(RM) $(OBJECTS) $(TEST_OBJ) $(TESTS)"; $(RM) $(OBJECTS) $(TEST_OBJ) $(TESTS)
 
 tests: $(TESTS)
-	sh ./tests/runtests.sh
+	bash ./tests/runtests.sh
 
 valgrind:
 	VALGRIND="valgrind --leak-check=full" $(MAKE)

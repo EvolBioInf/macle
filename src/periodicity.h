@@ -29,5 +29,8 @@ std::vector<Periodicity> collectPeriodicities(std::vector<std::list<Periodicity>
 
 std::vector<Periodicity> getPeriodicities2(Esa &esa);
 
+/* length (from start to end) of run/periodicity */
+static inline size_t perLen(Periodicity &p) { return p.e - p.b + 1; }
+
 /* number of periodicities corresponding to a run */
-static inline size_t persFromRun(Periodicity &p) { return (p.e - p.b + 1) / (2 * p.l); }
+static inline size_t persFromRun(Periodicity &p) { return perLen(p) / (2 * p.l); }

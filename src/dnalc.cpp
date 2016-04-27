@@ -149,6 +149,7 @@ int main(int argc, char *argv[]) {
   } else {
     for (size_t i = 0; i < args.num_files; i++) {
       tick();
+      tick();
       FastaFile ff(args.files[i]);
       tock("readFastaFromFile");
       if (ff.failed) {
@@ -156,6 +157,7 @@ int main(int argc, char *argv[]) {
         continue;
       }
       scanFile(ff);
+      tock("total for file");
     }
   }
 }

@@ -63,7 +63,8 @@ char const *test_onlyRuns() {
 
 char const *test_randomSequence() {
   size_t n = 1000000;
-  char *s = randSeq(n);
+  string str = randSeq(n);
+  char const *s = str.c_str();
   fprintnf(stdout, s, 80);
   printf("\n");
   Esa esa(s, n + 1); // calculate esa, including $
@@ -112,7 +113,6 @@ char const *test_randomSequence() {
     }
   }
 
-  delete[] s;
   mu_assert_eq(ps2.size(), ps.size(), "number of periodicities does not match");
   return NULL;
 }
@@ -121,7 +121,8 @@ char const *test_randomSequence() {
 // vs. getting only runs directly (for better performance)
 char const *test_randomOnlyRuns() {
   size_t n = 1000000;
-  char *s = randSeq(n);
+  string str = randSeq(n);
+  char const *s = str.c_str();
   n++; //$ border
   fprintnf(stdout, s, 80);
   printf("\n");
@@ -151,7 +152,6 @@ char const *test_randomOnlyRuns() {
   // get just runs
   auto ps = getPeriodicities(true, lzf, esa, plen2);
 
-  delete[] s;
   mu_assert_eq(plen2, plen, "number of runs does not match");
   return NULL;
 }

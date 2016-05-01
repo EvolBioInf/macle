@@ -16,6 +16,9 @@ cd dnalc
 make
 ```
 
+If you can't install libdivsufsort using your package manager, you can
+run `make libdivsufsort` to automatically download and build it.
+
 This should leave you with a `dnalc` binary in the `build` directory.
 
 (TODO: better description, usage examples)

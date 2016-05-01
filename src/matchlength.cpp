@@ -3,9 +3,9 @@
  * Author: Bernhard Haubold, haubold@evolbio.mpg.de
  * Date: Wed Jul 15 10:49:56 2015
  **************************************************/
-#include "prelude.h"
 #include "matchlength.h"
 #include "shulen.h"
+#include <algorithm>
 
 // calculate number of factor start positions up to some given prefix length
 // . allows to easily get number of factor start positions in any interval
@@ -27,14 +27,14 @@ uint64_t *computeFactPrefixSum(Fact &f) {
 
 Fact computeMLFact(Esa &esa) {
   Fact mlf;
-  mlf.prevOcc = NULL; // no prevOcc array here
+  mlf.prevOcc = nullptr; // no prevOcc array here
   mlf.str = esa.str;
   mlf.strLen = esa.n;
 
   /* construct and fill array of match lengths */
   uint64_t *ml = new uint64_t[esa.n];
   for (size_t i = 0; i < esa.n; i++) {
-    ml[esa.sa[i]] = MAX(1, MAX(esa.lcp[i], esa.lcp[i + 1]));
+    ml[esa.sa[i]] = std::max((int64_t)1, std::max(esa.lcp[i], esa.lcp[i + 1]));
   }
 
   /* compute observed number of match factors, store their positions */

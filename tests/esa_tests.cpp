@@ -3,14 +3,16 @@
 #include <cstring>
 #include <ctime>
 #include <algorithm>
+#include <string>
+using namespace std;
 
 #include "fastafile.h"
 #include "esa.h"
 
 // naive: length of lcs of prefixes 1..i and 1..j of given seq (input 1-indexed)
-size_t lcsNaive(char *str, int64_t i, int64_t j) {
+size_t lcsNaive(char const *str, int64_t i, int64_t j) {
   int64_t k = 0;
-  while (((int64_t)MIN(i, j)) - k >= 0 && str[i - k] == str[j - k])
+  while (((int64_t)min(i, j)) - k >= 0 && str[i - k] == str[j - k])
     k++;
   return k;
 }
@@ -37,12 +39,13 @@ char const *test_getEsa() {
 char const *test_revEsaRnd() {
   /* char *s = "AACCGGTTGGTT$"; // from Ohlebusch book */
   size_t n = 100;
-  char *s = randSeq(n++);
+  string str = randSeq(n++);
+  char const *s = str.c_str();
   Esa esa(s, n); // calculate esa, including $
 
-  char *srev = new char[n + 1];
-  memcpy(srev, s, (n + 1) * sizeof(char));
-  std::reverse(srev, srev + n);
+  string strrev = str;
+  reverse(strrev.begin(), strrev.end());
+  char const *srev = strrev.c_str();
 
   Esa resa(srev, n);
   RMQ rmq = resa.precomputeLcp();
@@ -60,8 +63,6 @@ char const *test_revEsaRnd() {
       mu_assert_eq(exp, obs, "lcs does not match");
     }
 
-  delete[] srev;
-  delete[] s;
   return NULL;
 }
 

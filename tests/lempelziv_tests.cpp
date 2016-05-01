@@ -4,6 +4,9 @@
 #include <cstring>
 #include <ctime>
 
+#include <string>
+using namespace std;
+
 #include "esa.h"
 #include "lempelziv.h"
 
@@ -30,7 +33,7 @@ char const *test_LempelZiv() {
   size_t n = strlen(seq);
   Esa esa(seq, n); // calculate esa, including $
   int64_t *oldlcp = new int64_t[esa.n + 1];
-  memcpy(oldlcp, esa.lcp, (esa.n + 1) * sizeof(int64_t));
+  memcpy(oldlcp, esa.lcp.data(), (esa.n + 1) * sizeof(int64_t));
 
   Fact lzf = computeLZFact(esa, false);
   for (size_t i = 0; i < esa.n + 1; i++) // this was actually a bug!
@@ -62,7 +65,8 @@ char const *test_prevOcc() {
 
 char const *test_randomSequence() {
   size_t n = 1000000;
-  char *s = randSeq(n);
+  string ss = randSeq(n);
+  char const *s = ss.c_str();
   fprintnf(stdout, s, 80);
   printf("\n");
   Esa esa(s, n + 1);
@@ -88,7 +92,6 @@ char const *test_randomSequence() {
                 "prev is not a match");
   }
 
-  delete[] s;
   return NULL;
 }
 

@@ -9,19 +9,22 @@
  * Author: Bernhard Haubold, haubold@evolbio.mpg.de
  * Date: Mon Jul 15 11:11:19 2013
  **************************************************/
-#include "prelude.h"
-
+#include <cinttypes>
 #include <cstdio>
+#include <algorithm>
+#include <vector>
+using namespace std;
+
 #include <divsufsort64.h>
 
 #include "esa.h"
 #include "rmq.h"
 
 // calculate suffix array using divsufsort
-saidx_t *getSa(char const *seq, size_t n) {
+vector<saidx64_t> getSa(char const *seq, size_t n) {
   sauchar_t *t = (sauchar_t *)seq;
-  saidx_t *sa = new saidx_t[n + 1];
-  if (divsufsort(t, sa, (saidx_t)n) != 0) {
+  vector<saidx64_t> sa(n + 1);
+  if (divsufsort64(t, sa.data(), (saidx64_t)n) != 0) {
     printf("ERROR[esa]: suffix sorting failed.\n");
     exit(-1);
   }
@@ -36,14 +39,15 @@ saidx_t *getSa(char const *seq, size_t n) {
 void calcLcp(Esa &esa) {
   char const *t = esa.str;
   size_t n = esa.n;
-  saidx_t *sa = esa.sa;
+  auto &sa = esa.sa;
 
-  saidx_t *rank = new saidx_t[n]; // isa
+  esa.isa = vector<saidx64_t>(n);
+  auto &rank = esa.isa;
   for (size_t i = 0; i < n; i++)
     rank[sa[i]] = i;
-  esa.isa = rank;
 
-  int64_t *lcp = new int64_t[n + 1];
+  esa.lcp = vector<saidx64_t>(n + 1);
+  auto &lcp = esa.lcp;
   int64_t h = 0, j = 0;
   lcp[0] = lcp[n] = -1;
   for (size_t i = 0; i < n; i++) {
@@ -57,7 +61,6 @@ void calcLcp(Esa &esa) {
         h--;
     }
   }
-  esa.lcp = lcp;
 }
 
 Esa::Esa(char const *seq, size_t len) : str(seq), n(len) {
@@ -65,25 +68,19 @@ Esa::Esa(char const *seq, size_t len) : str(seq), n(len) {
   calcLcp(*this);
 }
 
-Esa::~Esa() {
-  delete[] this->sa;
-  delete[] this->isa;
-  delete[] this->lcp;
-}
-
 void Esa::print() const {
   printf("i\tSA\tLCP\tSuffix\n");
   for (size_t i = 0; i < this->n; i++)
-    printf("%zu\t%d\t%ld\t%s\n", i, this->sa[i], this->lcp[i], this->str + this->sa[i]);
+    printf("%zu\t%ld\t%ld\t%s\n", i, this->sa[i], this->lcp[i], this->str + this->sa[i]);
   printf("\t\t%ld\n", this->lcp[this->n]);
 }
 
-RMQ Esa::precomputeLcp() const { return RMQ(this->lcp, this->n + 1); }
+RMQ Esa::precomputeLcp() const { return RMQ(this->lcp.data(), this->n + 1); }
 
 int64_t Esa::getLcp(const RMQ &rmq, size_t sai, size_t saj) const {
   if (sai == saj)
     return this->n - sai;
-  size_t l = MIN(this->isa[sai], this->isa[saj]) + 1;
-  size_t r = MAX(this->isa[sai], this->isa[saj]);
+  size_t l = min(this->isa[sai], this->isa[saj]) + 1;
+  size_t r = max(this->isa[sai], this->isa[saj]);
   return rmq.get(l, r);
 }

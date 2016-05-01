@@ -6,22 +6,21 @@
  * Date: Mon Jul 15 11:17:08 2013
  **************************************************/
 #pragma once
-#include <cstdlib>
-#include <divsufsort.h>
+#include <vector>
+#include <divsufsort64.h>
 #include "rmq.h"
 
 /* define data container */
 class Esa {
 public:
   Esa(char const *seq, size_t n);
-  ~Esa();
   RMQ precomputeLcp() const;
   int64_t getLcp(const RMQ &rmq, size_t sai, size_t saj) const;
   void print() const;
 
-  saidx_t *sa;     /* suffix array */
-  saidx_t *isa;    /* inverse suffix array */
-  int64_t *lcp;    /* longest common prefix array */
-  char const *str; /* pointer to underlying string */
-  size_t n;        /* length of sa and lcp */
+  std::vector<saidx64_t> sa;  /* suffix array */
+  std::vector<saidx64_t> isa; /* inverse suffix array */
+  std::vector<int64_t> lcp;   /* longest common prefix array */
+  char const *str;            /* pointer to underlying string */
+  size_t n;                   /* length of sa and lcp */
 };

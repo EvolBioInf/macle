@@ -1,6 +1,6 @@
 CC := g++
-CFLAGS := -std=c++11 -Isrc -Wall -Wextra -Wshadow -O2 -g # -Isdsl/include -msse4.2 -pg
-LDFLAGS := -lm -lgsl -lgslcblas -lblas -ldivsufsort -ldivsufsort64 # -Lsdsl/lib -lsdsl -pg
+CFLAGS := -std=c++11 -Isrc -Ilibdivsufsort/include -Wall -Wextra -Wshadow -O2 -g # -Isdsl/include -msse4.2 -pg
+LDFLAGS := -lm -lgsl -lgslcblas -lblas -ldivsufsort64 -Llibdivsufsort/lib # -Lsdsl/lib -lsdsl -pg
 TARGET := dnalc
 
 SOURCES := $(wildcard src/*.cpp)
@@ -44,4 +44,8 @@ sdsl:
 	cd sdsl-lite
 	sdsl-lite/install.sh sdsl
 
-.PHONY: all clean lint tests valgrind format sdsl
+libdivsufsort:
+	git clone git@github.com:y-256/libdivsufsort.git
+	cd libdivsufsort && cmake -DBUILD_SHARED_LIBS=0 -DBUILD_EXAMPLES=0 -DBUILD_DIVSUFSORT64=1 && make
+
+.PHONY: all clean lint tests valgrind format sdsl libdivsufsort

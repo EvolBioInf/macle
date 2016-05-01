@@ -1,21 +1,21 @@
-#include "util.h"
-#include <cstring>
 #include <cstdlib>
+#include <string>
+#include <cstring>
+using namespace std;
 
-/* generate random sequence of given length */
-char *randSeq(size_t n) {
+// generate random sequence of given length
+string randSeq(size_t n) {
   static char const *alphabet = "ACGT";
-  char *s = new char[n + 2];
-  s[n] = '$';
-  s[n + 1] = '\0';
+  string s;
+  s.reserve(n + 2);
   for (size_t i = 0; i < n; i++)
-    s[i] = alphabet[rand() % 4];
+    s += alphabet[rand() % 4];
+  s += "$";
   return s;
 }
 
-/* fprintnf: print max of n characters of str onto fp;
- * add ... if str was truncated
- */
+// fprintnf: print max of n characters of str onto fp;
+// add ... if str was truncated
 void fprintnf(FILE *fp, char const *str, int n) {
   int i, l, m;
   l = strlen(str);

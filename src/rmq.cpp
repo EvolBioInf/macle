@@ -1,4 +1,8 @@
-#include "prelude.h"
+#include <cassert>
+#include <cmath>
+#include <algorithm>
+using namespace std;
+
 #include "rmq.h"
 
 #define BLOCKSIZE(n) ((size_t)(log2(n) / 4) + 1)
@@ -39,14 +43,14 @@ int64_t getRMQwithPow2(int64_t const *A, size_t n, int64_t const *B, size_t l, s
   size_t l2 = l + (diff - range);
   int64_t cand1 = A[B[l * row + power] - 1];
   int64_t cand2 = A[B[l2 * row + power] - 1];
-  return MIN(cand1, cand2);
+  return min(cand1, cand2);
 }
 
-void precomputeBlockRMQ(int64_t *A, size_t n, int64_t *B) {
+void precomputeBlockRMQ(int64_t const *A, size_t n, int64_t *B) {
   size_t bSz = BLOCKSIZE(n);
   size_t bNum = BLOCKNUM(n);
   for (size_t i = 0; i < bNum; i++) {
-    size_t next = MIN((i + 1) * bSz, n);
+    size_t next = min((i + 1) * bSz, n);
     int64_t min = INT64_MAX;
     for (size_t j = i * bSz; j < next; j++)
       if (min > A[j])
@@ -55,7 +59,7 @@ void precomputeBlockRMQ(int64_t *A, size_t n, int64_t *B) {
   }
 }
 
-RMQ::RMQ(int64_t *A, size_t len) : arr(A), n(len) {
+RMQ::RMQ(int64_t const *A, size_t len) : arr(A), n(len) {
   size_t bNum = BLOCKNUM(n);
   size_t tRow = log2(bNum) + 1;
   size_t tNum = bNum * tRow;
@@ -92,7 +96,7 @@ int64_t RMQuery(int64_t const *A, size_t n, int64_t const *B, size_t l, size_t r
   int64_t rmin = INT64_MAX;
   int64_t medmin = INT64_MAX;
 
-  size_t nextbs = MIN((lblock + 1) * bSz, n);
+  size_t nextbs = min((lblock + 1) * bSz, n);
   for (size_t i = l; i < nextbs; i++)
     if (A[i] < lmin)
       lmin = A[i];
@@ -101,5 +105,5 @@ int64_t RMQuery(int64_t const *A, size_t n, int64_t const *B, size_t l, size_t r
       rmin = A[i];
   if (rblock - lblock > 1)
     medmin = getRMQwithPow2(B, bNum, &B[bNum], lblock + 1, rblock - 1);
-  return MIN(medmin, MIN(lmin, rmin));
+  return min(medmin, min(lmin, rmin));
 }

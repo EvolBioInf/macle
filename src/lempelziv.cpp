@@ -11,12 +11,12 @@
  * Author: Bernhard Haubold, haubold@evolbio.mpg.de
  * Date: Mon Jul 15 10:29:09 2013
  **************************************************/
-#include "prelude.h"
-
 #include "lempelziv.h"
 #include <cstring>
 
+#include <algorithm>
 #include <stack>
+#include <vector>
 using namespace std;
 
 // sum type used in lpf algorithm
@@ -38,8 +38,8 @@ Elem::Elem(int64_t a, int64_t b) : i(a), lcp(b) {}
  */
 size_t *computeLpf(Esa &esa, int64_t *&prevOccP) {
   size_t n = esa.n;
-  saidx_t *sa = esa.sa;
-  int64_t *lcp = esa.lcp;
+  auto &sa = esa.sa;
+  auto &lcp = esa.lcp;
 
   size_t *lpf = new size_t[n + 1];
   int64_t *prevOcc = new int64_t[n];
@@ -55,8 +55,8 @@ size_t *computeLpf(Esa &esa, int64_t *&prevOccP) {
     while (!s.empty() && sai < sa[s.top().i]) {
       Elem v = s.top();
       s.pop();
-      lpf[sa[v.i]] = MAX(v.lcp, currLcp);
-      currLcp = MIN(v.lcp, currLcp);
+      lpf[sa[v.i]] = max(v.lcp, currLcp);
+      currLcp = min(v.lcp, currLcp);
       // fill prevOcc
       if (lpf[sa[v.i]] == 0)
         prevOcc[sa[v.i]] = -1;
@@ -76,7 +76,7 @@ size_t *computeLpf(Esa &esa, int64_t *&prevOccP) {
 // alternative prevOcc calculation (from same paper)
 size_t *computeLpf2(Esa &esa, int64_t *&prevOccP) {
   size_t n = esa.n;
-  saidx_t *sa = esa.sa;
+  auto &sa = esa.sa;
   int64_t *lprev = new int64_t[n];
   int64_t *lnext = new int64_t[n];
   int64_t *prevl = new int64_t[n];
@@ -105,8 +105,8 @@ size_t *computeLpf2(Esa &esa, int64_t *&prevOccP) {
 
   prevOcc[0] = -1;
   for (size_t i = 1; i < esa.n; i++) {
-    size_t j = MAX(lpfl[i - 1] - 1, 0);
-    size_t k = MAX(lpfr[i - 1] - 1, 0);
+    size_t j = max(lpfl[i - 1] - 1, (int64_t)0);
+    size_t k = max(lpfr[i - 1] - 1, (int64_t)0);
     if (prevl[i] == -1)
       lpfl[i] = 0;
     else {
@@ -121,7 +121,7 @@ size_t *computeLpf2(Esa &esa, int64_t *&prevOccP) {
         k++;
       lpfr[i] = k;
     }
-    lpf[i] = MAX(lpfl[i], lpfr[i]);
+    lpf[i] = max(lpfl[i], lpfr[i]);
     if (lpf[i] == 0)
       prevOcc[i] = -1;
     else if (lpfl[i] > lpfr[i])
@@ -148,7 +148,7 @@ Fact computeLZFact(Esa &esa, bool alternative) {
   lzf.fact[0] = 0;
   long i = 0;
   while (lzf.fact[i] < n) {
-    lzf.fact[i + 1] = lzf.fact[i] + MAX(1, lpf[lzf.fact[i]]);
+    lzf.fact[i + 1] = lzf.fact[i] + max((size_t)1, lpf[lzf.fact[i]]);
     i++;
   }
   lzf.lpf = lpf;

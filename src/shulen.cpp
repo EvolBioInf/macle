@@ -8,7 +8,8 @@
  *****************************************************************/
 #include <cmath>
 #include <cfloat>
-#include <gsl/gsl_sf_gamma.h>
+#include "util.h"
+#include "gsl/gsl_sf_gamma.h"
 
 bool thresholdReached = false;
 

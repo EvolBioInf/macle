@@ -1,6 +1,7 @@
 *.o
 build/
 sdsl*/
+libdivsufsort/
 tests/scratchpad*
 tags
 randomSeed.dat

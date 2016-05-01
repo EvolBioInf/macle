@@ -1,3 +1,7 @@
+#include <cstdio>
+#include <algorithm>
+using namespace std;
+
 #include "args.h"
 #include "bench.h"
 
@@ -30,17 +34,18 @@ void gnuplotCode(uint32_t w, uint32_t k, int n) {
   printf(";\n");
 }
 
-void printPlot(uint32_t k, size_t n, FastaFile &ff, vector<vector<double>> &ys) {
+void printPlot(uint32_t w, uint32_t k, size_t n, FastaFile &ff,
+               vector<vector<double>> &ys) {
   printf("offset ");
   for (size_t i = 0; i < ff.seqs.size(); i++) { // two columns for each seq
-    printf("\"%s %s\" ", ff.seqs[i].name, "(ML)");
-    printf("\"%s %s\" ", ff.seqs[i].name, "(Per)");
+    printf("\"%s %s\"\t", ff.seqs[i].name, "(ML)");
+    printf("\"%s %s\"\t", ff.seqs[i].name, "(Per)");
   }
   printf("\n");
   for (size_t j = 0; j < n; j++) {
-    printf("%zu ", j * k);
+    printf("%zu\t", j * k + w / 2); // center of window
     for (size_t i = 0; i < 2 * ff.seqs.size(); i++)
-      printf("%.4f ", ys[i][j]);
+      printf("%.4f\t", ys[i][j]);
     printf("\n");
   }
 }
@@ -62,10 +67,10 @@ void scanFile(FastaFile &ff) {
   size_t k = args.k;
   if (w == 0)
     w = minlen;       // default window = whole (smallest) seq.
-  w = MIN(w, minlen); // biggest window = whole (smallest) seq.
+  w = min(w, minlen); // biggest window = whole (smallest) seq.
   if (k == 0)
     k = w;       // default interval = whole (smallest) seq.
-  k = MIN(k, w); // biggest interval = window size
+  k = min(k, w); // biggest interval = window size
 
   // array for results for all sequences in file
   size_t entries = (maxlen - w) / k + 1;
@@ -123,18 +128,18 @@ void scanFile(FastaFile &ff) {
       if (args.gf == 0) {
         for (size_t i = 0; i < 2 * ff.seqs.size(); i++) {
           for (size_t j = 0; j < entries; j++)
-            printf("%zu %.4f\n", j * k, ys[i][j]);
+            printf("%zu\t%.4f\n", j * k + w / 2, ys[i][j]);
           printf("\n");
         }
       } else if (args.gf == 1) {
         gnuplotCode(w, k, 2 * ff.seqs.size());
         for (size_t i = 0; i < 2 * ff.seqs.size(); i++) {
-          printPlot(k, entries, ff, ys);
+          printPlot(w, k, entries, ff, ys);
           printf("e\n");
         }
       }
     } else { // just print resulting data
-      printPlot(k, entries, ff, ys);
+      printPlot(w, k, entries, ff, ys);
     }
   }
 }

@@ -1,6 +1,6 @@
 #pragma once
-#include <cstdlib>
-#include <cinttypes>
+#include <cstddef>
+#include <cstdint>
 
 /* a factorization of a string (LempelZiv or MatchLength) */
 class Fact {

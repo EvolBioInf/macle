@@ -1,8 +1,8 @@
 #include <cinttypes>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
-#include "prelude.h"
 #include "matchlength.h"
 #include "periodicity.h"
 #include "shulen.h"
@@ -24,7 +24,7 @@ void mlComplexity(size_t w, size_t k, vector<double> &y, Fact &mlf, double gc) {
   // calc. for each window
   for (size_t j = 0; j < entries; j++) {
     size_t l = j * k;
-    size_t r = MIN(n, l + w) - 1;
+    size_t r = min(n, l + w) - 1;
     double cObs = (double)sumFromTo(mlf.lpf, l, r) / (double)w;
     y[j] = (cObs /* - cMin */) / (cAvg - cMin);
   }
@@ -52,7 +52,7 @@ void runComplexity(size_t w, size_t k, vector<double> &y, size_t n,
   double pMax = w; // no more atoms than window size
   for (size_t j = 0; j < entries; j++) {
     size_t l = j * k;
-    size_t r = MIN(n, l + w) - 1;
+    size_t r = min(n, l + w) - 1;
     double pObs = sumFromTo(ps, l, r);
     y[j] = pObs / pMax;
   }

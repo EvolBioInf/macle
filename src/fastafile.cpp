@@ -8,6 +8,7 @@
 #include <fcntl.h>
 
 #include <cstring>
+#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -16,14 +17,13 @@ FastaFile::~FastaFile() {
     return;
   for (auto it = seqs.begin(); it != seqs.end(); it++)
     pfasta_seq_free(&(*it));
-  seqs.clear();
 }
 
 /* eopen: open file on system level and report on error */
 int open_or_fail(char const *fname, int flag) {
   int fd = open(fname, flag, 0);
   if (fd < 0) {
-    fprintf(stderr, "open(\"%s\", %d) failed: %s\n", fname, flag, strerror(errno));
+    cerr << "open(" << fname << "," << flag << ") failed: " << strerror(errno) << endl;
     exit(EXIT_FAILURE);
   }
   return fd;

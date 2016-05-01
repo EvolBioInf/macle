@@ -1,6 +1,6 @@
 #pragma once
 #include <cstddef>
-#include <cinttypes>
+#include <cstdint>
 
 #define PROGNAME "dnalc"
 #define DESCRIPTION "Calculate DNA local neighborhood complexity"

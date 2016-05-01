@@ -1,4 +1,3 @@
-#include "prelude.h"
 #include "bench.h"
 
 #include "lempelziv.h"
@@ -25,18 +24,18 @@ int64_t lcp(const Esa &esa, const RMQ &tab, size_t i, size_t j) {
     return 0;
   uint64_t k = 0;
   bool lazy = false;
-  while (!lazy && MAX(i, j) + k < esa.n && esa.str[k + i] == esa.str[k + j])
+  while (!lazy && max(i, j) + k < esa.n && esa.str[k + i] == esa.str[k + j])
     if (++k > LAZY_CONST)
       lazy = true;
   if (!lazy)
     return k;
   k = esa.getLcp(tab, i, j);
-  return MAX(k, 0);
+  return max(k, (uint64_t)0);
 }
 
 int64_t lcs(const Esa &resa, const RMQ &rlcptab, size_t i, size_t j) {
-  int64_t max = lcp(resa, rlcptab, resa.n - i + 1, resa.n - j + 1);
-  return MAX(0, max);
+  int64_t maxval = lcp(resa, rlcptab, resa.n - i + 1, resa.n - j + 1);
+  return max(maxval, (int64_t)0);
 }
 
 // naive: length of lcp of suffixes i and j of given seq (1-indexed)
@@ -44,7 +43,7 @@ size_t lcp2(char const *str, size_t n, size_t i, size_t j) {
   i--;
   j--;
   uint64_t k = 0;
-  while (MAX(i, j) + k < n && str[k + i] == str[k + j])
+  while (max(i, j) + k < n && str[k + i] == str[k + j])
     k++;
   return k;
 }
@@ -54,7 +53,7 @@ size_t lcs2(char const *str, int64_t i, int64_t j) {
   i--;
   j--;
   int64_t k = 0;
-  while (((int64_t)MIN(i, j)) - k >= 0 && str[i - k] == str[j - k])
+  while (((int64_t)min(i, j)) - k >= 0 && str[i - k] == str[j - k])
     k++;
   return k;
 }
@@ -132,7 +131,7 @@ vector<list<Periodicity>> calcType1Periodicities(bool runsOnly, Fact &lzf, Esa &
     size_t ej = factEnd(lzf, j);          // e_j
     size_t ejm1 = factEnd(lzf, j - 1);    // e_(j-1)
 
-    size_t max = MIN(sjLen + sjm1Len - 1, ejm1);
+    size_t max = min(sjLen + sjm1Len - 1, ejm1);
     for (size_t l = 1; l <= max; l++) {
       /* size_t L = lcs2(lzf.str, ejm1 - l, ejm1); */
       size_t L = lcs(revesa, revlcptab, ejm1 - l, ejm1);

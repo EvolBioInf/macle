@@ -1,5 +1,6 @@
-#include <cstdio>
-#include <cstdlib>
+#include <iostream>
+using namespace std;
+
 #include <getopt.h>
 #include "args.h"
 
@@ -7,14 +8,14 @@
 Args args;
 
 static char const opts_short[] = "hs:w:k:pg::b";
-static const struct option opts[] = {
-    {"help", no_argument, NULL, 'h'},
-    {"seed", required_argument, NULL, 's'},
-    {"window-size", required_argument, NULL, 'w'},
-    {"window-interval", required_argument, NULL, 'k'},
-    {"print-factors", no_argument, NULL, 'p'},
-    {"graph", optional_argument, NULL, 'g'},
-    {"benchmark", no_argument, NULL, 'b'},
+static struct option const opts[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"seed", required_argument, nullptr, 's'},
+    {"window-size", required_argument, nullptr, 'w'},
+    {"window-interval", required_argument, nullptr, 'k'},
+    {"print-factors", no_argument, nullptr, 'p'},
+    {"graph", optional_argument, nullptr, 'g'},
+    {"benchmark", no_argument, nullptr, 'b'},
     {0, 0, 0, 0} // <- required
 };
 
@@ -45,7 +46,7 @@ void Args::parse(int argc, char *argv[]) {
       break;
     case 'g':
       args.g = true;
-      args.gf = optarg == NULL ? 0 : atoi(optarg);
+      args.gf = optarg == nullptr ? 0 : atoi(optarg);
       break;
     case 'b':
       args.b = true;
@@ -61,15 +62,16 @@ void Args::parse(int argc, char *argv[]) {
       break;
 
     case 'h':
-      printf("%s", usage);
+      cout << usage;
       exit(0);
       break;
     case '?': // automatic error message from getopt
       exit(1);
       break;
     default:
-      fprintf(stderr, "Error while parsing command line arguments. "
-                      "Please file a bug report.\n");
+      cerr << "Error while parsing command line arguments. "
+              "Please file a bug report."
+           << endl;
       abort();
     }
   }

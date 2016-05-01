@@ -4,11 +4,11 @@
 
 class RMQ {
 public:
-  RMQ(int64_t *A, size_t n);
+  RMQ(int64_t const *A, size_t n);
   ~RMQ();
   int64_t get(size_t l, size_t r) const;
 
-  int64_t *arr;
+  int64_t const *arr;
   const size_t n;
 
   int64_t *tab;

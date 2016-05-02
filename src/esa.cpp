@@ -75,7 +75,7 @@ void Esa::print() const {
   printf("\t\t%ld\n", this->lcp[this->n]);
 }
 
-RMQ Esa::precomputeLcp() const { return RMQ(this->lcp.data(), this->n + 1); }
+RMQ Esa::precomputeLcp() const { return RMQ(this->lcp); }
 
 int64_t Esa::getLcp(const RMQ &rmq, size_t sai, size_t saj) const {
   if (sai == saj)

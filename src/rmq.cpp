@@ -8,8 +8,10 @@ using namespace std;
 #define BLOCKSIZE(n) ((size_t)(log2(n) / 4) + 1)
 #define BLOCKNUM(n) (n / BLOCKSIZE(n) + 1)
 
-void precomputePow2RMQ(int64_t *A, size_t n, int64_t *B) {
+vector<int64_t> precomputePow2RMQ(vector<int64_t> const &A) {
+  auto n = A.size();
   size_t row = log2(n) + 1;
+  vector<int64_t> B(n*row);
   for (size_t i = 0; i < n; i++)
     B[i * row] = i + 1;
   for (size_t j = 1; j < row; j++) {
@@ -26,9 +28,11 @@ void precomputePow2RMQ(int64_t *A, size_t n, int64_t *B) {
         B[i * row + j] = B[i2 * row + (j - 1)];
     }
   }
+  return B;
 }
 
-int64_t getRMQwithPow2(int64_t const *A, size_t n, int64_t const *B, size_t l, size_t r) {
+int64_t getRMQwithPow2(vector<int64_t> const &A, vector<int64_t> const &B, size_t l, size_t r) {
+  auto n = A.size();
   assert(l <= r);
   size_t row = log2(n) + 1;
   size_t diff = r - l + 1;
@@ -46,9 +50,11 @@ int64_t getRMQwithPow2(int64_t const *A, size_t n, int64_t const *B, size_t l, s
   return min(cand1, cand2);
 }
 
-void precomputeBlockRMQ(int64_t const *A, size_t n, int64_t *B) {
+vector<int64_t> precomputeBlockRMQ(vector<int64_t> const &A) {
+  auto n = A.size();
   size_t bSz = BLOCKSIZE(n);
   size_t bNum = BLOCKNUM(n);
+  vector<int64_t> B(bNum);
   for (size_t i = 0; i < bNum; i++) {
     size_t next = min((i + 1) * bSz, n);
     int64_t min = INT64_MAX;
@@ -57,30 +63,22 @@ void precomputeBlockRMQ(int64_t const *A, size_t n, int64_t *B) {
         min = A[j];
     B[i] = min;
   }
+  return B;
 }
 
-RMQ::RMQ(int64_t const *A, size_t len) : arr(A), n(len) {
-  size_t bNum = BLOCKNUM(n);
-  size_t tRow = log2(bNum) + 1;
-  size_t tNum = bNum * tRow;
-  this->tab = new int64_t[bNum + tNum];
-  precomputeBlockRMQ(A, n, this->tab);
-  precomputePow2RMQ(this->tab, bNum, &(this->tab[bNum]));
+RMQ::RMQ(vector<int64_t> const &A) : arr(&A) {
+  this->btab = precomputeBlockRMQ(A);
+  this->ptab = precomputePow2RMQ(this->btab);
 }
-
-RMQ::~RMQ() { delete[] this->tab; }
 
 int64_t RMQ::get(size_t l, size_t r) const {
-  return RMQuery(this->arr, this->n, this->tab, l, r);
-}
-
-int64_t RMQuery(int64_t const *A, size_t n, int64_t const *B, size_t l, size_t r) {
+  auto &A = *arr;
+  auto n = arr->size();
   assert(l <= r);
   if (l == r)
     return A[l];
 
   size_t bSz = BLOCKSIZE(n);
-  size_t bNum = BLOCKNUM(n);
 
   size_t lblock = l / bSz;
   size_t rblock = r / bSz;
@@ -104,6 +102,6 @@ int64_t RMQuery(int64_t const *A, size_t n, int64_t const *B, size_t l, size_t r
     if (A[i] < rmin)
       rmin = A[i];
   if (rblock - lblock > 1)
-    medmin = getRMQwithPow2(B, bNum, &B[bNum], lblock + 1, rblock - 1);
+    medmin = getRMQwithPow2(btab, ptab, lblock + 1, rblock - 1);
   return min(medmin, min(lmin, rmin));
 }

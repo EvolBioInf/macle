@@ -16,6 +16,6 @@ void tock(char const *str) {
     auto const tp2 = high_resolution_clock::now();
     double span = duration_cast<duration<double>>(tp2 - tp.top()).count();
     tp.pop();
-    cerr << "[BENCH] " << str << " " << setprecision(2) << fixed << span << "s" << endl;
+    cerr << "[BENCH:"<<tp.size()<<"] " << str << " " << setprecision(2) << fixed << span << "s" << endl;
   }
 }

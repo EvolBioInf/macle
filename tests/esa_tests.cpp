@@ -19,17 +19,18 @@ size_t lcsNaive(char const *str, int64_t i, int64_t j) {
 
 char const *test_getEsa() {
   FastaFile ff("Data/hotspotExample2.fasta");
+  ff.seqs[0].seq += "$";
 
-  char *s = ff.seqs[0].seq;
-  size_t n = ff.seqs[0].len;
-  Esa esa(s, n + 1); // calculate esa, including $
+  char const *s = ff.seqs[0].seq.c_str();
+  size_t n = ff.seqs[0].seq.size();
+  Esa esa(s, n); // calculate esa, including $
 
   mu_assert(esa.str == s, "ESA does not point to original sequence");
-  mu_assert(esa.n == n + 1, "ESA size not correct");
+  mu_assert(esa.n == n, "ESA size not correct");
   mu_assert(esa.str[esa.sa[0]] == '$', "first ESA entry not $");
-  mu_assert(esa.sa[0] == (int64_t)n, "wrong SA index");
+  mu_assert(esa.sa[0] == (int64_t)(n - 1), "wrong SA index");
   mu_assert(esa.isa[esa.sa[0]] == 0, "isa incorrect");
-  mu_assert(esa.isa[esa.sa[n]] == (int64_t)n, "isa incorrect");
+  mu_assert(esa.isa[esa.sa[n - 1]] == (int64_t)(n - 1), "isa incorrect");
   mu_assert(esa.lcp[0] == -1, "first LCP not -1");
   mu_assert(esa.lcp[esa.n] == -1, "last LCP not -1");
 

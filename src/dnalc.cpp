@@ -14,13 +14,26 @@ using namespace std;
 using namespace std;
 
 // calculate the GC content
-double gcContent(pfasta_seq const &ps) {
+double gcContent(string const &s) {
   size_t gc = 0;
-  char const *ptr = ps.seq;
-  for (; *ptr; ptr++)
-    if (*ptr == 'g' || *ptr == 'G' || *ptr == 'c' || *ptr == 'C')
+  for (auto it=s.begin(); it!=s.end(); it++)
+    if (*it == 'g' || *it == 'G' || *it == 'c' || *it == 'C')
       gc++;
-  return (double)gc / (ptr - ps.seq);
+  return (double)gc / s.size();
+}
+
+//returns reverse complement DNA string
+string revComp(string const &s) {
+  string r = s;
+  for (auto it=r.begin(); it!=r.end(); it++)
+    switch (*it) {
+      case 'A': *it = 'T'; break;
+      case 'T': *it = 'A'; break;
+      case 'G': *it = 'C'; break;
+      case 'C': *it = 'G'; break;
+    }
+  reverse(r.begin(),r.end());
+  return r;
 }
 
 void gnuplotCode(uint32_t w, uint32_t k, int n) {
@@ -45,11 +58,11 @@ void printPlot(uint32_t w, uint32_t k, size_t n, FastaFile &ff,
 }
 
 // read sequence, do stuff
-void scanFile(FastaFile &ff) {
+void processFile(FastaFile &ff) {
   size_t maxlen = 0;        // max implies the domain of the plot
   size_t minlen = SIZE_MAX; // min restricts the reasonable window sizes
   for (size_t i = 0; i < ff.seqs.size(); i++) {
-    size_t len = ff.seqs[i].len;
+    size_t len = ff.seqs[i].seq.size();
     if (len > maxlen)
       maxlen = len;
     if (len < minlen)
@@ -71,15 +84,16 @@ void scanFile(FastaFile &ff) {
   vector<vector<double>> ys(2 * ff.seqs.size(), vector<double>(entries + 1));
 
   for (size_t i = 0; i < ff.seqs.size(); i++) {
-    double gc = gcContent(ff.seqs[i]);
-    char *t = ff.seqs[i].seq;
-    size_t n = ff.seqs[i].len;
+    double gc = gcContent(ff.seqs[i].seq);
+    ff.seqs[i].seq += "$";
+    char const *t = ff.seqs[i].seq.c_str();
+    size_t n = ff.seqs[i].seq.size();
 
     tick();
-    Esa esa(t, n + 1); // esa for sequence+$
+    Esa esa(t, n); // esa for sequence+$
     tock("getEsa");
     if (args.p) {
-      printf("%s %s\n", ff.seqs[i].name, ff.seqs[i].comment);
+      printf("%s %s\n", ff.seqs[i].name.c_str(), ff.seqs[i].comment.c_str());
       /* printEsa(esa); */
     }
 
@@ -132,12 +146,12 @@ void scanFile(FastaFile &ff) {
           // print column header (for plot labels)
           printf("offset ");
           for (size_t j = 0; j < ff.seqs.size(); j++) { // two columns for each seq
-            printf("\"%s %s\"\t", ff.seqs[j].name, "(MC)");
-            printf("\"%s %s\"\t", ff.seqs[j].name, "(PC)");
+            printf("\"%s %s\"\t", ff.seqs[j].name.c_str(), "(MC)");
+            printf("\"%s %s\"\t", ff.seqs[j].name.c_str(), "(PC)");
           }
           printf("\n");
           printPlot(w, k, entries, ff, ys); // print plot itself
-          printf("e\n"); // separator between repeats of data
+          printf("e\n");                    // separator between repeats of data
         }
       }
     } else { // just print resulting data
@@ -152,7 +166,7 @@ int main(int argc, char *argv[]) {
   // process files (or stdin, if none given)
   if (!args.num_files) {
     FastaFile ff(nullptr);
-    scanFile(ff);
+    processFile(ff);
   } else {
     for (size_t i = 0; i < args.num_files; i++) {
       tick();
@@ -163,7 +177,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Skipping invalid FASTA file...\n");
         continue;
       }
-      scanFile(ff);
+      processFile(ff);
       tock("total for file");
     }
   }

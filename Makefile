@@ -1,5 +1,5 @@
-CC := g++
-CFLAGS := -std=c++11 -Isrc -Ilibdivsufsort/include -Wall -Wextra -Wshadow -O2 -g # -Isdsl/include -msse4.2 -pg
+CXX := g++
+CFLAGS := -std=c++11 -Isrc -Ilibdivsufsort/include -Wall -Wextra -Wshadow -O2 -g -ggdb # -Isdsl/include -msse4.2 -pg
 LDFLAGS := -lm -lgsl -lgslcblas -lblas -ldivsufsort64 -Llibdivsufsort/lib # -Lsdsl/lib -lsdsl -pg
 TARGET := dnalc
 
@@ -14,17 +14,17 @@ all: build/$(TARGET) tests
 
 build/$(TARGET): $(OBJECTS)
 	@echo " mkdir -p build"; mkdir -p build
-	@echo " $(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o build/$(TARGET) $(LDFLAGS)
+	@echo " $(CXX) $^ -o $(TARGET) $(LIB)"; $(CXX) $^ -o build/$(TARGET) $(LDFLAGS)
 
 src/%.o: src/%.cpp
-	@echo " $(CC) $(CFLAGS) -c -o $@ $<"; $(CC) $(CFLAGS) -c -o $@ $<
+	@echo " $(CXX) $(CFLAGS) -c -o $@ $<"; $(CXX) $(CFLAGS) -c -o $@ $<
 
 tests/%.o: tests/%.cpp
-	@echo " $(CC) $(CFLAGS) -c -o $@ $<"; $(CC) $(CFLAGS) -c -o $@ $<
+	@echo " $(CXX) $(CFLAGS) -c -o $@ $<"; $(CXX) $(CFLAGS) -c -o $@ $<
 
 $(TESTS): $(OBJECTS) $(TEST_OBJ)
-	@echo " $(CC) $(filter-out src/$(TARGET).o,$(OBJECTS)) $@.o -o $@ $(LDFLAGS)"
-	$(CC) $(filter-out src/$(TARGET).o,$(OBJECTS)) $(@:build/%=tests/%).o -o $@ $(LDFLAGS)
+	@echo " $(CXX) $(filter-out src/$(TARGET).o,$(OBJECTS)) $@.o -o $@ $(LDFLAGS)"
+	$(CXX) $(filter-out src/$(TARGET).o,$(OBJECTS)) $(@:build/%=tests/%).o -o $@ $(LDFLAGS)
 
 clean:
 	@echo " $(RM) -r build"; $(RM) -r build

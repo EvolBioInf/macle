@@ -10,14 +10,10 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
+#include <string>
 using namespace std;
 
-FastaFile::~FastaFile() {
-  if (failed)
-    return;
-  for (auto it = seqs.begin(); it != seqs.end(); it++)
-    pfasta_seq_free(&(*it));
-}
+FastaSeq::FastaSeq(string n, string c, string s) : name(n), comment(c), seq(s) {}
 
 /* eopen: open file on system level and report on error */
 int open_or_fail(char const *fname, int flag) {
@@ -32,7 +28,7 @@ int open_or_fail(char const *fname, int flag) {
 // input: filename of fasta file (or 0 for STDIN), reference to an empty number
 // output: either successfully parsed file, or NULL
 FastaFile::FastaFile(char const *file) : failed(false) {
-  seqs = vector<pfasta_seq>();
+  seqs = vector<FastaSeq>();
 
   // open file
   int fd = file ? open_or_fail(file, O_RDONLY) : STDIN_FILENO;
@@ -45,31 +41,30 @@ FastaFile::FastaFile(char const *file) : failed(false) {
   pfasta_file pf;
   if ((l = pfasta_parse(&pf, fd)) != 0) {
     warnx("%s: %s", filename, pfasta_strerror(&pf));
-    this->failed = true;
     pfasta_free(&pf);
+    failed = true;
     return;
   }
 
   // read sequences
   pfasta_seq seq;
-  while ((l = pfasta_read(&pf, &seq)) == 0)
-    seqs.push_back(seq);
+  while ((l = pfasta_read(&pf, &seq)) == 0) {
+    string name = seq.name ? string(seq.name) : "";
+    string comment = seq.comment ? string(seq.comment) : "";
+    string sequence = seq.seq ? string(seq.seq) : "";
+    for (auto it=sequence.begin(); it!=sequence.end(); it++)
+      *it = toupper(*it); //acgt->ACGT
+    seqs.push_back(FastaSeq(name, comment, sequence));
+    pfasta_seq_free(&seq);
+  }
 
   if (l < 0) {
-    pfasta_seq_free(&seq);
     warnx("%s: %s", filename, pfasta_strerror(&pf));
-    for (auto it = seqs.begin(); it != seqs.end(); it++)
-      pfasta_seq_free(&(*it));
-    seqs.clear();
-    pfasta_free(&pf);
-    this->failed = true;
-    return;
+    pfasta_seq_free(&seq);
+    failed = true;
   }
 
   pfasta_free(&pf);
   if (file)
     close(fd);
-
-  for (auto it = seqs.begin(); it != seqs.end(); it++)
-    it->len = strlen(it->seq) - 1;
 }

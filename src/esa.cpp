@@ -9,6 +9,7 @@
  * Author: Bernhard Haubold, haubold@evolbio.mpg.de
  * Date: Mon Jul 15 11:11:19 2013
  **************************************************/
+#include "bench.h"
 #include <cinttypes>
 #include <cstdio>
 #include <algorithm>
@@ -40,11 +41,7 @@ void calcLcp(Esa &esa) {
   char const *t = esa.str;
   size_t n = esa.n;
   auto &sa = esa.sa;
-
-  esa.isa = vector<saidx64_t>(n);
   auto &rank = esa.isa;
-  for (size_t i = 0; i < n; i++)
-    rank[sa[i]] = i;
 
   esa.lcp = vector<saidx64_t>(n + 1);
   auto &lcp = esa.lcp;
@@ -53,9 +50,8 @@ void calcLcp(Esa &esa) {
   for (size_t i = 0; i < n; i++) {
     if (rank[i] > 0) {
       j = sa[rank[i] - 1];
-      while (t[i + h] == t[j + h]) {
+      while (t[i + h] == t[j + h])
         h++;
-      }
       lcp[rank[i]] = h;
       if (h > 0)
         h--;
@@ -63,9 +59,70 @@ void calcLcp(Esa &esa) {
   }
 }
 
+// alternative lcp calculation (PLCP algorithm, Ohlebusch book)
+int esa_init_LCP(Esa &esa) {
+  const char *S = esa.str;
+  auto &SA = esa.sa;
+  saidx64_t len = esa.n;
+
+  // Allocate new memory
+  // The LCP array is one element longer than S.
+  esa.lcp = vector<saidx64_t>(len + 1);
+  auto &LCP = esa.lcp;
+
+  LCP[0] = -1;
+  LCP[len] = -1;
+
+  // Allocate temporary arrays
+  saidx64_t *PHI = new saidx64_t[len];
+  saidx64_t *PLCP = PHI;
+
+  PHI[SA[0]] = -1;
+  saidx64_t k;
+  ssize_t i;
+
+  for (i = 1; i < len; i++) {
+    PHI[SA[i]] = SA[i - 1];
+  }
+
+  ssize_t l = 0;
+  for (i = 0; i < len; i++) {
+    k = PHI[i];
+    if (k != -1) {
+      while (S[k + l] == S[i + l]) {
+        l++;
+      }
+      PLCP[i] = l;
+      l--;
+      if (l < 0)
+        l = 0;
+    } else {
+      PLCP[i] = -1;
+    }
+  }
+
+  // unpermutate the LCP array
+  for (i = 1; i < len; i++) {
+    LCP[i] = PLCP[SA[i]];
+  }
+
+  delete[] PHI;
+  return 0;
+}
+
 Esa::Esa(char const *seq, size_t len) : str(seq), n(len) {
-  this->sa = getSa(seq, n);
-  calcLcp(*this);
+  tick();
+  sa = getSa(seq, n);
+  tock("libdivsufsort");
+
+  isa = vector<saidx64_t>(n);
+  for (size_t i = 0; i < n; i++)
+    isa[sa[i]] = i;
+
+  tick();
+  // calcLcp(*this);
+  esa_init_LCP(*this);
+  tock("calcLCP");
 }
 
 void Esa::print() const {

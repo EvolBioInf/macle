@@ -412,8 +412,6 @@ int pfasta_read_seq(pfasta_file *pf, pfasta_seq *ps) {
   if (dynstr_len(&seq) == 0) {
     PF_FAIL_STR("Empty sequence on line %zu", pf->line);
   }
-  if (dynstr_put(&seq, '$') != 0)
-    PF_FAIL_ERRNO(); // add border
   ps->seq = dynstr_move(&seq);
 
 cleanup:

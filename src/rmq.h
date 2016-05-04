@@ -15,5 +15,6 @@ public:
 };
 
 std::vector<int64_t> precomputePow2RMQ(std::vector<int64_t> const &A);
-int64_t getRMQwithPow2(std::vector<int64_t> const &A, std::vector<int64_t> const &B, size_t l, size_t r);
+int64_t getRMQwithPow2(std::vector<int64_t> const &A, std::vector<int64_t> const &B,
+                       size_t l, size_t r);
 std::vector<int64_t> precomputeBlockRMQ(std::vector<int64_t> const &A);

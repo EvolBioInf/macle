@@ -36,12 +36,6 @@ void gnuplotCode(uint32_t w, uint32_t k, int n) {
 
 void printPlot(uint32_t w, uint32_t k, size_t n, FastaFile &ff,
                vector<vector<double>> &ys) {
-  printf("offset ");
-  for (size_t i = 0; i < ff.seqs.size(); i++) { // two columns for each seq
-    printf("\"%s %s\"\t", ff.seqs[i].name, "(ML)");
-    printf("\"%s %s\"\t", ff.seqs[i].name, "(Per)");
-  }
-  printf("\n");
   for (size_t j = 0; j < n; j++) {
     printf("%zu\t", j * k + w / 2); // center of window
     for (size_t i = 0; i < 2 * ff.seqs.size(); i++)
@@ -69,7 +63,7 @@ void scanFile(FastaFile &ff) {
     w = minlen;       // default window = whole (smallest) seq.
   w = min(w, minlen); // biggest window = whole (smallest) seq.
   if (k == 0)
-    k = w;       // default interval = whole (smallest) seq.
+    k = w / 10;  // default interval = 1/10 of window
   k = min(k, w); // biggest interval = window size
 
   // array for results for all sequences in file
@@ -132,10 +126,18 @@ void scanFile(FastaFile &ff) {
           printf("\n");
         }
       } else if (args.gf == 1) {
-        gnuplotCode(w, k, 2 * ff.seqs.size());
+        gnuplotCode(w, k, 2 * ff.seqs.size()); // gnuplot control code
+        // need to output everything n times for n plots
         for (size_t i = 0; i < 2 * ff.seqs.size(); i++) {
-          printPlot(w, k, entries, ff, ys);
-          printf("e\n");
+          // print column header (for plot labels)
+          printf("offset ");
+          for (size_t j = 0; j < ff.seqs.size(); j++) { // two columns for each seq
+            printf("\"%s %s\"\t", ff.seqs[j].name, "(MC)");
+            printf("\"%s %s\"\t", ff.seqs[j].name, "(PC)");
+          }
+          printf("\n");
+          printPlot(w, k, entries, ff, ys); // print plot itself
+          printf("e\n"); // separator between repeats of data
         }
       }
     } else { // just print resulting data

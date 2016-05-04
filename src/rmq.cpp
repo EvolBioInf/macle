@@ -11,7 +11,7 @@ using namespace std;
 vector<int64_t> precomputePow2RMQ(vector<int64_t> const &A) {
   auto n = A.size();
   size_t row = log2(n) + 1;
-  vector<int64_t> B(n*row);
+  vector<int64_t> B(n * row);
   for (size_t i = 0; i < n; i++)
     B[i * row] = i + 1;
   for (size_t j = 1; j < row; j++) {
@@ -31,7 +31,8 @@ vector<int64_t> precomputePow2RMQ(vector<int64_t> const &A) {
   return B;
 }
 
-int64_t getRMQwithPow2(vector<int64_t> const &A, vector<int64_t> const &B, size_t l, size_t r) {
+int64_t getRMQwithPow2(vector<int64_t> const &A, vector<int64_t> const &B, size_t l,
+                       size_t r) {
   auto n = A.size();
   assert(l <= r);
   size_t row = log2(n) + 1;

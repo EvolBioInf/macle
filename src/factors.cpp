@@ -1,23 +1,16 @@
 #include <cstdio>
 #include "factors.h"
 
-Fact::~Fact() {
-  delete[] this->fact;
-  if (this->lpf)
-    delete[] this->lpf;
-  if (this->prevOcc)
-    delete[] this->prevOcc;
-}
-
 void Fact::print() const {
   char tmp;
+  size_t n = fact.size();
   char *s = (char *)this->str; // we write there, but restore it back!
-  for (size_t i = 0; i < this->n; i++) {
+  for (size_t i = 0; i < n; i++) {
     size_t start = this->fact[i];
-    size_t end = i < this->n - 1 ? this->fact[i + 1] : this->strLen;
+    size_t end = i < n - 1 ? this->fact[i + 1] : this->strLen;
     tmp = this->str[end];
     s[end] = '\0';
-    printf("%s%s", &(this->str[start]), i < this->n - 1 ? "." : "\n");
+    printf("%s%s", &(this->str[start]), i < n - 1 ? "." : "\n");
     s[end] = tmp;
   }
 }

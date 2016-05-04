@@ -5,6 +5,7 @@
 #include <ctime>
 
 #include <string>
+#include <vector>
 using namespace std;
 
 #include "esa.h"
@@ -32,29 +33,30 @@ static char const *str = "abbaabbbaaabab";
 char const *test_LempelZiv() {
   size_t n = strlen(seq);
   Esa esa(seq, n); // calculate esa, including $
-  int64_t *oldlcp = new int64_t[esa.n + 1];
-  memcpy(oldlcp, esa.lcp.data(), (esa.n + 1) * sizeof(int64_t));
+  auto oldlcp = esa.lcp;
 
-  Fact lzf = computeLZFact(esa, false);
+  Fact lzf;
+  computeLZFact(lzf, esa, false);
   for (size_t i = 0; i < esa.n + 1; i++) // this was actually a bug!
     mu_assert_eq(oldlcp[i], esa.lcp[i], "old lcp values were changed!");
 
-  mu_assert_eq(20, lzf.n, "wrong number of LZ factors");
-
-  for (size_t i = 0; i < lzf.n; i++) {
+  for (size_t i = 0; i < lzf.fact.size(); i++) {
     mu_assert(!strncmp(lzf.str + lzf.fact[i], factors[i], factLen(lzf, i)),
               "wrong factor");
   }
 
-  delete[] oldlcp;
+  mu_assert_eq(20, lzf.fact.size(), "wrong number of LZ factors");
+
   return NULL;
 }
 
 char const *test_prevOcc() {
   size_t n = strlen(str);
   Esa esa(str, n);
-  Fact lzf = computeLZFact(esa, false);
-  Fact lzfRef = computeLZFact(esa, true);
+  Fact lzf;
+  computeLZFact(lzf, esa, false);
+  Fact lzfRef;
+  computeLZFact(lzfRef, esa, true);
 
   // should be same as poResult[sa[i]]
   for (size_t i = 0; i < n; i++)
@@ -70,18 +72,20 @@ char const *test_randomSequence() {
   fprintnf(stdout, s, 80);
   printf("\n");
   Esa esa(s, n + 1);
-  Fact lzf = computeLZFact(esa, false);
-  Fact lzfRef = computeLZFact(esa, true); // using different algorithm
+  Fact lzf;
+  computeLZFact(lzf, esa, false);
+  Fact lzfRef;
+  computeLZFact(lzfRef, esa, true); // using different algorithm
 
   for (size_t i = 0; i < esa.n; i++)
     mu_assert(lzf.prevOcc[i] == lzf.prevOcc[i], "incorrect prevOcc array");
   for (size_t i = 0; i < esa.n; i++)
     mu_assert(lzf.lpf[i] == lzf.lpf[i], "incorrect lpf array");
-  mu_assert(lzf.n == lzf.n, "different number of factors");
-  for (size_t i = 0; i < lzf.n; i++)
+  mu_assert(lzf.fact.size() == lzfRef.fact.size(), "different number of factors");
+  for (size_t i = 0; i < lzf.fact.size(); i++)
     mu_assert(lzf.fact[i] == lzf.fact[i], "incorrect factor positions");
 
-  for (size_t i = 0; i < lzf.n; i++) {
+  for (size_t i = 0; i < lzf.fact.size(); i++) {
     int64_t po = lzf.prevOcc[lzf.fact[i]];
     bool tmp = po <= (int64_t)lzf.fact[i];
     if (!tmp)

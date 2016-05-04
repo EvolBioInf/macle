@@ -4,8 +4,8 @@
 #include "periodicity.h"
 #include "esa.h"
 
-#include <cstring>
 #include <algorithm>
+#include <string>
 #include <vector>
 #include <list>
 using namespace std;
@@ -86,7 +86,7 @@ static inline size_t factStart(Fact &f, size_t i) { return f.fact[i] + 1; }
 
 // end position (1-indexed)
 static inline size_t factEnd(Fact &f, size_t i) {
-  return (i < f.n - 1 ? f.fact[i + 1] : f.strLen);
+  return (i < f.fact.size() - 1 ? f.fact[i + 1] : f.strLen);
 }
 
 // helper to avoid duplication
@@ -112,10 +112,9 @@ vector<list<Periodicity>> calcType1Periodicities(bool runsOnly, Fact &lzf, Esa &
   RMQ lcptab = esa.precomputeLcp();
   tock("precomputeLcp");
   tick();
-  char *srev = new char[esa.n + 1];
-  memcpy(srev, esa.str, (esa.n + 1) * sizeof(char));
-  reverse(srev, srev + esa.n);
-  Esa revesa(srev, esa.n);
+  string srev = esa.str;
+  reverse(srev.begin(), srev.end());
+  Esa revesa(srev.c_str(), srev.size());
   RMQ revlcptab = revesa.precomputeLcp();
   tock("prepare reverse seq");
 
@@ -123,7 +122,7 @@ vector<list<Periodicity>> calcType1Periodicities(bool runsOnly, Fact &lzf, Esa &
   // as required, array of lists of max. per. of type 1
   // indexed by start position, each sorted by end position
   vector<list<Periodicity>> Lt1(lzf.strLen + 1);
-  for (size_t j = 1; j < lzf.n; j++) {
+  for (size_t j = 1; j < lzf.fact.size(); j++) {
     size_t sjLen = factLen(lzf, j);       // |s_j|
     size_t sjm1Len = factLen(lzf, j - 1); // |s_(j-1)|
     size_t bj = factStart(lzf, j);        // b_j
@@ -159,7 +158,6 @@ vector<list<Periodicity>> calcType1Periodicities(bool runsOnly, Fact &lzf, Esa &
     }
   }
 
-  delete[] srev;
   return Lt1;
 }
 
@@ -186,7 +184,7 @@ void listInsert(list<Periodicity> &l, Periodicity p) {
 
 // Algorithm 5.18 - calculate type 2 periodicities (proper substrings of LZ-factors)
 void calcType2Periodicities(vector<list<Periodicity>> &Lt1, Fact &lzf, size_t &pnum) {
-  for (size_t j = 1; j < lzf.n; j++) {
+  for (size_t j = 1; j < lzf.fact.size(); j++) {
     size_t bj = factStart(lzf, j); // b_j
     size_t ej = factEnd(lzf, j);   // e_j
     if (factLen(lzf, j) >= 4) {

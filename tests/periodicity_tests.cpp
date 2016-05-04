@@ -30,7 +30,8 @@ char const *test_knownExample() {
   char const *s = "AACCAACCAACCAA$"; // from Ohlebusch book
   size_t n = strlen(s);
   Esa esa(s, n); // calculate esa, including $
-  Fact lzf = computeLZFact(esa, false);
+  Fact lzf;
+  computeLZFact(lzf, esa, false);
 
   auto ps = getPeriodicities2(esa);
   mu_assert_eq(8, ps.size(), "wrong number of periodicities detected (easy algorithm)");
@@ -46,7 +47,8 @@ char const *test_onlyRuns() {
   char const *s = "AAAAAAAAGCGCGCGCGCGCGCGTTTTTTTTTTTTACTACTACTACTACTACTA$";
   size_t n = strlen(s);
   Esa esa(s, n); // calculate esa, including $
-  Fact lzf = computeLZFact(esa, false);
+  Fact lzf;
+  computeLZFact(lzf, esa, false);
 
   auto ps2 = getPeriodicities2(esa);
   mu_assert_eq(16, ps2.size(), "wrong number of periodicities detected (easy algorithm)");
@@ -68,7 +70,8 @@ char const *test_randomSequence() {
   fprintnf(stdout, s, 80);
   printf("\n");
   Esa esa(s, n + 1); // calculate esa, including $
-  Fact lzf = computeLZFact(esa, false);
+  Fact lzf;
+  computeLZFact(lzf, esa, false);
 
   size_t plen;
   auto ps = getPeriodicities(false, lzf, esa, plen);
@@ -91,7 +94,7 @@ char const *test_randomSequence() {
       fprintnf(stdout, s + ps2[i + missed].b - 1, 80);
       printf("\nrelevant LZ-Factor:\n");
       size_t fact = 0;
-      for (size_t j = 0; j < lzf.n; j++) {
+      for (size_t j = 0; j < lzf.fact.size(); j++) {
         size_t b = lzf.fact[j];
         size_t e = lzf.fact[j] + factLen(lzf, j);
         if (b <= ps2[i + missed].b - 1 && e >= ps2[i + missed].e - 1) {
@@ -127,7 +130,8 @@ char const *test_randomOnlyRuns() {
   fprintnf(stdout, s, 80);
   printf("\n");
   Esa esa(s, n); // calculate esa
-  Fact lzf = computeLZFact(esa, false);
+  Fact lzf;
+  computeLZFact(lzf, esa, false);
 
   size_t plen, plen2;
   // get all, then remove non-runs

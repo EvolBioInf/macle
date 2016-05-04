@@ -60,12 +60,12 @@ void calcLcp(Esa &esa) {
 }
 
 // alternative lcp calculation (PLCP algorithm, Ohlebusch book)
-int esa_init_LCP(Esa &esa) {
+// from: EvolBioInf/andi source code
+void esa_init_LCP(Esa &esa) {
   const char *S = esa.str;
   auto &SA = esa.sa;
   saidx64_t len = esa.n;
 
-  // Allocate new memory
   // The LCP array is one element longer than S.
   esa.lcp = vector<saidx64_t>(len + 1);
   auto &LCP = esa.lcp;
@@ -74,8 +74,8 @@ int esa_init_LCP(Esa &esa) {
   LCP[len] = -1;
 
   // Allocate temporary arrays
-  saidx64_t *PHI = new saidx64_t[len];
-  saidx64_t *PLCP = PHI;
+  vector<saidx64_t> PHI(len);
+  auto &PLCP = PHI;
 
   PHI[SA[0]] = -1;
   saidx64_t k;
@@ -102,12 +102,8 @@ int esa_init_LCP(Esa &esa) {
   }
 
   // unpermutate the LCP array
-  for (i = 1; i < len; i++) {
+  for (i = 1; i < len; i++)
     LCP[i] = PLCP[SA[i]];
-  }
-
-  delete[] PHI;
-  return 0;
 }
 
 Esa::Esa(char const *seq, size_t len) : str(seq), n(len) {

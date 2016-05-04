@@ -52,8 +52,8 @@ FastaFile::FastaFile(char const *file) : failed(false) {
     string name = seq.name ? string(seq.name) : "";
     string comment = seq.comment ? string(seq.comment) : "";
     string sequence = seq.seq ? string(seq.seq) : "";
-    for (auto it=sequence.begin(); it!=sequence.end(); it++)
-      *it = toupper(*it); //acgt->ACGT
+    for (auto it = sequence.begin(); it != sequence.end(); it++)
+      *it = toupper(*it); // acgt->ACGT
     seqs.push_back(FastaSeq(name, comment, sequence));
     pfasta_seq_free(&seq);
   }

@@ -13,12 +13,15 @@ using namespace std;
 // calculate match length complexity for sliding windows
 // input: sane w and k, allocated array for results, match length factors, gc content
 void mlComplexity(size_t w, size_t k, vector<double> &y, Fact &mlf, double gc) {
-  size_t n = mlf.strLen;
+  size_t n = mlf.strLen / 2; // mlf was calculated on both strands, we look on first only
   size_t entries = (n - w) / k + 1;
 
   // calculations (per nucleotide)
-  double cMin = 2.0 / n;         // at least 2 factors an any sequence, like AAAAAA.A
-  double esl = expShulen(gc, n); // some wildly advanced estimation for avg. shulen length
+  double cMin = 2.0 / n; // at least 2 factors an any sequence, like AAAAAA.A
+  // some wildly advanced estimation for avg. shulen length,
+  // 2n because matches are from both strands
+  double esl = expShulen(gc, 2 * n);
+
   double cAvg = 1.0 / (esl - 1.0); // expected # of match length factors / nucleotide
 
   // calc. for each window

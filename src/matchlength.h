@@ -2,4 +2,4 @@
 #include "factors.h"
 #include "esa.h"
 
-Fact computeMLFact(Esa &esa);
+void computeMLFact(Fact &fact, Esa const &esa);

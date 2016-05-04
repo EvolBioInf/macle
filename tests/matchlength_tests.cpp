@@ -22,10 +22,11 @@ static char const *factors2[] = {
 char const *checkML(char const *seq, char const *facts[], size_t num) {
   Esa esa(seq, strlen(seq)); // calculate esa, including $
 
-  Fact mlf = computeMLFact(esa);
-  mu_assert(mlf.n == num, "wrong number of ML factors");
+  Fact mlf;
+  computeMLFact(mlf, esa);
+  mu_assert(mlf.fact.size() == num, "wrong number of ML factors");
 
-  for (size_t i = 0; i < mlf.n; i++) {
+  for (size_t i = 0; i < mlf.fact.size(); i++) {
     mu_assert(!strncmp(mlf.str + mlf.fact[i], facts[i], factLen(mlf, i)), "wrong factor");
   }
 

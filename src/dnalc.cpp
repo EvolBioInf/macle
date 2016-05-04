@@ -16,23 +16,31 @@ using namespace std;
 // calculate the GC content
 double gcContent(string const &s) {
   size_t gc = 0;
-  for (auto it=s.begin(); it!=s.end(); it++)
+  for (auto it = s.begin(); it != s.end(); it++)
     if (*it == 'g' || *it == 'G' || *it == 'c' || *it == 'C')
       gc++;
   return (double)gc / s.size();
 }
 
-//returns reverse complement DNA string
+// returns reverse complement DNA string
 string revComp(string const &s) {
   string r = s;
-  for (auto it=r.begin(); it!=r.end(); it++)
+  for (auto it = r.begin(); it != r.end(); it++)
     switch (*it) {
-      case 'A': *it = 'T'; break;
-      case 'T': *it = 'A'; break;
-      case 'G': *it = 'C'; break;
-      case 'C': *it = 'G'; break;
+    case 'A':
+      *it = 'T';
+      break;
+    case 'T':
+      *it = 'A';
+      break;
+    case 'G':
+      *it = 'C';
+      break;
+    case 'C':
+      *it = 'G';
+      break;
     }
-  reverse(r.begin(),r.end());
+  reverse(r.begin(), r.end());
   return r;
 }
 
@@ -85,23 +93,21 @@ void processFile(FastaFile &ff) {
 
   for (size_t i = 0; i < ff.seqs.size(); i++) {
     double gc = gcContent(ff.seqs[i].seq);
-    ff.seqs[i].seq += "$";
-    char const *t = ff.seqs[i].seq.c_str();
-    size_t n = ff.seqs[i].seq.size();
+    string &s = ff.seqs[i].seq;
+    string s2n = s + revComp(s) + "$"; // complete sequence (both strands)
+    s += "$";                          // add border to single strand, too
 
-    tick();
-    Esa esa(t, n); // esa for sequence+$
-    tock("getEsa");
-    if (args.p) {
-      printf("%s %s\n", ff.seqs[i].name.c_str(), ff.seqs[i].comment.c_str());
-      /* printEsa(esa); */
+    Fact mlf;
+    {
+      tick();
+      Esa esa2n(s2n.c_str(), s2n.size()); // esa for sequence+revsequence+$
+      tock("getEsa (2n)");
+      tick();
+      computeMLFact(mlf, esa2n);
+      tock("computeMLFact");
     }
-
-    tick();
-    Fact mlf = computeMLFact(esa);
-    tock("computeMLFact");
     if (args.p) {
-      printf("ML-Factors (%zu):\n", mlf.n);
+      printf("ML-Factors (%zu):\n", mlf.fact.size());
       mlf.print();
     }
 
@@ -110,7 +116,16 @@ void processFile(FastaFile &ff) {
     tock("mlComplexity");
 
     tick();
-    Fact lzf = computeLZFact(esa, false);
+    Esa esa(s.c_str(), s.size()); // esa for sequence+$
+    tock("getEsa");
+    if (args.p) {
+      printf("%s %s\n", ff.seqs[i].name.c_str(), ff.seqs[i].comment.c_str());
+      /* printEsa(esa); */
+    }
+
+    tick();
+    Fact lzf;
+    computeLZFact(lzf, esa, false);
     tock("computeLZFact");
     tick();
     size_t pnum;
@@ -122,7 +137,7 @@ void processFile(FastaFile &ff) {
     tock("runComplexity");
 
     if (args.p) {
-      printf("LZ-Factors (%zu):\n", lzf.n);
+      printf("LZ-Factors (%zu):\n", lzf.fact.size());
       lzf.print();
       printf("Periodicities (%zu):\n", pnum);
       for (size_t j = 0; j < ls.size(); j++)

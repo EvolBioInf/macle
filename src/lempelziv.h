@@ -2,4 +2,4 @@
 #include "factors.h"
 #include "esa.h"
 
-Fact computeLZFact(Esa &esa, bool useAlternateAlgorithm);
+void computeLZFact(Fact &f, Esa const &esa, bool useAlternateAlgorithm);

@@ -43,8 +43,10 @@ void runComplexity(size_t w, size_t k, vector<double> &y, size_t n,
       Periodicity p = *it;
       if (perLen(p) < 4)
         continue;
-      for (size_t j = p.b; j <= p.e; j += p.l) // increment for each starting "atom"
-        ps[j]++;
+      // for (size_t j = p.b; j <= p.e; j += p.l) // increment for each starting "atom"
+      //   ps[j]++;
+      for (size_t j = p.b; j <= p.e; j++) // mark nucleotides inside runs
+        ps[j] |= 1;
     }
   }
 
@@ -52,11 +54,13 @@ void runComplexity(size_t w, size_t k, vector<double> &y, size_t n,
   for (size_t i = 1; i < n; i++)
     ps[i] += ps[i - 1];
 
-  double pMax = w; // no more atoms than window size
+  // double pMax = w; // no more runs than window size
   for (size_t j = 0; j < entries; j++) {
     size_t l = j * k;
     size_t r = min(n, l + w) - 1;
-    double pObs = sumFromTo(ps, l, r);
-    y[j] = pObs / pMax;
+    // double pObs = sumFromTo(ps, l, r);
+    double pObs = (double)sumFromTo(ps, l, r) / (double)w;
+    // y[j] = pObs / pMax;
+    y[j] = 1 - pObs;
   }
 }

@@ -9,24 +9,6 @@
 #include <vector>
 using namespace std;
 
-// calculate number of factor start positions up to some given prefix length
-// allows to easily get number of factor start positions in any interval
-void computeFactPrefixSum(Fact &f) {
-  size_t n = f.strLen;
-  /* compute observed number of match factors for every prefix */
-  auto &ps = f.lpf;
-  ps.resize(n);
-  size_t nextfact = 1;
-  ps[0] = 1;
-  for (size_t i = 1; i < n; i++) {
-    ps[i] = ps[i - 1];
-    if (nextfact < f.fact.size() && i == f.fact[nextfact]) {
-      ps[i]++;
-      nextfact++;
-    }
-  }
-}
-
 void computeMLFact(Fact &mlf, Esa const &esa) {
   mlf.prevOcc.clear();
   mlf.fact.clear();
@@ -46,7 +28,4 @@ void computeMLFact(Fact &mlf, Esa const &esa) {
     mlf.fact.push_back(i);
     i += ml[i];
   }
-
-  // use lpf field to store prefix sums for ML factors
-  computeFactPrefixSum(mlf);
 }

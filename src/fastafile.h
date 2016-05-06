@@ -5,7 +5,7 @@
 #include <string>
 
 struct FastaSeq {
-  FastaSeq(std::string n, std::string c, std::string s);
+  FastaSeq(std::string const &n, std::string const &c, std::string const &s);
   std::string name;
   std::string comment;
   std::string seq;

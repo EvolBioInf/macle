@@ -49,7 +49,7 @@ size_t lcp2(char const *str, size_t n, size_t i, size_t j) {
 }
 
 // naive: length of lcs of prefixes 1..i and 1..j of given seq (input 1-indexed)
-size_t lcs2(char const *str, int64_t i, int64_t j) {
+size_t lcs2(char const *str, size_t i, size_t j) {
   i--;
   j--;
   int64_t k = 0;
@@ -59,7 +59,7 @@ size_t lcs2(char const *str, int64_t i, int64_t j) {
 }
 
 // max. periodicities in O(nlog(n)) (Algorithm 5.16), mainly for reference / comparison
-vector<Periodicity> getPeriodicities2(Esa &esa) {
+vector<Periodicity> getPeriodicities2(Esa const &esa) {
   size_t n = esa.n;
   char const *str = esa.str;
   vector<Periodicity> ps;
@@ -82,10 +82,10 @@ vector<Periodicity> getPeriodicities2(Esa &esa) {
 }
 
 // start position (1-indexed)
-static inline size_t factStart(Fact &f, size_t i) { return f.fact[i] + 1; }
+static inline size_t factStart(Fact const &f, size_t i) { return f.fact[i] + 1; }
 
 // end position (1-indexed)
-static inline size_t factEnd(Fact &f, size_t i) {
+static inline size_t factEnd(Fact const &f, size_t i) {
   return (i < f.fact.size() - 1 ? f.fact[i + 1] : f.strLen);
 }
 
@@ -106,7 +106,7 @@ static inline bool addPeriodicity(bool runsOnly, vector<list<Periodicity>> &Lt1,
 }
 
 // Algorithm 5.17 - calculate type1 periodicities
-vector<list<Periodicity>> calcType1Periodicities(bool runsOnly, Fact &lzf, Esa &esa,
+vector<list<Periodicity>> calcType1Periodicities(bool runsOnly, Fact const &lzf, Esa const &esa,
                                                  size_t &pnum) {
   tick();
   RMQ lcptab = esa.precomputeLcp();
@@ -162,7 +162,7 @@ vector<list<Periodicity>> calcType1Periodicities(bool runsOnly, Fact &lzf, Esa &
 }
 
 // prevOcc conforming to algorithm: 1-indexed and current value instead of -1
-static inline int64_t getPrevOcc(Fact &lzf, size_t i) {
+static inline int64_t getPrevOcc(Fact const &lzf, size_t i) {
   int64_t tmp = lzf.prevOcc[lzf.fact[i]];
   return (tmp == -1 ? (int64_t)lzf.fact[i] : tmp) + 1;
 }
@@ -183,7 +183,7 @@ void listInsert(list<Periodicity> &l, Periodicity p) {
 }
 
 // Algorithm 5.18 - calculate type 2 periodicities (proper substrings of LZ-factors)
-void calcType2Periodicities(vector<list<Periodicity>> &Lt1, Fact &lzf, size_t &pnum) {
+void calcType2Periodicities(vector<list<Periodicity>> &Lt1, Fact const &lzf, size_t &pnum) {
   for (size_t j = 1; j < lzf.fact.size(); j++) {
     size_t bj = factStart(lzf, j); // b_j
     size_t ej = factEnd(lzf, j);   // e_j
@@ -205,7 +205,7 @@ void calcType2Periodicities(vector<list<Periodicity>> &Lt1, Fact &lzf, size_t &p
 }
 
 // max. periodicities in O(n) using LZ-Factors, returns array of lists
-vector<list<Periodicity>> getPeriodicityLists(bool runsOnly, Fact &lzf, Esa &esa,
+vector<list<Periodicity>> getPeriodicityLists(bool runsOnly, Fact const &lzf, Esa const &esa,
                                               size_t &pnum) {
   auto Lt1 = calcType1Periodicities(runsOnly, lzf, esa, pnum);
   calcType2Periodicities(Lt1, lzf, pnum);
@@ -224,7 +224,7 @@ vector<Periodicity> collectPeriodicities(vector<list<Periodicity>> &pl, size_t p
   return ps;
 }
 
-vector<Periodicity> getPeriodicities(bool runsOnly, Fact &lzf, Esa &esa, size_t &pnum) {
+vector<Periodicity> getPeriodicities(bool runsOnly, Fact const &lzf, Esa const &esa, size_t &pnum) {
   auto pl = getPeriodicityLists(runsOnly, lzf, esa, pnum);
   return collectPeriodicities(pl, pnum);
 }

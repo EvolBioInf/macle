@@ -18,7 +18,7 @@ struct Fact {
 };
 
 // length of factor
-inline size_t factLen(Fact &f, size_t i) {
+inline size_t factLen(Fact const &f, size_t i) {
   if (i == 0)
     return f.fact[1];
   if (i == f.fact.size() - 1)

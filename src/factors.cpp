@@ -1,4 +1,6 @@
-#include <cstdio>
+#include <iostream>
+using namespace std;
+
 #include "factors.h"
 
 void Fact::print() const {
@@ -10,7 +12,7 @@ void Fact::print() const {
     size_t end = i < n - 1 ? this->fact[i + 1] : this->strLen;
     tmp = this->str[end];
     s[end] = '\0';
-    printf("%s%s", &(this->str[start]), i < n - 1 ? "." : "\n");
+    cout << this->str+start << (i < n - 1 ? "." : "\n");
     s[end] = tmp;
   }
 }

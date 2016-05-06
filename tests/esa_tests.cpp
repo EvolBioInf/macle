@@ -41,6 +41,7 @@ char const *test_revEsaRnd() {
   /* char *s = "AACCGGTTGGTT$"; // from Ohlebusch book */
   size_t n = 100;
   string str = randSeq(n++);
+  str += "$";
   char const *s = str.c_str();
   Esa esa(s, n); // calculate esa, including $
 
@@ -67,11 +68,31 @@ char const *test_revEsaRnd() {
   return NULL;
 }
 
+char const *test_reduceEsa() {
+  string str = randSeq(1000);
+  string str2n = str + "$" + revComp(str) + "$";
+  str += "$";
+  Esa esaOne(str.c_str(), str.size()); // calculate esa, including $
+  Esa esaBoth(str2n.c_str(), str2n.size()); // calculate esa, including $
+  reduceEsa(esaBoth);
+  esaBoth.str = str.c_str();
+
+  mu_assert_eq(-1, esaBoth.lcp[esaBoth.sa.size()], "last LCP not -1!");
+  for (size_t i=0; i<str.size(); i++) {
+    mu_assert_eq(esaOne.sa[i], esaBoth.sa[i], "SA do not match");
+    mu_assert_eq(esaOne.lcp[i], esaBoth.lcp[i], "LCP do not match");
+    mu_assert_eq(esaOne.isa[i], esaBoth.isa[i], "ISA do not match");
+  }
+
+  return NULL;
+}
+
 char const *all_tests() {
   srand(time(NULL));
   mu_suite_start();
   mu_run_test(test_getEsa);
   mu_run_test(test_revEsaRnd);
+  mu_run_test(test_reduceEsa);
   return NULL;
 }
 

@@ -11,7 +11,7 @@
  **************************************************/
 #include "bench.h"
 #include <cinttypes>
-#include <cstdio>
+#include <iostream>
 #include <algorithm>
 #include <vector>
 using namespace std;
@@ -26,7 +26,7 @@ vector<saidx64_t> getSa(char const *seq, size_t n) {
   sauchar_t *t = (sauchar_t *)seq;
   vector<saidx64_t> sa(n + 1);
   if (divsufsort64(t, sa.data(), (saidx64_t)n) != 0) {
-    printf("ERROR[esa]: suffix sorting failed.\n");
+    cout << "ERROR[esa]: suffix sorting failed." << endl;
     exit(-1);
   }
   return sa;
@@ -122,10 +122,9 @@ Esa::Esa(char const *seq, size_t len) : str(seq), n(len) {
 }
 
 void Esa::print() const {
-  printf("i\tSA\tLCP\tSuffix\n");
+  cout << "i\tSA\tISA\tLCP\tSuffix" << endl;
   for (size_t i = 0; i < this->n; i++)
-    printf("%zu\t%ld\t%ld\t%s\n", i, this->sa[i], this->lcp[i], this->str + this->sa[i]);
-  printf("\t\t%ld\n", this->lcp[this->n]);
+    cout << i << "\t" << sa[i] << "\t" << isa[i] << "\t" << lcp[i] << "\t" << str+sa[i] << endl;
 }
 
 RMQ Esa::precomputeLcp() const { return RMQ(this->lcp); }
@@ -137,3 +136,35 @@ int64_t Esa::getLcp(const RMQ &rmq, size_t sai, size_t saj) const {
   size_t r = max(this->isa[sai], this->isa[saj]);
   return rmq.get(l, r);
 }
+
+//reduce esa to half (seq+$+revseq+$ -> seq+$) without recomputing
+//important! asserting that n and str are replaced by user!
+void reduceEsa(Esa &esa) {
+  size_t n = esa.sa.size()/2;
+  vector<saidx64_t> sa(n);
+  vector<saidx64_t> isa(n);
+  vector<int64_t> lcp(n+1);
+  lcp[0]=lcp[n]=-1;
+  sa[0]=n-1;
+  isa[n-1]=0;
+  int64_t lcptmp=INT64_MAX;
+  size_t ind=1;
+  for (size_t i=1; i<n*2; i++) {
+    if ((size_t)esa.sa[i]<n-1) {
+      sa[ind] = esa.sa[i];
+      isa[sa[ind]] = ind;
+      lcp[ind] = min(lcptmp, esa.lcp[i]);
+      ind++;
+      lcptmp=INT64_MAX;
+    } else {
+      lcptmp = min(lcptmp, esa.lcp[i]);
+    }
+  }
+  esa.sa.clear();
+  esa.isa.clear();
+  esa.lcp.clear();
+  esa.sa = sa;
+  esa.isa = isa;
+  esa.lcp = lcp;
+}
+

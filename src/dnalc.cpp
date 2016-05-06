@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <algorithm>
 using namespace std;
 
 #include "args.h"
@@ -10,39 +9,9 @@ using namespace std;
 #include "lempelziv.h"
 #include "periodicity.h"
 #include "complexity.h"
+#include "util.h"
 
 using namespace std;
-
-// calculate the GC content
-double gcContent(string const &s) {
-  size_t gc = 0;
-  for (auto it = s.begin(); it != s.end(); it++)
-    if (*it == 'g' || *it == 'G' || *it == 'c' || *it == 'C')
-      gc++;
-  return (double)gc / s.size();
-}
-
-// returns reverse complement DNA string
-string revComp(string const &s) {
-  string r = s;
-  for (auto it = r.begin(); it != r.end(); it++)
-    switch (*it) {
-    case 'A':
-      *it = 'T';
-      break;
-    case 'T':
-      *it = 'A';
-      break;
-    case 'G':
-      *it = 'C';
-      break;
-    case 'C':
-      *it = 'G';
-      break;
-    }
-  reverse(r.begin(), r.end());
-  return r;
-}
 
 void gnuplotCode(uint32_t w, uint32_t k, int n) {
   printf( //"set terminal png; "
@@ -94,18 +63,16 @@ void processFile(FastaFile &ff) {
   for (size_t i = 0; i < ff.seqs.size(); i++) {
     double gc = gcContent(ff.seqs[i].seq);
     string &s = ff.seqs[i].seq;
-    string s2n = s + revComp(s) + "$"; // complete sequence (both strands)
-    s += "$";                          // add border to single strand, too
+    s = s + "$" + revComp(s) + "$";
 
+    tick();
+    Esa esa(s.c_str(), s.size()); // esa for seq+$+revseq+$
+    tock("getEsa (2n)");
+    tick();
     Fact mlf;
-    {
-      tick();
-      Esa esa2n(s2n.c_str(), s2n.size()); // esa for sequence+revsequence+$
-      tock("getEsa (2n)");
-      tick();
-      computeMLFact(mlf, esa2n);
-      tock("computeMLFact");
-    }
+    computeMLFact(mlf, esa);
+    tock("computeMLFact");
+
     if (args.p) {
       printf("ML-Factors (%zu):\n", mlf.fact.size());
       mlf.print();
@@ -116,11 +83,16 @@ void processFile(FastaFile &ff) {
     tock("mlComplexity");
 
     tick();
-    Esa esa(s.c_str(), s.size()); // esa for sequence+$
-    tock("getEsa");
+    s.resize(s.size()/2); //drop complementary seq.
+    s.shrink_to_fit();
+    esa.str = s.c_str();
+    esa.n = s.size();
+    reduceEsa(esa);
+    tock("reduceEsa");
+
     if (args.p) {
       printf("%s %s\n", ff.seqs[i].name.c_str(), ff.seqs[i].comment.c_str());
-      /* printEsa(esa); */
+      esa.print();
     }
 
     tick();

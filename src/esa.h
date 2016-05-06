@@ -24,3 +24,5 @@ public:
   char const *str;            /* pointer to underlying string */
   size_t n;                   /* length of sa and lcp */
 };
+
+void reduceEsa(Esa &esa);

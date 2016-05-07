@@ -124,7 +124,8 @@ Esa::Esa(char const *seq, size_t len) : str(seq), n(len) {
 void Esa::print() const {
   cout << "i\tSA\tISA\tLCP\tSuffix" << endl;
   for (size_t i = 0; i < this->n; i++)
-    cout << i << "\t" << sa[i] << "\t" << isa[i] << "\t" << lcp[i] << "\t" << str+sa[i] << endl;
+    cout << i << "\t" << sa[i] << "\t" << isa[i] << "\t" << lcp[i] << "\t" << str + sa[i]
+         << endl;
 }
 
 RMQ Esa::precomputeLcp() const { return RMQ(this->lcp); }
@@ -137,25 +138,25 @@ int64_t Esa::getLcp(const RMQ &rmq, size_t sai, size_t saj) const {
   return rmq.get(l, r);
 }
 
-//reduce esa to half (seq+$+revseq+$ -> seq+$) without recomputing
-//important! asserting that n and str are replaced by user!
+// reduce esa to half (seq+$+revseq+$ -> seq+$) without recomputing
+// important! asserting that n and str are replaced by user!
 void reduceEsa(Esa &esa) {
-  size_t n = esa.sa.size()/2;
+  size_t n = esa.sa.size() / 2;
   vector<saidx64_t> sa(n);
   vector<saidx64_t> isa(n);
-  vector<int64_t> lcp(n+1);
-  lcp[0]=lcp[n]=-1;
-  sa[0]=n-1;
-  isa[n-1]=0;
-  int64_t lcptmp=INT64_MAX;
-  size_t ind=1;
-  for (size_t i=1; i<n*2; i++) {
-    if ((size_t)esa.sa[i]<n-1) {
+  vector<int64_t> lcp(n + 1);
+  lcp[0] = lcp[n] = -1;
+  sa[0] = n - 1;
+  isa[n - 1] = 0;
+  int64_t lcptmp = INT64_MAX;
+  size_t ind = 1;
+  for (size_t i = 1; i < n * 2; i++) {
+    if ((size_t)esa.sa[i] < n - 1) {
       sa[ind] = esa.sa[i];
       isa[sa[ind]] = ind;
       lcp[ind] = min(lcptmp, esa.lcp[i]);
       ind++;
-      lcptmp=INT64_MAX;
+      lcptmp = INT64_MAX;
     } else {
       lcptmp = min(lcptmp, esa.lcp[i]);
     }
@@ -167,4 +168,3 @@ void reduceEsa(Esa &esa) {
   esa.isa = isa;
   esa.lcp = lcp;
 }
-

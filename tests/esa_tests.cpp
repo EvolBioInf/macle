@@ -72,13 +72,13 @@ char const *test_reduceEsa() {
   string str = randSeq(1000);
   string str2n = str + "$" + revComp(str) + "$";
   str += "$";
-  Esa esaOne(str.c_str(), str.size()); // calculate esa, including $
+  Esa esaOne(str.c_str(), str.size());      // calculate esa, including $
   Esa esaBoth(str2n.c_str(), str2n.size()); // calculate esa, including $
   reduceEsa(esaBoth);
   esaBoth.str = str.c_str();
 
   mu_assert_eq(-1, esaBoth.lcp[esaBoth.sa.size()], "last LCP not -1!");
-  for (size_t i=0; i<str.size(); i++) {
+  for (size_t i = 0; i < str.size(); i++) {
     mu_assert_eq(esaOne.sa[i], esaBoth.sa[i], "SA do not match");
     mu_assert_eq(esaOne.lcp[i], esaBoth.lcp[i], "LCP do not match");
     mu_assert_eq(esaOne.isa[i], esaBoth.isa[i], "ISA do not match");

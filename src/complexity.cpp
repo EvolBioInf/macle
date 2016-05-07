@@ -12,16 +12,15 @@ using namespace std;
 
 // calculate match length complexity for sliding windows
 // input: sane w and k, allocated array for results, match length factors, gc content
-void mlComplexity(size_t w, size_t k, vector<double> &y, Fact const &mlf, double gc) {
-  size_t n = mlf.strLen/2; // mlf was calculated on both strands, we look on first only
-
+void mlComplexity(size_t w, size_t k, vector<double> &y, size_t n,
+                  vector<size_t> const &fact, double gc) {
   // compute observed number of match factors for every prefix
   vector<size_t> ps(n);
   size_t nextfact = 1;
   ps[0] = 1;
   for (size_t i = 1; i < n; i++) {
     ps[i] = ps[i - 1];
-    if (nextfact < mlf.fact.size() && i == mlf.fact[nextfact]) {
+    if (nextfact < fact.size() && i == fact[nextfact]) {
       ps[i]++;
       nextfact++;
     }
@@ -50,7 +49,7 @@ void runComplexity(size_t w, size_t k, vector<double> &y, size_t n,
   for (size_t i = 0; i < n; i++) {
     for (auto it = ls[i].begin(); it != ls[i].end(); it++) {
       Periodicity p = *it;
-      if (perLen(p) < 8)
+      if (perLen(p) < 10)
         continue;
       // for (size_t j = p.b; j <= p.e; j += p.l) // increment for each starting "atom"
       //   ps[j]++;

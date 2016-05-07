@@ -13,7 +13,8 @@
 #include <string>
 using namespace std;
 
-FastaSeq::FastaSeq(string const &n, string const &c, string const &s) : name(n), comment(c), seq(s) {}
+FastaSeq::FastaSeq(string const &n, string const &c, string const &s)
+    : name(n), comment(c), seq(s) {}
 
 /* eopen: open file on system level and report on error */
 int open_or_fail(char const *fname, int flag) {

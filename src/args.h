@@ -11,10 +11,11 @@ struct Args {
   void parse(int argc, char *argv[]);
 
   bool h = false; // help message?
-  uint32_t s = 0; // seed for random number generator
 
   uint32_t w = 0;  // sliding window size
   uint32_t k = 0;  // sliding interval
+  bool s = false;  // output intermediate
+  bool l = false;  // use intermediate
   bool p = false;  // print match length decomposition?
   bool g = false;  // output for plotting
   uint32_t gf = 0; // plot output format

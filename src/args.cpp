@@ -7,31 +7,33 @@ using namespace std;
 // globally accessible arguments for convenience
 Args args;
 
-static char const opts_short[] = "hs:w:k:pg::b";
+static char const opts_short[] = "hw:k:slpg:b";
 static struct option const opts[] = {
     {"help", no_argument, nullptr, 'h'},
-    {"seed", required_argument, nullptr, 's'},
     {"window-size", required_argument, nullptr, 'w'},
     {"window-interval", required_argument, nullptr, 'k'},
+    {"save-intermediate", no_argument, nullptr, 's'},
+    {"load-intermediate", no_argument, nullptr, 'l'},
     {"print-factors", no_argument, nullptr, 'p'},
-    {"graph", optional_argument, nullptr, 'g'},
+    {"graph", required_argument, nullptr, 'g'},
     {"benchmark", no_argument, nullptr, 'b'},
     {0, 0, 0, 0} // <- required
 };
 
-static char const usage[] = PROGNAME
-    " " VERSION " - " DESCRIPTION "\n" COPYRIGHT "\n"
-    "Usage: " PROGNAME " [OPTIONS] [FILES]\n"
-    "OPTIONS:\n"
-    "\t-h: print this help message and exit\n"
-    "\t-s <NUM>: seed for random number generator (default: generated internally)\n"
-    "\t-w <NUM>: size of sliding window (default: whole sequence length)\n"
-    "\t-k <NUM>: interval between sliding windows (default: w/10)\n"
-    "\t-p: print match-length and Lempel-Ziv factors and periodicities\n"
-    "\t-b: print benchmarking information\n"
-    "\t-gN: output pipe-ready to plot with:\n"
-    "\t\tN=0 -> graph -T X (part of plotutils)\n"
-    "\t\tN=1 -> gnuplot -p\n";
+static char const usage[] =
+    PROGNAME " " VERSION " - " DESCRIPTION "\n" COPYRIGHT "\n"
+             "Usage: " PROGNAME " [OPTIONS] [FILES]\n"
+             "OPTIONS:\n"
+             "\t-h: print this help message and exit\n"
+             "\t-w <NUM>: size of sliding window (default: whole sequence length)\n"
+             "\t-k <NUM>: interval between sliding windows (default: w/10)\n"
+             "\t-s: output intermediate data for further processing (no regular result)\n"
+             "\t-l: use intermediate data from file instead of FASTA sequence file\n"
+             "\t-p: print match-length and Lempel-Ziv factors and periodicities\n"
+             "\t-b: print benchmarking information\n"
+             "\t-g N: output pipe-ready to plot with:\n"
+             "\t\tN=1 -> gnuplot -p\n"
+             "\t\tN=2 -> graph -T X (part of plotutils)\n";
 
 void Args::parse(int argc, char *argv[]) {
   int c = 0;       // getopt stores value returned (last struct component) here
@@ -45,20 +47,23 @@ void Args::parse(int argc, char *argv[]) {
       args.p = true;
       break;
     case 'g':
-      args.g = true;
       args.gf = optarg == nullptr ? 0 : atoi(optarg);
+      args.g = args.gf > 0;
       break;
     case 'b':
       args.b = true;
-      break;
-    case 's':
-      args.s = atoi(optarg);
       break;
     case 'w':
       args.w = atoi(optarg);
       break;
     case 'k':
       args.k = atoi(optarg);
+      break;
+    case 's':
+      args.s = true;
+      break;
+    case 'l':
+      args.l = true;
       break;
 
     case 'h':

@@ -106,8 +106,8 @@ static inline bool addPeriodicity(bool runsOnly, vector<list<Periodicity>> &Lt1,
 }
 
 // Algorithm 5.17 - calculate type1 periodicities
-vector<list<Periodicity>> calcType1Periodicities(bool runsOnly, Fact const &lzf, Esa const &esa,
-                                                 size_t &pnum) {
+vector<list<Periodicity>> calcType1Periodicities(bool runsOnly, Fact const &lzf,
+                                                 Esa const &esa, size_t &pnum) {
   tick();
   RMQ lcptab = esa.precomputeLcp();
   tock("precomputeLcp");
@@ -183,7 +183,8 @@ void listInsert(list<Periodicity> &l, Periodicity p) {
 }
 
 // Algorithm 5.18 - calculate type 2 periodicities (proper substrings of LZ-factors)
-void calcType2Periodicities(vector<list<Periodicity>> &Lt1, Fact const &lzf, size_t &pnum) {
+void calcType2Periodicities(vector<list<Periodicity>> &Lt1, Fact const &lzf,
+                            size_t &pnum) {
   for (size_t j = 1; j < lzf.fact.size(); j++) {
     size_t bj = factStart(lzf, j); // b_j
     size_t ej = factEnd(lzf, j);   // e_j
@@ -205,8 +206,8 @@ void calcType2Periodicities(vector<list<Periodicity>> &Lt1, Fact const &lzf, siz
 }
 
 // max. periodicities in O(n) using LZ-Factors, returns array of lists
-vector<list<Periodicity>> getPeriodicityLists(bool runsOnly, Fact const &lzf, Esa const &esa,
-                                              size_t &pnum) {
+vector<list<Periodicity>> getPeriodicityLists(bool runsOnly, Fact const &lzf,
+                                              Esa const &esa, size_t &pnum) {
   auto Lt1 = calcType1Periodicities(runsOnly, lzf, esa, pnum);
   calcType2Periodicities(Lt1, lzf, pnum);
   return Lt1;
@@ -224,7 +225,8 @@ vector<Periodicity> collectPeriodicities(vector<list<Periodicity>> &pl, size_t p
   return ps;
 }
 
-vector<Periodicity> getPeriodicities(bool runsOnly, Fact const &lzf, Esa const &esa, size_t &pnum) {
+vector<Periodicity> getPeriodicities(bool runsOnly, Fact const &lzf, Esa const &esa,
+                                     size_t &pnum) {
   auto pl = getPeriodicityLists(runsOnly, lzf, esa, pnum);
   return collectPeriodicities(pl, pnum);
 }

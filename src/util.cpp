@@ -15,12 +15,12 @@ string randSeq(size_t n, string alphabet) {
 }
 
 string randRun(size_t n, size_t l) {
-  if (l>n)
-    l=n;
+  if (l > n)
+    l = n;
   string s;
   string rep = randSeq(l);
   while (s.size() < n)
-    s+=rep;
+    s += rep;
   s.resize(n);
   return s;
 }

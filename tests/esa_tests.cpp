@@ -17,7 +17,7 @@ size_t lcsNaive(char const *str, int64_t i, int64_t j) {
   return k;
 }
 
-char const *test_getEsa() {
+void test_getEsa() {
   FastaFile ff("Data/hotspotExample2.fasta");
   ff.seqs[0].seq += "$";
 
@@ -33,11 +33,9 @@ char const *test_getEsa() {
   mu_assert(esa.isa[esa.sa[n - 1]] == (int64_t)(n - 1), "isa incorrect");
   mu_assert(esa.lcp[0] == -1, "first LCP not -1");
   mu_assert(esa.lcp[esa.n] == -1, "last LCP not -1");
-
-  return NULL;
 }
 
-char const *test_revEsaRnd() {
+void test_revEsaRnd() {
   /* char *s = "AACCGGTTGGTT$"; // from Ohlebusch book */
   size_t n = 100;
   string str = randSeq(n++);
@@ -64,11 +62,9 @@ char const *test_revEsaRnd() {
         printf("%zu %zu -> %zu %zu\n", i, j, n - i - 1, n - j - 1);
       mu_assert_eq(exp, obs, "lcs does not match");
     }
-
-  return NULL;
 }
 
-char const *test_reduceEsa() {
+void test_reduceEsa() {
   string str = randSeq(1000);
   string str2n = str + "$" + revComp(str) + "$";
   str += "$";
@@ -79,21 +75,16 @@ char const *test_reduceEsa() {
 
   mu_assert_eq(-1, esaBoth.lcp[esaBoth.sa.size()], "last LCP not -1!");
   for (size_t i = 0; i < str.size(); i++) {
-    mu_assert_eq(esaOne.sa[i], esaBoth.sa[i], "SA do not match");
-    mu_assert_eq(esaOne.lcp[i], esaBoth.lcp[i], "LCP do not match");
-    mu_assert_eq(esaOne.isa[i], esaBoth.isa[i], "ISA do not match");
+    mu_assert_eq(esaOne.sa[i], esaBoth.sa[i], "SA[" << i << "] does not match");
+    mu_assert_eq(esaOne.lcp[i], esaBoth.lcp[i], "LCP[" << i << "] does not match");
+    mu_assert_eq(esaOne.isa[i], esaBoth.isa[i], "ISA[" << i << "] does not match");
   }
-
-  return NULL;
 }
 
-char const *all_tests() {
+void all_tests() {
   srand(time(NULL));
-  mu_suite_start();
   mu_run_test(test_getEsa);
   mu_run_test(test_revEsaRnd);
   mu_run_test(test_reduceEsa);
-  return NULL;
 }
-
 RUN_TESTS(all_tests)

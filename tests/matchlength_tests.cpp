@@ -1,45 +1,43 @@
 #include "minunit.h"
-#include <string.h>
+#include <cstring>
+using namespace std;
 
 #include "esa.h"
 #include "matchlength.h"
 
 // hotspot paper example 1
-static char const *seq1 = "CCCCGCTCTCCA$";
+static string seq1 = "CCCCGCTCTCCA$";
 // hotspot paper example 2
-static char const *seq2 =
+static string seq2 =
     "GCACGCACGCACACACACACACACACACACACACACACACACACACACACACACACACACACACACAC"
     "ACACATATGCTAACTCTCAGTCTGTGTGTGCA$";
 
-static char const *factors1[] = {"CCC", "C", "G", "CTC", "TC", "C", "A", "$"};
-static char const *factors2[] = {
+static string factors1[] = {"CCC", "C", "G", "CTC", "TC", "C", "A", "$"};
+static string factors2[] = {
     "GCACGCAC", "GCAC", "ACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA",
     "TA",       "TGC",  "TA",
     "AC",       "TCT",  "CA",
     "GT",       "CT",   "GTGTG",
     "TGC",      "A",    "$"};
 
-char const *checkML(char const *seq, char const *facts[], size_t num) {
-  Esa esa(seq, strlen(seq)); // calculate esa, including $
+void checkML(string seq, string facts[], size_t num) {
+  Esa esa(seq.c_str(), seq.size()); // calculate esa, including $
 
   Fact mlf;
   computeMLFact(mlf, esa);
   mu_assert(mlf.fact.size() == num, "wrong number of ML factors");
 
   for (size_t i = 0; i < mlf.fact.size(); i++) {
-    mu_assert(!strncmp(mlf.str + mlf.fact[i], facts[i], factLen(mlf, i)), "wrong factor");
+    mu_assert(!strncmp(mlf.str + mlf.fact[i], facts[i].c_str(), factLen(mlf, i)),
+              "wrong factor");
   }
-
-  return NULL;
 }
 
-char const *test_MatchLength1() { return checkML(seq1, factors1, 8); }
-char const *test_MatchLength2() { return checkML(seq2, factors2, 15); }
+void test_MatchLength1() { return checkML(seq1, factors1, 8); }
+void test_MatchLength2() { return checkML(seq2, factors2, 15); }
 
-char const *all_tests() {
-  mu_suite_start();
+void all_tests() {
   mu_run_test(test_MatchLength1);
   mu_run_test(test_MatchLength2);
-  return NULL;
 }
 RUN_TESTS(all_tests)

@@ -4,7 +4,7 @@
 
 #include <vector>
 
-char const *test_rmqSmall() {
+void test_rmqSmall() {
   size_t n = 25;
   std::vector<int64_t> array(n);
   for (size_t i = 0; i < n; i++) {
@@ -23,15 +23,11 @@ char const *test_rmqSmall() {
           exp = array[k];
 
       int64_t obs = rmq.get(i, j);
-      if (exp != obs)
-        printf("tried %zu and %zu\n", i, j);
-      mu_assert_eq(exp, obs, "wrong range minimum");
+      mu_assert_eq(exp, obs, "wrong range minimum (tried " << i << " and " << j << ")");
     }
-
-  return NULL;
 }
 
-char const *test_rmqRand() {
+void test_rmqRand() {
   size_t n = 10000;
   std::vector<int64_t> array(n);
   for (size_t i = 0; i < n; i++) {
@@ -49,20 +45,14 @@ char const *test_rmqRand() {
         exp = array[k];
 
     int64_t obs = rmq.get(l, r);
-    if (exp != obs)
-      printf("tried %zu and %zu\n", l, r);
-    mu_assert_eq(exp, obs, "wrong range minimum");
+    mu_assert_eq(exp, obs, "wrong range minimum (tried " << l << " and " << r << ")");
   }
-
-  return NULL;
 }
 
-char const *all_tests() {
+void all_tests() {
   srand(time(NULL));
-  mu_suite_start();
   mu_run_test(test_rmqSmall);
   for (size_t i = 0; i < 3; i++)
     mu_run_test(test_rmqRand);
-  return NULL;
 }
 RUN_TESTS(all_tests)

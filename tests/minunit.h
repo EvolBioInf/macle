@@ -8,13 +8,9 @@
  */
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <inttypes.h>
+#include <iostream>
+#include <string>
+#include <sstream>
 
 // 30+i foreground, 40+i background, bold->add ;1
 #define ANSI_CLR_BLACK "\x1b[30m"
@@ -27,13 +23,17 @@ extern "C" {
 #define ANSI_CLR_WHITE "\x1b[37m"
 #define ANSI_CLR_RESET "\x1b[0m"
 
-#define mu_suite_start() char const *message = NULL
+std::string errmsg;
+int tests_run;
 
 #define mu_assert(test, message)                                                         \
   do {                                                                                   \
     if (!(test)) {                                                                       \
-      fprintf(stderr, "[ERROR] %s:%d: " message "\n", __FILE__, __LINE__);               \
-      return message;                                                                    \
+      std::stringstream sstrm;                                                           \
+      sstrm << __FILE__ << ":" << __LINE__ << ": " message;                              \
+      std::cerr << "[ERROR] " << sstrm.str() << std::endl;                               \
+      errmsg = sstrm.str();                                                              \
+      return;                                                                            \
     }                                                                                    \
   } while (0)
 
@@ -42,19 +42,22 @@ extern "C" {
     int64_t e = (expected);                                                              \
     int64_t o = (observed);                                                              \
     if (e != o) {                                                                        \
-      fprintf(stderr, "[ERROR] %s:%d: %s\n\t(Expected: %ld, Observed: %ld)\n", __FILE__, \
-              __LINE__, (message), e, o);                                                \
-      return (message);                                                                  \
+      std::stringstream sstrm;                                                           \
+      sstrm << __FILE__ << ":" << __LINE__ << ": " message;                              \
+      std::cerr << "[ERROR] " << sstrm.str() << std::endl;                               \
+      std::cerr << "\t(Expected: " << e << ", Observed: " << o << ")" << std::endl;      \
+      errmsg = sstrm.str();                                                              \
+      return;                                                                            \
     }                                                                                    \
   } while (0)
 
 #define mu_run_test(test)                                                                \
   do {                                                                                   \
-    fprintf(stderr, "-----  " #test "\n");                                               \
-    message = test();                                                                    \
+    std::cerr << "-----  " #test << std::endl;                                           \
+    test();                                                                              \
     tests_run++;                                                                         \
-    if (message) {                                                                       \
-      return message;                                                                    \
+    if (!errmsg.empty()) {                                                               \
+      return;                                                                            \
     }                                                                                    \
   } while (0)
 
@@ -62,20 +65,14 @@ extern "C" {
   int main(int argc, char *argv[]) {                                                     \
     tests_run = 0;                                                                       \
     argc = argc;                                                                         \
-    fprintf(stderr, "RUNNING: %s\n", argv[0]);                                           \
-    printf("----\nRUNNING: %s\n", argv[0]);                                              \
-    char const *result = name();                                                         \
-    if (result != 0) {                                                                   \
-      printf(ANSI_CLR_RED "FAILED:" ANSI_CLR_RESET " %s\n", result);                     \
+    std::cerr << "RUNNING: " << argv[0] << std::endl;                                    \
+    std::cout << "----" << std::endl << "RUNNING: " << argv[0] << std::endl;             \
+    name();                                                                              \
+    if (!errmsg.empty()) {                                                               \
+      std::cout << ANSI_CLR_RED "FAILED:" ANSI_CLR_RESET " " << errmsg << std::endl;     \
     } else {                                                                             \
-      printf(ANSI_CLR_GREEN "ALL TESTS PASSED\n" ANSI_CLR_RESET);                        \
+      std::cout << ANSI_CLR_GREEN "ALL TESTS PASSED" << ANSI_CLR_RESET << std::endl;     \
     }                                                                                    \
-    printf("Tests run: %d\n", tests_run);                                                \
-    exit(result == 0 ? EXIT_SUCCESS : EXIT_FAILURE);                                     \
+    std::cout << "Tests run: " << tests_run << std::endl;                                \
+    exit(errmsg.empty() ? EXIT_SUCCESS : EXIT_FAILURE);                                  \
   }
-
-int tests_run;
-
-#ifdef __cplusplus
-}
-#endif

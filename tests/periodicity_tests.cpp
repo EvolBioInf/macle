@@ -26,10 +26,9 @@ int cmpPer(const void *a, const void *b) {
   return dl;
 }
 
-char const *test_knownExample() {
-  char const *s = "AACCAACCAACCAA$"; // from Ohlebusch book
-  size_t n = strlen(s);
-  Esa esa(s, n); // calculate esa, including $
+void test_knownExample() {
+  string s = "AACCAACCAACCAA$"; // from Ohlebusch book
+  Esa esa(s.c_str(), s.size()); // calculate esa, including $
   Fact lzf;
   computeLZFact(lzf, esa, false);
 
@@ -39,14 +38,11 @@ char const *test_knownExample() {
   size_t plen;
   auto pl = getPeriodicityLists(false, lzf, esa, plen);
   mu_assert_eq(8, plen, "wrong number of periodicities detected");
-
-  return NULL;
 }
 
-char const *test_onlyRuns() {
-  char const *s = "AAAAAAAAGCGCGCGCGCGCGCGTTTTTTTTTTTTACTACTACTACTACTACTA$";
-  size_t n = strlen(s);
-  Esa esa(s, n); // calculate esa, including $
+void test_onlyRuns() {
+  string s = "AAAAAAAAGCGCGCGCGCGCGCGTTTTTTTTTTTTACTACTACTACTACTACTA$";
+  Esa esa(s.c_str(), s.size()); // calculate esa, including $
   Fact lzf;
   computeLZFact(lzf, esa, false);
 
@@ -59,11 +55,9 @@ char const *test_onlyRuns() {
 
   ps = getPeriodicities(true, lzf, esa, plen);
   mu_assert_eq(4, plen, "wrong number of runs detected");
-
-  return NULL;
 }
 
-char const *test_randomSequence() {
+void test_randomSequence() {
   size_t n = 1000000;
   string str = randSeq(n);
   char const *s = str.c_str();
@@ -117,12 +111,11 @@ char const *test_randomSequence() {
   }
 
   mu_assert_eq(ps2.size(), ps.size(), "number of periodicities does not match");
-  return NULL;
 }
 
 // compare: getting all, then filtering afterwards (as proposed in book)
 // vs. getting only runs directly (for better performance)
-char const *test_randomOnlyRuns() {
+void test_randomOnlyRuns() {
   size_t n = 1000000;
   string str = randSeq(n);
   char const *s = str.c_str();
@@ -157,18 +150,15 @@ char const *test_randomOnlyRuns() {
   auto ps = getPeriodicities(true, lzf, esa, plen2);
 
   mu_assert_eq(plen2, plen, "number of runs does not match");
-  return NULL;
 }
 
-char const *all_tests() {
+void all_tests() {
   srand(time(NULL));
-  mu_suite_start();
   mu_run_test(test_knownExample);
   mu_run_test(test_onlyRuns);
   for (size_t i = 0; i < 3; i++)
     mu_run_test(test_randomSequence);
   for (size_t i = 0; i < 3; i++)
     mu_run_test(test_randomOnlyRuns);
-  return NULL;
 }
 RUN_TESTS(all_tests)

@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <string>
 #include <algorithm>
+#include <random>
+#include <chrono>
 #include <cstring>
 #include "util.h"
 using namespace std;
@@ -8,17 +10,20 @@ using namespace std;
 // generate random sequence of given length
 string randSeq(size_t n, string alphabet) {
   string s;
-  s.reserve(n + 2);
+  s.resize(n);
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  default_random_engine gen(seed);
+  uniform_int_distribution<int> distr(0,3);
   for (size_t i = 0; i < n; i++)
-    s += alphabet[rand() % alphabet.size()];
+    s[i] = alphabet[distr(gen)];
   return s;
 }
 
-string randRun(size_t n, size_t l) {
+string randRun(size_t n, size_t l, string alphabet) {
   if (l > n)
     l = n;
   string s;
-  string rep = randSeq(l);
+  string rep = randSeq(l, alphabet);
   while (s.size() < n)
     s += rep;
   s.resize(n);

@@ -191,8 +191,7 @@ void calcType2Periodicities(vector<list<Periodicity>> &Lt1, Fact const &lzf,
     if (factLen(lzf, j) >= 4) {
       int64_t dj = bj - getPrevOcc(lzf, j);
       for (size_t i = bj; i < ej - 1; i++) {
-        for (auto it = Lt1[i - dj].begin(); it != Lt1[i - dj].end(); it++) {
-          Periodicity p = *it;
+        for (auto p : Lt1[i - dj]) {
           if (p.e + dj >= ej - 1)
             break;
           /* listPrepend(&Lt1[i], newp); */ // XXX: doesn't work with prepend!!!
@@ -217,8 +216,8 @@ vector<Periodicity> collectPeriodicities(vector<list<Periodicity>> &pl, size_t p
   vector<Periodicity> ps;
   ps.reserve(pnum);
   for (size_t i = 0; i < pl.size(); i++) {
-    for (auto it = pl[i].begin(); it != pl[i].end(); it++)
-      ps.push_back(*it);
+    for (auto p : pl[i])
+      ps.push_back(p);
     pl[i].clear();
   }
   pl.clear();

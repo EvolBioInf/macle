@@ -25,6 +25,7 @@ struct ComplexityData {
   std::vector<std::list<Periodicity>> pl; // periodicities
 };
 
+// print data related to a sequence
 void ComplexityData::print() const {
   cout << name << " " << len << " " << gc << endl;
   cout << mlf.size() << endl;
@@ -39,6 +40,14 @@ void ComplexityData::print() const {
       cout << p.b << " " << p.e << " " << p.l << endl;
 }
 
+// print a series of sequences
+void printData(vector<ComplexityData> &vec) {
+  cout << vec.size() << endl;
+  for (auto &d : vec)
+    d.print();
+}
+
+// load precomputed data from stdin (when file=nullptr) or some file
 bool loadData(vector<ComplexityData> &cplx, char const *file) {
   istream *finP = &cin;
   ifstream fs;
@@ -115,6 +124,7 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &ff) {
     tick();
     Fact lzf;
     computeLZFact(lzf, esa, false);
+    lzf.lpf.resize(0); // we dont need it, memory waste
     tock("computeLZFact");
     tick();
     size_t pnum;
@@ -174,9 +184,7 @@ void processFile(char const *file) {
     extractData(dat, ff);
 
     if (args.s && !args.p) { // just dump intermediate results and quit
-      cout << dat.size() << endl;
-      for (auto d : dat)
-        d.print();
+      printData(dat);
       return;
     }
   }
@@ -198,21 +206,21 @@ void processFile(char const *file) {
     w = minlen;       // default window = whole (smallest) seq.
   w = min(w, minlen); // biggest window = whole (smallest) seq.
   if (k == 0)
-    k = w / 10;  // default interval = 1/10 of window
-  k = min(k, w); // biggest interval = window size
+    k = max((size_t)1, w / 10); // default interval = 1/10 of window
+  k = min(k, w);                // biggest interval = window size
 
   // array for results for all sequences in file
-  size_t entries = (maxlen - w) / k + 1;
-  vector<vector<double>> ys(2 * dat.size(), vector<double>(entries + 1));
+  size_t entries = numEntries(maxlen, w, k);
+  vector<vector<double>> ys(2 * dat.size(), vector<double>(entries));
 
   int n = 0;
   for (auto &seq : dat) {
     tick();
-    mlComplexity(w, k, ys[2 * n], seq.len, seq.mlf, seq.gc);
+    mlComplexity(seq.len, w, k, ys[2 * n], seq.mlf, seq.gc);
     tock("mlComplexity");
 
     tick();
-    runComplexity(w, k, ys[2 * n + 1], seq.len, seq.pl);
+    runComplexity(seq.len, w, k, ys[2 * n + 1], seq.pl);
     tock("runComplexity");
 
     n++;

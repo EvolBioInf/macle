@@ -17,6 +17,7 @@ size_t lcsNaive(char const *str, int64_t i, int64_t j) {
   return k;
 }
 
+// some basic tests
 void test_getEsa() {
   FastaFile ff("Data/hotspotExample2.fasta");
   ff.seqs[0].seq += "$";
@@ -35,6 +36,7 @@ void test_getEsa() {
   mu_assert(esa.lcp[esa.n] == -1, "last LCP not -1");
 }
 
+// tests lcs value retrieval from reverse esa using getLcp vs naive
 void test_revEsaRnd() {
   /* char *s = "AACCGGTTGGTT$"; // from Ohlebusch book */
   size_t n = 100;
@@ -56,7 +58,6 @@ void test_revEsaRnd() {
   for (size_t i = 0; i < n - 1; i++)
     for (size_t j = i + 1; j < n; j++) {
       int64_t exp = lcsNaive(s, i, j);
-      /* printf("%zu %zu -> %zu %zu\n", i,j, n-i-2, n-j-2); */
       int64_t obs = resa.getLcp(rmq, n - i - 1, n - j - 1);
       if (exp != obs)
         printf("%zu %zu -> %zu %zu\n", i, j, n - i - 1, n - j - 1);
@@ -64,12 +65,13 @@ void test_revEsaRnd() {
     }
 }
 
+// tests ESA reduction from seq$revcompseq$ -> seq$ without recalculation
 void test_reduceEsa() {
   string str = randSeq(1000);
   string str2n = str + "$" + revComp(str) + "$";
   str += "$";
-  Esa esaOne(str.c_str(), str.size());      // calculate esa, including $
-  Esa esaBoth(str2n.c_str(), str2n.size()); // calculate esa, including $
+  Esa esaOne(str.c_str(), str.size());
+  Esa esaBoth(str2n.c_str(), str2n.size());
   reduceEsa(esaBoth);
   esaBoth.str = str.c_str();
 

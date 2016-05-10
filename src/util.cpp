@@ -13,7 +13,7 @@ string randSeq(size_t n, string alphabet) {
   s.resize(n);
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine gen(seed);
-  uniform_int_distribution<int> distr(0, 3);
+  uniform_int_distribution<int> distr(0, alphabet.size() - 1);
   for (size_t i = 0; i < n; i++)
     s[i] = alphabet[distr(gen)];
   return s;

@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <iostream>
 #include <fstream>
+#include <utility>
 using namespace std;
 
 #include "args.h"
@@ -23,6 +24,7 @@ struct ComplexityData {
   double gc;                              // gc content of sequence
   std::vector<size_t> mlf;                // match factors
   std::vector<std::list<Periodicity>> pl; // periodicities
+  std::vector<pair<size_t, size_t>> bad;  // list of bad intervals
 };
 
 // print data related to a sequence
@@ -38,6 +40,9 @@ void ComplexityData::print() const {
   for (auto &l : pl)
     for (auto p : l)
       cout << p.b << " " << p.e << " " << p.l << endl;
+  cout << bad.size() << endl;
+  for (auto i : bad)
+    cout << i.first << " " << i.second << endl;
 }
 
 // print a series of sequences
@@ -66,19 +71,27 @@ bool loadData(vector<ComplexityData> &cplx, char const *file) {
   for (int i = 0; i < n; i++) {
     ComplexityData c;
     fin >> c.name >> c.len >> c.gc;
-    int fnum;
+    size_t fnum;
     fin >> fnum;
     c.mlf.resize(fnum);
-    for (int j = 0; j < fnum; j++)
+    for (size_t j = 0; j < fnum; j++)
       fin >> c.mlf[j];
-    int pnum;
+    size_t pnum;
     fin >> pnum;
     c.pl.resize(c.len);
-    for (int j = 0; j < pnum; j++) {
+    for (size_t j = 0; j < pnum; j++) {
       size_t b, e, l;
       fin >> b >> e >> l;
       c.pl[b].push_back(Periodicity(b, e, l));
     }
+    size_t bnum;
+    fin >> bnum;
+    for (size_t j = 0; j < bnum; j++) {
+      size_t l, r;
+      fin >> l >> r;
+      c.bad.push_back(make_pair(l, r));
+    }
+
     cplx.push_back(c);
   }
   return true;
@@ -139,6 +152,25 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &ff) {
         for (auto p : l)
           printPeriodicity(p);
     }
+
+    // get list of bad intervals
+    tick();
+    bool insidebad = false;
+    size_t start = 0;
+    string validchars = "ACGT$";
+    for (size_t i = 0; i < s.size(); i++) {
+      bool valid = validchars.find(s[i]) != string::npos;
+      if (insidebad && valid) {
+        insidebad = false;
+        c.bad.push_back(make_pair(start, i - 1));
+      } else if (!insidebad && !valid) {
+        start = i;
+        insidebad = true;
+      }
+    }
+    if (insidebad) // push last one, if we are inside
+      c.bad.push_back(make_pair(start, s.size() - 1));
+    tock("find bad intervals");
 
     cplx.push_back(c);
   }
@@ -215,12 +247,15 @@ void processFile(char const *file) {
 
   int n = 0;
   for (auto &seq : dat) {
+    // get bad window indices for given parameters
+    vector<size_t> bad = calcNAWindows(seq.len, w, k, seq.bad);
+
     tick();
-    mlComplexity(seq.len, w, k, ys[2 * n], seq.mlf, seq.gc);
+    mlComplexity(seq.len, w, k, ys[2 * n], seq.mlf, seq.gc, bad);
     tock("mlComplexity");
 
     tick();
-    runComplexity(seq.len, w, k, ys[2 * n + 1], seq.pl);
+    runComplexity(seq.len, w, k, ys[2 * n + 1], seq.pl, bad);
     tock("runComplexity");
 
     n++;

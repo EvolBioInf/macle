@@ -2,6 +2,8 @@
 #include <cinttypes>
 #include <vector>
 #include <algorithm>
+#include <utility>
+#include <queue>
 using namespace std;
 
 #include "complexity.h"
@@ -21,14 +23,38 @@ size_t numEntries(size_t n, size_t w, size_t k) {
 
 // usage: for each_window(total, windowsize, step) -> sets j,l,r in each iteration
 #define each_window(n, w, k)                                                             \
-  (size_t max = numEntries(n, w, k), j = 0, l = j * k, r = min(n, l + w) - 1; j < max;   \
+  (size_t numj = numEntries(n, w, k), j = 0, l = j * k, r = min(n, l + w) - 1; j < numj; \
    j++, l = j * k, r = min(n, l + w) - 1)
+
+// given sequence length, desired window and step size and a list of intervals
+// with invalid nucleotides, returns a list of windows (iteration numbers) that
+// should be ignored in the complexity calculation
+vector<size_t> calcNAWindows(size_t n, size_t w, size_t k,
+                             vector<pair<size_t, size_t>> const &badiv) {
+  vector<size_t> na;
+  vector<Interval<bool>> ivs;
+  for (auto p : badiv)
+    ivs.push_back(Interval<bool>(p.first, p.second, true));
+  IntervalTree<bool> tree;
+  tree = IntervalTree<bool>(ivs);
+  for
+    each_window(n, w, k) {
+      vector<Interval<bool>> res;
+      tree.findContained(l, r, res);
+      size_t sum = 0;
+      for (auto &i : res)
+        sum += max(i.start, l) - min(r, i.stop) + 1;
+      if ((double)sum / (double)w > 0.05)
+        na.push_back(j);
+    }
+  return na;
+}
 
 // calculate match length complexity for sliding windows
 // input: sequence length, sane w and k, allocated array for results,
 //        match length factors, gc content
 void mlComplexity(size_t n, size_t w, size_t k, vector<double> &y,
-                  vector<size_t> const &fact, double gc) {
+                  vector<size_t> const &fact, double gc, vector<size_t> const &badw) {
   // compute observed number of match factors for every prefix
   vector<size_t> ps(n);
   size_t nextfact = 1;
@@ -50,8 +76,17 @@ void mlComplexity(size_t n, size_t w, size_t k, vector<double> &y,
   // only subtract cMin if its not a degenerate case
   double cNorm = cAvg - cMin > 0 ? cAvg - cMin : cAvg;
 
+  queue<size_t> badj;
+  for (auto j : badw)
+    badj.push(j);
   for
     each_window(n, w, k) {
+      if (j == badj.front()) {
+        y[j] = -1;
+        badj.pop();
+        continue;
+      }
+
       double cObs = (double)sumFromTo(ps, l, r) / (double)w;
       y[j] = (cObs /* - cMin */) / cNorm;
     }
@@ -84,7 +119,7 @@ void runComplexityOld(size_t n, size_t w, size_t k, vector<double> &y,
 
 // get "information content" of window
 void runComplexity(size_t n, size_t w, size_t k, vector<double> &y,
-                   vector<list<Periodicity>> const &ls) {
+                   vector<list<Periodicity>> const &ls, vector<size_t> const &badw) {
   vector<int64_t> ps(n, 1); // all nucleotides marked
   vector<Interval<size_t>> intervals;
   for (auto &l : ls) {
@@ -105,8 +140,18 @@ void runComplexity(size_t n, size_t w, size_t k, vector<double> &y,
 
   // subtract 1 from w to cap result at 1, max to prevent div. by 0
   double pMax = max(1.0, (double)w - 1.0);
+
+  queue<size_t> badj;
+  for (auto j : badw)
+    badj.push(j);
   for
     each_window(n, w, k) {
+      if (j == badj.front()) {
+        y[j] = -1;
+        badj.pop();
+        continue;
+      }
+
       size_t pObs = sumFromTo(ps, l, r); // count non-run nucl. in window
       // cout << j << ": " << pObs;
       vector<Interval<size_t>> runs;

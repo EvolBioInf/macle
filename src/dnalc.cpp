@@ -57,7 +57,8 @@ bool loadData(vector<ComplexityData> &cplx, char const *file) {
   istream *finP = &cin;
   ifstream fs;
   if (file) {
-    fs = ifstream(file);
+    // fs = ifstream(file);
+    fs.open(file);
     if (!fs.is_open()) {
       cerr << "ERROR: Could not open file: " << file << endl;
       return false;
@@ -94,6 +95,8 @@ bool loadData(vector<ComplexityData> &cplx, char const *file) {
 
     cplx.push_back(c);
   }
+  if (fs.is_open())
+    fs.close();
   return true;
 }
 

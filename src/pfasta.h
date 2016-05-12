@@ -1,6 +1,6 @@
 #ifndef PFASTA_H
 #define PFASTA_H
-#include <stdlib.h>
+#include <cstdlib>
 
 /** The following is the maximum length of an error string. It has to be
  * carefully chosen, so that all calls to PF_FAIL_STR succeed. For instance,

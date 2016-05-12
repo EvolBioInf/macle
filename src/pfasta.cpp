@@ -15,13 +15,13 @@
  *
  */
 
-#include <assert.h>
-#include <ctype.h>
+#include <cassert>
+#include <cctype>
 #include <errno.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sys/types.h>
 #include <unistd.h>
 

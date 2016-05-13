@@ -40,7 +40,7 @@ vector<size_t> calcNAWindows(size_t n, size_t w, size_t k,
   for
     each_window(n, w, k) {
       vector<Interval<bool>> res;
-      tree.findContained(l, r, res);
+      tree.findOverlapping(l, r, res);
       size_t sum = 0;
       for (auto &i : res)
         sum += max(i.start, l) - min(r, i.stop) + 1;

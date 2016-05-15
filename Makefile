@@ -1,6 +1,6 @@
 CXX := g++
-CFLAGS := -std=c++11 -Isrc -Ilibdivsufsort/include -Wall -Wextra -Wshadow -O2 -g -ggdb # -pg
-LDFLAGS := -lm -lgsl -lgslcblas -lblas -ldivsufsort64 -Llibdivsufsort/lib # -pg
+CFLAGS := -std=c++11 -Isrc -Ilibdivsufsort/include -Igsl/include -Wall -Wextra -Wshadow -O2 -g -ggdb # -pg
+LDFLAGS := -lm -lgsl -lgslcblas -lblas -ldivsufsort64 -Llibdivsufsort/lib -Lgsl/lib # -pg
 TARGET := dnalc
 
 SOURCES := $(wildcard src/*.cpp)
@@ -45,4 +45,11 @@ libdivsufsort:
 	git clone git@github.com:y-256/libdivsufsort.git
 	cd libdivsufsort && cmake -DBUILD_SHARED_LIBS=0 -DBUILD_EXAMPLES=0 -DBUILD_DIVSUFSORT64=1 && make
 
-.PHONY: all build clean tests valgrind format libdivsufsort
+gsl:
+	wget http://ftp.halifax.rwth-aachen.de/gnu/gsl/gsl-2.1.tar.gz
+	tar xf gsl-2.1.tar.gz && rm gsl-2.1.tar.gz
+	cd gsl-2.1 && ./configure --prefix=$(shell pwd)/gsl && make && make install
+	find gsl -name "*.so.*" -exec rm {} \;
+
+
+.PHONY: all build clean tests valgrind format libdivsufsort gsl

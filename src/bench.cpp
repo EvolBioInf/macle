@@ -9,7 +9,7 @@ using namespace std::chrono;
 
 static stack<high_resolution_clock::time_point> tp;
 
-void tick() { tp.push(high_resolution_clock::now()); }
+void tick() { if (args.b) tp.push(high_resolution_clock::now()); }
 
 void tock(char const *str) {
   if (args.b) {

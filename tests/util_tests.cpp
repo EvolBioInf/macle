@@ -12,9 +12,19 @@ void test_randSeq() {
   cout << seq << endl;
   for (char c : seq)
     mu_assert(alphabet.find(c) != string::npos, "invalid character: " << c);
-  // test with default alphabet
-  alphabet = "ACGT";
-  seq = randSeq(n);
+  // test with default alphabet, different gc contents
+  alphabet="ACGT";
+  seq = randSeq(n, 0.4);
+  cout << seq << endl;
+  for (char c : seq)
+    mu_assert(alphabet.find(c) != string::npos, "invalid character: " << c);
+  alphabet="AT";
+  seq = randSeq(n, 0.0);
+  cout << seq << endl;
+  for (char c : seq)
+    mu_assert(alphabet.find(c) != string::npos, "invalid character: " << c);
+  alphabet="GC";
+  seq = randSeq(n, 1.0);
   cout << seq << endl;
   for (char c : seq)
     mu_assert(alphabet.find(c) != string::npos, "invalid character: " << c);

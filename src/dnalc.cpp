@@ -258,7 +258,7 @@ void processFile(char const *file) {
     tock("mlComplexity");
 
     tick();
-    runComplexity(seq.len, w, k, ys[2 * n + 1], seq.pl, bad);
+    runComplexity(seq.len, w, k, ys[2 * n + 1], seq.pl, seq.gc, bad, true);
     tock("runComplexity");
 
     n++;

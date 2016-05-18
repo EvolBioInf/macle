@@ -13,8 +13,7 @@ void mlComplexity(size_t n, size_t w, size_t k, std::vector<double> &y,
                   std::vector<size_t> const &fact, double gc,
                   std::vector<size_t> const &badw = std::vector<size_t>(0));
 void runComplexity(size_t n, size_t w, size_t k, std::vector<double> &y,
-                   std::vector<std::list<Periodicity>> const &ls,
-                   std::vector<size_t> const &badw = std::vector<size_t>(0));
+                   std::vector<std::list<Periodicity>> const &ls, double gc,
+                   std::vector<size_t> const &badw = std::vector<size_t>(0), bool calcAvg=false);
 
-// runs that are smaller that this are thrown away -> seen as random noise
-#define FILTER 10
+double calcExpRunComplexity(size_t len, double gc, size_t reps);

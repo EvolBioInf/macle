@@ -4,8 +4,27 @@
 #include <random>
 #include <chrono>
 #include <cstring>
+#include "lempelziv.h"
 #include "util.h"
+#include "args.h"
 using namespace std;
+
+// generate random DNA seq of given length
+string randSeq(size_t n, double gc) {
+  string s;
+  s.resize(n);
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  default_random_engine gen(seed);
+  bernoulli_distribution coin(0.5);
+  uniform_real_distribution<double> rdistr(0, 1.0);
+  for (size_t i = 0; i < n; i++) {
+    if (rdistr(gen)<gc)
+      s[i] = coin(gen) ? 'G' : 'C';
+    else
+      s[i] = coin(gen) ? 'A' : 'T';
+  }
+  return s;
+}
 
 // generate random sequence of given length
 string randSeq(size_t n, string alphabet) {
@@ -71,4 +90,16 @@ void fprintnf(FILE *fp, char const *str, int n) {
     fprintf(fp, "%c", str[i]);
   if (m < l)
     fprintf(fp, "...");
+}
+
+vector<list<Periodicity>> getRuns(string const &seq) {
+  bool b = args.b;
+  args.b = false;
+  Esa esa(seq.c_str(), seq.size()); // esa for sequence+$
+  Fact lzf;
+  computeLZFact(lzf, esa, false);
+  size_t pnum;
+  auto ls=getPeriodicityLists(true, lzf, esa, pnum);
+  args.b = b;
+  return ls;
 }

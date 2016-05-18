@@ -10,6 +10,7 @@ using namespace std;
 #include "matchlength.h"
 #include "periodicity.h"
 #include "shulen.h"
+#include "util.h"
 #include "IntervalTree.h"
 
 // input: prefix-sum array, left and right bound (inclusive)
@@ -81,51 +82,26 @@ void mlComplexity(size_t n, size_t w, size_t k, vector<double> &y,
     badj.push(j);
   for
     each_window(n, w, k) {
-      if (j == badj.front()) {
-        y[j] = -1;
-        badj.pop();
-        continue;
-      }
+      if (n!=w)
+        if (!badj.empty() && j == badj.front()) {
+          y[j] = -1;
+          badj.pop();
+          continue;
+        }
 
       double cObs = (double)sumFromTo(ps, l, r) / (double)w;
       y[j] = (cObs /* - cMin */) / cNorm;
     }
 }
 
-void runComplexityOld(size_t n, size_t w, size_t k, vector<double> &y,
-                      vector<list<Periodicity>> const &ls) {
-  vector<int64_t> ps(n, 0);
-  for (auto &l : ls) {
-    for (auto p : l) {
-      if (perLen(p) < FILTER)
-        continue;
-      for (size_t j = p.b; j <= p.e; j++) // mark nucleotides inside runs
-        ps[j] |= 1;
-    }
-  }
-
-  // prefix sum (for fast range sum retrieval)
-  for (size_t i = 1; i < n; i++)
-    ps[i] += ps[i - 1];
-
-  for
-    each_window(n, w, k) {
-      // complexity = fraction of nucleotides outside
-      // of any remaining runs (after filtering)
-      double pObs = (double)sumFromTo(ps, l, r) / (double)w;
-      y[j] = 1 - pObs;
-    }
-}
-
 // get "information content" of window
 void runComplexity(size_t n, size_t w, size_t k, vector<double> &y,
-                   vector<list<Periodicity>> const &ls, vector<size_t> const &badw) {
+                   vector<list<Periodicity>> const &ls, double gc,
+                   vector<size_t> const &badw, bool calcAvg) {
   vector<int64_t> ps(n, 1); // all nucleotides marked
   vector<Interval<size_t>> intervals;
   for (auto &l : ls) {
     for (auto p : l) {
-      if (perLen(p) < FILTER)
-        continue;
       for (size_t j = p.b; j <= p.e; j++) // un-mark nucleotides inside runs
         ps[j] = 0;
       intervals.push_back(Interval<size_t>(p.b, p.e, p.l));
@@ -139,30 +115,50 @@ void runComplexity(size_t n, size_t w, size_t k, vector<double> &y,
   IntervalTree<size_t> tree = IntervalTree<size_t>(intervals);
 
   // subtract 1 from w to cap result at 1, max to prevent div. by 0
-  double pMax = max(1.0, (double)w - 1.0);
+  // divide by window length -> unnormalized max. information per nucleotide
+  double pAvg = max(1.0, (double)w - 1.0) / (double)w;
+  if (calcAvg) //obtain expected nucleotid information via simulations
+    pAvg = calcExpRunComplexity(1000, gc, 1000);
 
   queue<size_t> badj;
   for (auto j : badw)
     badj.push(j);
   for
     each_window(n, w, k) {
-      if (j == badj.front()) {
-        y[j] = -1;
-        badj.pop();
-        continue;
-      }
+      if (n!=w)
+        if (!badj.empty() && j == badj.front()) {
+          y[j] = -1;
+          badj.pop();
+          continue;
+        }
 
-      size_t pObs = sumFromTo(ps, l, r); // count non-run nucl. in window
+      size_t info = sumFromTo(ps, l, r); // count non-run nucl. in window
       // cout << j << ": " << pObs;
       vector<Interval<size_t>> runs;
       tree.findOverlapping(l, r, runs);
       for (auto &run : runs) {
-        pObs += run.value; // add period lengths of runs touching window
+        info += run.value; // add period lengths of runs touching window
         // cout << " + " << run.value;
       }
       // cout << " = " << pObs << endl;
-      pObs = min(w, pObs); // we look at all overl. runs, could lead to sum > w
+
+      // we look at all overlapping runs, could lead to sum > w -> min(w,*)
       // subtract 1 from pObs to make 0 possible (e.g. for AAAA..)
-      y[j] = ((double)pObs - 1.0) / pMax;
+      double pObs = (min(w, info) - 1.0)/(double)w;
+      y[j] = pObs / pAvg;
     }
+}
+
+// simulate complexity calculation on random dna sequence
+// to get expected value. the value is invariant under seq. length
+double calcExpRunComplexity(size_t len, double gc, size_t reps) {
+  double c = 0;
+  vector<double> y(1);
+  for (size_t rep=0; rep<reps; rep++) {
+    string seq = randSeq(len, gc) + "$";
+    auto ls = getRuns(seq);
+    runComplexity(len, len, len, y, getRuns(seq), gc, vector<size_t>(0), false);
+    c += y[0];
+  }
+  return c/reps;
 }

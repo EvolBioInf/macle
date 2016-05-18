@@ -13,3 +13,5 @@ std::string revComp(std::string const &s);
 std::vector<std::list<Periodicity>> getRuns(std::string const &seq);
 
 void fprintnf(FILE *fp, char const *str, int n);
+int open_or_fail(char const *fname, int flag);
+FILE *fopen_or_fail(char const *fname, char const *flags);

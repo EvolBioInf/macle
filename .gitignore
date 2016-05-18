@@ -8,4 +8,4 @@ tags
 randomSeed.dat
 gmon.out
 vgcore.*
-
+perf.*

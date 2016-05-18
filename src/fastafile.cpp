@@ -1,9 +1,10 @@
 #include "fastafile.h"
+#include "util.h"
 
 #include <err.h>
 #include "pfasta.h"
 
-#include <errno.h>
+//for open_or_fail flags
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -15,16 +16,6 @@ using namespace std;
 
 FastaSeq::FastaSeq(string const &n, string const &c, string const &s)
     : name(n), comment(c), seq(s) {}
-
-/* eopen: open file on system level and report on error */
-int open_or_fail(char const *fname, int flag) {
-  int fd = open(fname, flag, 0);
-  if (fd < 0) {
-    cerr << "open(" << fname << "," << flag << ") failed: " << strerror(errno) << endl;
-    exit(EXIT_FAILURE);
-  }
-  return fd;
-}
 
 // input: filename of fasta file (or 0 for STDIN), reference to an empty number
 // output: either successfully parsed file, or NULL

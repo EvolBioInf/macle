@@ -1,6 +1,5 @@
 #include <iostream>
 #include <iomanip>
-#include <fstream>
 #include <utility>
 using namespace std;
 
@@ -8,6 +7,7 @@ using namespace std;
 #include "bench.h"
 
 #include "fastafile.h"
+#include "index.h"
 #include "matchlength.h"
 #include "lempelziv.h"
 #include "periodicity.h"
@@ -15,90 +15,6 @@ using namespace std;
 #include "util.h"
 
 using namespace std;
-
-// All information from a sequence required to calculate complexity plots
-struct ComplexityData {
-  void print() const;
-  std::string name;                       // name of sequence
-  size_t len;                             // length of sequence
-  double gc;                              // gc content of sequence
-  std::vector<size_t> mlf;                // match factors
-  std::vector<std::list<Periodicity>> pl; // periodicities
-  std::vector<pair<size_t, size_t>> bad;  // list of bad intervals
-};
-
-// print data related to a sequence
-void ComplexityData::print() const {
-  cout << name << " " << len << " " << gc << endl;
-  cout << mlf.size() << endl;
-  for (auto i : mlf)
-    cout << i << endl;
-  size_t pernum = 0;
-  for (auto &l : pl)
-    pernum += l.size();
-  cout << pernum << endl;
-  for (auto &l : pl)
-    for (auto p : l)
-      cout << p.b << " " << p.e << " " << p.l << endl;
-  cout << bad.size() << endl;
-  for (auto i : bad)
-    cout << i.first << " " << i.second << endl;
-}
-
-// print a series of sequences
-void printData(vector<ComplexityData> &vec) {
-  cout << vec.size() << endl;
-  for (auto &d : vec)
-    d.print();
-}
-
-// load precomputed data from stdin (when file=nullptr) or some file
-bool loadData(vector<ComplexityData> &cplx, char const *file) {
-  istream *finP = &cin;
-  ifstream fs;
-  if (file) {
-    // fs = ifstream(file);
-    fs.open(file);
-    if (!fs.is_open()) {
-      cerr << "ERROR: Could not open file: " << file << endl;
-      return false;
-    }
-    finP = &fs;
-  }
-  istream &fin = *finP;
-
-  int n;
-  fin >> n;
-  for (int i = 0; i < n; i++) {
-    ComplexityData c;
-    fin >> c.name >> c.len >> c.gc;
-    size_t fnum;
-    fin >> fnum;
-    c.mlf.resize(fnum);
-    for (size_t j = 0; j < fnum; j++)
-      fin >> c.mlf[j];
-    size_t pnum;
-    fin >> pnum;
-    c.pl.resize(c.len);
-    for (size_t j = 0; j < pnum; j++) {
-      size_t b, e, l;
-      fin >> b >> e >> l;
-      c.pl[b].push_back(Periodicity(b, e, l));
-    }
-    size_t bnum;
-    fin >> bnum;
-    for (size_t j = 0; j < bnum; j++) {
-      size_t l, r;
-      fin >> l >> r;
-      c.bad.push_back(make_pair(l, r));
-    }
-
-    cplx.push_back(c);
-  }
-  if (fs.is_open())
-    fs.close();
-  return true;
-}
 
 // given sequences from a fasta file, calculate match factors and runs
 void extractData(vector<ComplexityData> &cplx, FastaFile &ff) {
@@ -216,7 +132,7 @@ void processFile(char const *file) {
     extractData(dat, ff);
 
     if (args.s && !args.p) { // just dump intermediate results and quit
-      printData(dat);
+      saveData(dat);
       return;
     }
   }

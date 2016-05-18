@@ -1,9 +1,16 @@
+#include <cstdio>
 #include <cstdlib>
 #include <string>
 #include <algorithm>
 #include <random>
 #include <chrono>
 #include <cstring>
+
+//for open_or_fail
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 #include "lempelziv.h"
 #include "util.h"
 #include "args.h"
@@ -78,6 +85,26 @@ string revComp(string const &s) {
     }
   reverse(r.begin(), r.end());
   return r;
+}
+
+/* open_or_fail: open file on system level and report on error */
+int open_or_fail(char const *fname, int flag) {
+  int fd = open(fname, flag, 0);
+  if (fd < 0) {
+    fprintf(stderr, "open(%s, %i) failed: %s\n", fname, flag, strerror(errno));
+    exit(EXIT_FAILURE);
+  }
+  return fd;
+}
+
+/* fopen_or_fail: open file on system level and report on error */
+FILE *fopen_or_fail(char const *fname, char const *flags) {
+  FILE *f = fopen(fname, flags);
+  if (!f) {
+    fprintf(stderr, "fopen(%s, %s) failed: %s\n", fname, flags, strerror(errno));
+    exit(EXIT_FAILURE);
+  }
+  return f;
 }
 
 // fprintnf: print max of n characters of str onto fp;

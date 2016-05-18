@@ -32,7 +32,7 @@ static char const usage[] =
              "\t-p: print match-length and Lempel-Ziv factors and periodicities\n"
              "\t-b: print benchmarking information\n"
              "\t-g N: output pipe-ready to plot with:\n"
-             "\t\tN=1 -> gnuplot -p\n"
+             "\t\tN=1 -> dnalc_plot.sh (-> gnuplot)\n"
              "\t\tN=2 -> graph -T X (part of plotutils)\n";
 
 void Args::parse(int argc, char *argv[]) {

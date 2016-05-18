@@ -1,5 +1,5 @@
-#include <cstdio>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <utility>
 using namespace std;
@@ -180,23 +180,20 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &ff) {
 }
 
 void gnuplotCode(uint32_t w, uint32_t k, int n) {
-  printf( //"set terminal png; "
-      "set key autotitle columnheader; "
-      "set ylabel \"window complexity\"; "
-      "set xlabel \"window offset (w=%u, k=%u)\"; ",
-      w, k);
+  cout << "set key autotitle columnheader; set ylabel \"window complexity\"; "
+    << "set xlabel \"window offset (w=" << w << ", k="<<k<<")\"; ";
   for (int i = 0; i < n; i++)
-    printf("%s using 1:%d with lines", i ? ", ''" : "plot \"-\"", i + 2);
-  printf(";\n");
+    cout << (i ? ", ''" : "plot \"$PLOTFILE\"") << " using 1:"<<(i+2)<<" with lines";
+  cout << ";" << endl;
 }
 
 // print data: X Y1 ... Yn
 void printPlot(uint32_t w, uint32_t k, size_t n, vector<vector<double>> &ys) {
   for (size_t j = 0; j < n; j++) {
-    printf("%zu\t", j * k + w / 2); // center of window
+    cout << (j * k + w / 2) << "\t"; // center of window
     for (size_t i = 0; i < ys.size(); i++)
-      printf("%.4f\t", ys[i][j]);
-    printf("\n");
+      cout << ys[i][j] <<"\t";
+    cout << endl;
   }
 }
 
@@ -265,27 +262,23 @@ void processFile(char const *file) {
   }
 
   if (!args.p) {
+    cout << fixed << setprecision(4);
     if (args.g) { // print to be directly piped into some plot tool
       if (args.gf == 2) {
         for (size_t i = 0; i < 2 * dat.size(); i++) {
           for (size_t j = 0; j < entries; j++)
-            printf("%zu\t%.4f\n", j * k + w / 2, ys[i][j]);
-          printf("\n");
+            cout << (j * k + w / 2) << "\t" << ys[i][j] << endl;
+          cout << endl;
         }
       } else if (args.gf == 1) {
+        cout << "DNALC_PLOT" << endl; //magic keyword
         gnuplotCode(w, k, 2 * dat.size()); // gnuplot control code
-        // need to output everything n times for n plots
-        for (size_t i = 0; i < 2 * dat.size(); i++) {
-          // print column header (for plot labels)
-          printf("offset ");
-          for (size_t j = 0; j < dat.size(); j++) { // two columns for each seq
-            printf("\"%s %s\"\t", dat[j].name.c_str(), "(MC)");
-            printf("\"%s %s\"\t", dat[j].name.c_str(), "(PC)");
-          }
-          printf("\n");
-          printPlot(w, k, entries, ys); // print plot itself
-          printf("e\n");                // separator between repeats of data
-        }
+        // print column header (for plot labels)
+        cout << "offset\t";
+        for (size_t j = 0; j < dat.size(); j++) // two columns for each seq
+          cout << "\"" << dat[j].name << " (MC)\"\t" << "\"" << dat[j].name << " (RC)\"\t";
+        cout << endl;
+        printPlot(w, k, entries, ys); // print plot itself
       }
     } else { // just print resulting data
       printPlot(w, k, entries, ys);

@@ -5,11 +5,19 @@
 #include <random>
 #include <chrono>
 #include <cstring>
+#include <functional>
+#include <iostream>
+#include <fstream>
 
 //for open_or_fail
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
+
+//for mmap stuff
+#include <cassert>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 #include "lempelziv.h"
 #include "util.h"
@@ -105,6 +113,48 @@ FILE *fopen_or_fail(char const *fname, char const *flags) {
     exit(EXIT_FAILURE);
   }
   return f;
+}
+
+// if file==nullptr, calls lambda with stdin as stream, otherwise opens file +
+// closes afterwards
+bool with_file(char const *file, function<bool(istream&)> lambda, ios_base::openmode mode) {
+  istream *finP = &cin;
+  ifstream fs;
+  if (file) {
+    // fs = ifstream(file); //does not work with older g++?
+    fs.open(file, mode);
+    if (!fs.is_open()) {
+      cerr << "ERROR: Could not open file: " << file << endl;
+      return false;
+    }
+    finP = &fs;
+  }
+  istream &fin = *finP;
+  bool ret = lambda(fin);
+  if (fs.is_open())
+    fs.close();
+  return ret;
+}
+
+size_t getFilesize(const char* filename) {
+    struct stat st;
+    stat(filename, &st);
+    return st.st_size;
+}
+bool with_mmap(char const *file, function<bool(MMapReader&)> lambda) {
+  int fd = open_or_fail(file, O_RDONLY);
+  assert(fd != -1);
+
+  MMapReader r;
+  if (file)
+    r.sz=getFilesize(file);
+  char* data = reinterpret_cast<char*>(mmap(NULL, r.sz, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0));
+  r.dat = data;
+  bool ret = lambda(r);
+  int rc = munmap(data, r.sz);
+  assert(rc == 0);
+  close(fd);
+  return ret;
 }
 
 // fprintnf: print max of n characters of str onto fp;

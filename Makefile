@@ -1,6 +1,6 @@
 CXX := g++
-CFLAGS := -std=c++11 -Isrc -Ilibdivsufsort/include -Igsl/include -Wall -Wextra -Wshadow -O2 -g -ggdb # -pg
-LDFLAGS := -lm -lgsl -lgslcblas -lblas -ldivsufsort64 -Llibdivsufsort/lib -Lgsl/lib # -pg
+CFLAGS := -std=c++11 -Isrc -Ilibdivsufsort/include -Igsl/include -Wall -Wextra -Wshadow -O2 -g -ggdb -fopenmp # -pg
+LDFLAGS := -lm -lgsl -lgslcblas -lblas -ldivsufsort64 -lomp -Llibdivsufsort/lib -Lgsl/lib # -pg
 TARGET := dnalc
 
 SOURCES := $(wildcard src/*.cpp)

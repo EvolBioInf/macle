@@ -1,11 +1,8 @@
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <utility>
 #include <functional>
 using namespace std;
-
-#include <cstdio>
 
 #include "index.h"
 #include "periodicity.h"
@@ -18,23 +15,12 @@ template<typename T> void binwrite(T x) {
 template<typename T> void binread(istream &i, T &x) {
   i.read(reinterpret_cast<char*>(&x),sizeof(x));
 }
-bool with_file(char const *file, function<bool(istream&)> lambda, ios_base::openmode mode=ios_base::in) {
-  istream *finP = &cin;
-  ifstream fs;
-  if (file) {
-    // fs = ifstream(file); //does not work with older g++?
-    fs.open(file, mode);
-    if (!fs.is_open()) {
-      cerr << "ERROR: Could not open file: " << file << endl;
-      return false;
-    }
-    finP = &fs;
-  }
-  istream &fin = *finP;
-  bool ret = lambda(fin);
-  if (fs.is_open())
-    fs.close();
-  return ret;
+template<typename T> void binget(MMapReader &i, size_t offbytes, T &x) {
+  x = *reinterpret_cast<T*>(i.dat+i.off+offbytes);
+}
+template<typename T> void binread(MMapReader &i, T &x) {
+  binget(i, 0, x);
+  i.off += sizeof(x);
 }
 
 // serialize relevant data of a sequence
@@ -73,7 +59,13 @@ void saveData(vector<ComplexityData> &vec) {
 
 // load precomputed data from stdin (when file=nullptr) or some file
 bool loadData(vector<ComplexityData> &cplx, char const *file) {
-  return with_file(file, [&](istream &fin) {
+  if (!file) {
+    cerr << "ERROR: Can not load binary index file from pipe!"
+      << " Please pass it as argument!" << endl;
+    return false;
+  }
+  // return with_file(file, [&](istream &fin) {
+  return with_mmap(file, [&](MMapReader &fin) {
     size_t n;
     binread(fin,n);
     for (size_t i = 0; i < n; i++) {
@@ -91,31 +83,53 @@ bool loadData(vector<ComplexityData> &cplx, char const *file) {
       size_t fnum;
       binread(fin,fnum);
       c.mlf.resize(fnum);
-      for (size_t j = 0; j < fnum; j++)
-        binread(fin,c.mlf[j]);
+#pragma omp parallel for
+      for (size_t j = 0; j < fnum; j++) {
+        // binread(fin,c.mlf[j]);
+        binget(fin, sizeof(size_t)*j, c.mlf[j]);
+      }
+      fin.off += fnum*sizeof(size_t);
 
       size_t pnum;
       binread(fin,pnum);
       c.pl.resize(c.len);
+#pragma omp parallel for
       for (size_t j = 0; j < pnum; j++) {
         size_t b, e, l;
-        binread(fin,b);
-        binread(fin,e);
-        binread(fin,l);
-        c.pl[b].push_back(Periodicity(b, e, l));
+        // binread(fin,b);
+        // binread(fin,e);
+        // binread(fin,l);
+        binget(fin, sizeof(size_t)*(3*j), b);
+        binget(fin, sizeof(size_t)*(3*j+1), e);
+        binget(fin, sizeof(size_t)*(3*j+2), l);
+        c.pl[b].push_back(Periodicity(b, e, l)); //FIXME: not thread safe! rethink serialization of runs
       }
+      fin.off += 3*pnum*sizeof(size_t);
+
+#if defined(_OPENMP)
+      //fix possible wrong order in lists (because of omp)
+#pragma omp parallel for
+      for (size_t j=0; j<c.len; j++)
+        c.pl[j].sort([](Periodicity a, Periodicity b) { return a.e < b.e; });
+#endif
+
       size_t bnum;
       binread(fin,bnum);
+      c.bad.resize(bnum);
+#pragma omp parallel for
       for (size_t j = 0; j < bnum; j++) {
         size_t l, r;
-        binread(fin,l);
-        binread(fin,r);
-        c.bad.push_back(make_pair(l, r));
+        // binread(fin,l);
+        // binread(fin,r);
+        binget(fin, sizeof(size_t)*(2*j), l);
+        binget(fin, sizeof(size_t)*(2*j+1), r);
+        c.bad[j] = make_pair(l, r);
       }
+      fin.off += 2*bnum*sizeof(size_t);
 
       cplx.push_back(c);
     }
     return true;
-  }, ios::binary);
+  }); //, ios::binary);
 }
 

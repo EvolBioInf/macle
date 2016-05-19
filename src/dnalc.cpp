@@ -163,15 +163,13 @@ void processFile(char const *file) {
 
   int n = 0;
   for (auto &seq : dat) {
-    // get bad window indices for given parameters
-    vector<size_t> bad = calcNAWindows(seq.len, w, k, seq.bad);
 
     tick();
-    mlComplexity(seq.len, w, k, ys[2 * n], seq.mlf, seq.gc, bad);
+    mlComplexity(seq.len, w, k, ys[2 * n], seq.mlf, seq.gc, seq.bad);
     tock("mlComplexity");
 
     tick();
-    runComplexity(seq.len, w, k, ys[2 * n + 1], seq.pl, seq.gc, bad, true);
+    runComplexity(seq.len, w, k, ys[2 * n + 1], seq.pl, seq.gc, seq.bad, true);
     tock("runComplexity");
 
     n++;

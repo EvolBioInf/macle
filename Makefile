@@ -1,5 +1,5 @@
 CXX := g++
-CFLAGS := -std=c++11 -Isrc -Ilibdivsufsort/include -Igsl/include -Wall -Wextra -Wshadow -O2 -g -ggdb -fopenmp # -pg
+CFLAGS := -std=c++11 -Isrc -Ilibdivsufsort/include -Igsl/include -Wall -Wextra -Wshadow -Wno-unknown-pragmas -O2 -g -ggdb # -pg
 LDFLAGS := -lm -lgsl -lgslcblas -lblas -ldivsufsort64 -lomp -Llibdivsufsort/lib -Lgsl/lib # -pg
 TARGET := dnalc
 

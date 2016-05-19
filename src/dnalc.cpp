@@ -36,7 +36,12 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &ff) {
     c.mlf = mlf.fact;
 
     if (args.p) {
-      cout << "ML-Factors (" << mlf.fact.size() << "):" << endl;
+      cout << seq.name << seq.comment << endl;
+      // esa.print();
+    }
+
+    if (args.p) {
+      cout << "ML-Factors for both strands (" << mlf.fact.size() << "):" << endl;
       mlf.print();
     }
 
@@ -48,10 +53,6 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &ff) {
     reduceEsa(esa);
     tock("reduceEsa");
 
-    if (args.p) {
-      cout << seq.name << seq.comment << endl;
-      // esa.print();
-    }
 
     tick();
     Fact lzf;
@@ -66,7 +67,7 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &ff) {
     if (args.p) {
       cout << "LZ-Factors (" << lzf.fact.size() << "):" << endl;
       lzf.print();
-      cout << "Periodicities (" << pnum << "):" << endl;
+      cout << "Runs (" << pnum << "):" << endl;
       for (auto &l : c.pl)
         for (auto p : l)
           printPeriodicity(p);

@@ -7,6 +7,7 @@
 #include <queue>
 using namespace std;
 
+#include "args.h"
 #include "complexity.h"
 #include "matchlength.h"
 #include "periodicity.h"
@@ -182,6 +183,13 @@ void runComplexity(size_t n, size_t w, size_t k, vector<double> &y,
   if (calcAvg)
     pAvg = estimateAvgRunComplexity(gc);
 
+  if (args.p) { //some user information
+    cout << "GC-content: "<<gc<<endl;
+    cout << "Estimated RC/nucleotide (via interpolated polynomial): "
+      << "12.363*gc^6-37.167*gc^547.21*gc^4-32.397*gc^3+12.064*gc^2-2.075*gc+0.778 = "
+      << pAvg << endl;
+  }
+
   list<Periodicity> runs; //current runs overlapping window
 
   // get bad window indices for given parameters
@@ -197,17 +205,34 @@ void runComplexity(size_t n, size_t w, size_t k, vector<double> &y,
 
       size_t info = sumFromTo(ps, l, r); // count non-run nucl. in window
 
+      if (args.p)
+        cout << "NuclNotInRuns: " << info << endl;
+
       // update list of runs that overlap the current window
       updateRunQueue(runs, ls, l, r);
 
       // add period lengths of runs touching window
-      for (auto &run : runs)
+      if (args.p)
+        cout << "Add unique info (=period length) of runs: NuclNotInRuns";
+      for (auto &run : runs) {
         info += run.l;
+        if (args.p)
+          cout << " + " << run.l;
+      }
+      if (args.p)
+        cout << " = " << info << " = infoContent" << endl;
 
       // we look at all overlapping runs, could lead to sum > w -> min(w,*)
       // subtract 1 from pObs to make 0 possible (e.g. for AAAA..)
       double pObs = (min(w, info) - 1.0)/(double)w;
 
+      if (args.p)
+        cout << "avgPerNucl = (infoContent - 1) / seqLen = " << pObs << endl;
+
       y[j] = pObs / pAvg;
+
+      if (args.p)
+        cout << "runComplexity = avgPerNucl / estimated = "
+             << pObs << "/" << pAvg << " = " << y[j] << endl;
     }
 }

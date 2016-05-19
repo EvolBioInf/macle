@@ -83,49 +83,30 @@ bool loadData(vector<ComplexityData> &cplx, char const *file) {
       size_t fnum;
       binread(fin,fnum);
       c.mlf.resize(fnum);
-#pragma omp parallel for
       for (size_t j = 0; j < fnum; j++) {
-        // binread(fin,c.mlf[j]);
-        binget(fin, sizeof(size_t)*j, c.mlf[j]);
+        binread(fin,c.mlf[j]);
       }
-      fin.off += fnum*sizeof(size_t);
 
       size_t pnum;
       binread(fin,pnum);
       c.pl.resize(c.len);
-#pragma omp parallel for
       for (size_t j = 0; j < pnum; j++) {
         size_t b, e, l;
-        // binread(fin,b);
-        // binread(fin,e);
-        // binread(fin,l);
-        binget(fin, sizeof(size_t)*(3*j), b);
-        binget(fin, sizeof(size_t)*(3*j+1), e);
-        binget(fin, sizeof(size_t)*(3*j+2), l);
-        c.pl[b].push_back(Periodicity(b, e, l)); //FIXME: not thread safe! rethink serialization of runs
+        binread(fin,b);
+        binread(fin,e);
+        binread(fin,l);
+        c.pl[b].push_back(Periodicity(b, e, l));
       }
-      fin.off += 3*pnum*sizeof(size_t);
-
-#if defined(_OPENMP)
-      //fix possible wrong order in lists (because of omp)
-#pragma omp parallel for
-      for (size_t j=0; j<c.len; j++)
-        c.pl[j].sort([](Periodicity a, Periodicity b) { return a.e < b.e; });
-#endif
 
       size_t bnum;
       binread(fin,bnum);
       c.bad.resize(bnum);
-#pragma omp parallel for
       for (size_t j = 0; j < bnum; j++) {
         size_t l, r;
-        // binread(fin,l);
-        // binread(fin,r);
-        binget(fin, sizeof(size_t)*(2*j), l);
-        binget(fin, sizeof(size_t)*(2*j+1), r);
+        binread(fin,l);
+        binread(fin,r);
         c.bad[j] = make_pair(l, r);
       }
-      fin.off += 2*bnum*sizeof(size_t);
 
       cplx.push_back(c);
     }

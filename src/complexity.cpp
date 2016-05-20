@@ -67,9 +67,14 @@ void mlComplexity(size_t n, size_t w, size_t k, vector<double> &y,
                   vector<size_t> const &fact, double gc, vector<pair<size_t,size_t>> const &badiv) {
   //calculate number of bad nucleotides for global mode
   size_t numbad=0;
-  if (n==w)
+  if (n==w) {
     for (auto &bad : badiv)
       numbad += bad.second - bad.first + 1;
+    // adapt gc content (as if no N-blocks present)
+    // oldgc = c(gc) / (c(n)+c(at)+c(gc))=seqlen
+    // -> newgc = oldgc * seqlen / (seqlen-c(n))
+    gc = gc * n / (n-numbad);
+  }
 
   // compute observed number of match factors for every prefix
   vector<size_t> ps(n);
@@ -85,6 +90,9 @@ void mlComplexity(size_t n, size_t w, size_t k, vector<double> &y,
 
   // calculations (per nucleotide)
   double cMin = 2.0 / n; // at least 2 factors an any sequence, like AAAAAA.A
+  if (n==w) //if global -> ignore N-blocks from sequence
+    cMin = cMin * n / (n-numbad);
+
   // some wildly advanced estimation for avg. shulen length,
   // 2n because matches are from both strands
   double esl = 0;
@@ -104,6 +112,11 @@ void mlComplexity(size_t n, size_t w, size_t k, vector<double> &y,
   // only subtract cMin if its not a degenerate case
   double cNorm = cAvg - cMin > 0 ? cAvg - cMin : cAvg;
 
+  if (args.p) {
+    cout  << "expected match factor length: " << esl-1 << endl;
+    cout << "expected match factors per nucleotide: " << cNorm << endl;
+  }
+
   // get bad window indices for given parameters
   queue<size_t> badj = calcNAWindows(n, w, k, badiv);
   for
@@ -120,8 +133,18 @@ void mlComplexity(size_t n, size_t w, size_t k, vector<double> &y,
       if (n==w)
         numfacs -= badiv.size();
 
-      double cObs = (double)numfacs / (double)w;
+      //in global mode we ignore the N-blocks
+      double effectiveW = n==w ? w-numbad : w;
+
+      double cObs = (double)numfacs / effectiveW;
       y[j] = (cObs /* - cMin */) / cNorm;
+
+      if (args.p) {
+        cout << "observed match factors: " << numfacs << endl;
+        cout << "observed match factors per nucleotide: " << cObs << endl;
+        cout << "mlComplexity = avgPerNucl / estimated = "
+              << cObs << "/" << cNorm << " = " << y[j] << endl;
+      }
     }
 }
 
@@ -167,9 +190,14 @@ void runComplexity(size_t n, size_t w, size_t k, vector<double> &y,
                    vector<pair<size_t,size_t>> const &badiv, bool calcAvg) {
   //calculate number of bad nucleotides for global mode
   size_t numbad=0;
-  if (n==w)
+  if (n==w) {
     for (auto &bad : badiv)
       numbad += bad.second - bad.first + 1;
+    // adapt gc content (as if no N-blocks present)
+    // oldgc = c(gc) / (c(n)+c(at)+c(gc))=seqlen
+    // -> newgc = oldgc * seqlen / (seqlen-c(n))
+    gc = gc * n / (n-numbad);
+  }
 
   vector<int64_t> ps(n, 1); // all nucleotides marked
   for (auto &l : ls)
@@ -211,10 +239,10 @@ void runComplexity(size_t n, size_t w, size_t k, vector<double> &y,
 
       size_t info = sumFromTo(ps, l, r); // count non-run nucl. in window
 
-      //in global mode, N-blocks are counted as "average" DNA
-      //-> as if they are not even there
+      //in global mode, N-blocks are ignored, they have period length 1
+      //-> subtract them away
       if (n==w)
-        info += (double)numbad * pAvg - badiv.size();
+        info -= badiv.size();
 
       if (args.p)
         cout << "NuclNotInRuns: " << info << endl;
@@ -233,17 +261,18 @@ void runComplexity(size_t n, size_t w, size_t k, vector<double> &y,
       if (args.p)
         cout << " = " << info << " = infoContent" << endl;
 
+      //in global mode we ignore the N-blocks
+      double effectiveW = n==w ? w-numbad : w;
+
       // we look at all overlapping runs, could lead to sum > w -> min(w,*)
       // subtract 1 from pObs to make 0 possible (e.g. for AAAA..)
-      double pObs = (min(w, info) - 1.0)/(double)w;
-
-      if (args.p)
-        cout << "avgPerNucl = (infoContent - 1) / seqLen = " << pObs << endl;
-
+      double pObs = (min(w, info) - 1.0)/effectiveW;
       y[j] = pObs / pAvg;
 
-      if (args.p)
+      if (args.p) {
+        cout << "avgPerNucl = (infoContent - 1) / seqLen = " << pObs << endl;
         cout << "runComplexity = avgPerNucl / estimated = "
              << pObs << "/" << pAvg << " = " << y[j] << endl;
+      }
     }
 }

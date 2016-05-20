@@ -160,38 +160,44 @@ void processFile(char const *file) {
 
   // array for results for all sequences in file
   size_t entries = numEntries(maxlen, w, k);
-  vector<vector<double>> ys(2 * dat.size(), vector<double>(entries));
+  size_t numMetrics = args.m == 'b' ? 2 : 1;
+  vector<vector<double>> ys(numMetrics * dat.size(), vector<double>(entries));
 
-  int n = 0;
+  int col = 0;
   for (auto &seq : dat) {
+    if (args.m != 'r') {
+      tick();
+      mlComplexity(seq.len, w, k, ys[col++], seq.mlf, seq.gc, seq.bad);
+      tock("mlComplexity");
+    }
 
-    tick();
-    mlComplexity(seq.len, w, k, ys[2 * n], seq.mlf, seq.gc, seq.bad);
-    tock("mlComplexity");
-
-    tick();
-    runComplexity(seq.len, w, k, ys[2 * n + 1], seq.pl, seq.gc, seq.bad, true);
-    tock("runComplexity");
-
-    n++;
+    if (args.m != 'm') {
+      tick();
+      runComplexity(seq.len, w, k, ys[col++], seq.pl, seq.gc, seq.bad, true);
+      tock("runComplexity");
+    }
   }
 
   if (!args.p) {
     cout << fixed << setprecision(4);
     if (args.g) { // print to be directly piped into some plot tool
       if (args.gf == 2) {
-        for (size_t i = 0; i < 2 * dat.size(); i++) {
+        for (size_t i = 0; i < ys.size(); i++) {
           for (size_t j = 0; j < entries; j++)
             cout << (j * k + w / 2) << "\t" << ys[i][j] << endl;
           cout << endl;
         }
       } else if (args.gf == 1) {
         cout << "DNALC_PLOT" << endl; //magic keyword
-        gnuplotCode(w, k, 2 * dat.size()); // gnuplot control code
+        gnuplotCode(w, k, ys.size()); // gnuplot control code
         // print column header (for plot labels)
         cout << "offset\t";
-        for (size_t j = 0; j < dat.size(); j++) // two columns for each seq
-          cout << "\"" << dat[j].name << " (MC)\"\t" << "\"" << dat[j].name << " (RC)\"\t";
+        for (size_t j = 0; j < dat.size(); j++) { // columns for each seq
+          if (args.m != 'r')
+            cout << "\"" << dat[j].name << " (MC)\"\t";
+          if (args.m != 'm')
+            cout << "\"" << dat[j].name << " (RC)\"\t";
+        }
         cout << endl;
         printPlot(w, k, entries, ys); // print plot itself
       }

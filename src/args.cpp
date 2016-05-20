@@ -7,11 +7,12 @@ using namespace std;
 // globally accessible arguments for convenience
 Args args;
 
-static char const opts_short[] = "hw:k:slpg:b";
+static char const opts_short[] = "hw:k:m:slpg:b";
 static struct option const opts[] = {
     {"help", no_argument, nullptr, 'h'},
     {"window-size", required_argument, nullptr, 'w'},
     {"window-interval", required_argument, nullptr, 'k'},
+    {"mode", required_argument, nullptr, 'm'},
     {"save-intermediate", no_argument, nullptr, 's'},
     {"load-intermediate", no_argument, nullptr, 'l'},
     {"print-factors", no_argument, nullptr, 'p'},
@@ -27,6 +28,7 @@ static char const usage[] =
              "\t-h: print this help message and exit\n"
              "\t-w <NUM>: size of sliding window (default: whole sequence length)\n"
              "\t-k <NUM>: interval between sliding windows (default: w/10)\n"
+             "\t-m m|r|b: complexity calculation mode (match factors, runs, both) (default: b)\n"
              "\t-s: output intermediate data for further processing (no regular result)\n"
              "\t-l: use intermediate data from file instead of FASTA sequence file\n"
              "\t-p: print match-length and Lempel-Ziv factors and periodicities\n"
@@ -58,6 +60,9 @@ void Args::parse(int argc, char *argv[]) {
       break;
     case 'k':
       args.k = atoi(optarg);
+      break;
+    case 'm':
+      args.m = *optarg;
       break;
     case 's':
       args.s = true;

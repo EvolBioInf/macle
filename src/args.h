@@ -14,6 +14,7 @@ struct Args {
 
   uint32_t w = 0;  // sliding window size
   uint32_t k = 0;  // sliding interval
+  char m = 'b';    // complexity mode (m,r,b)
   bool s = false;  // output intermediate
   bool l = false;  // use intermediate
   bool p = false;  // print match length decomposition?

@@ -165,6 +165,12 @@ void updateRunQueue(list<Periodicity> &runs, PerLists const &ls, size_t l, size_
 void runComplexity(size_t n, size_t w, size_t k, vector<double> &y,
                    PerLists const &ls, double gc,
                    vector<pair<size_t,size_t>> const &badiv, bool calcAvg) {
+  //calculate number of bad nucleotides for global mode
+  size_t numbad=0;
+  if (n==w)
+    for (auto &bad : badiv)
+      numbad += bad.second - bad.first + 1;
+
   vector<int64_t> ps(n, 1); // all nucleotides marked
   for (auto &l : ls)
     for (auto &p : l)
@@ -204,6 +210,11 @@ void runComplexity(size_t n, size_t w, size_t k, vector<double> &y,
         }
 
       size_t info = sumFromTo(ps, l, r); // count non-run nucl. in window
+
+      //in global mode, N-blocks are counted as "average" DNA
+      //-> as if they are not even there
+      if (n==w)
+        info += (double)numbad * pAvg - badiv.size();
 
       if (args.p)
         cout << "NuclNotInRuns: " << info << endl;

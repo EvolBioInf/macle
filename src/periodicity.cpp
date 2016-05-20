@@ -90,7 +90,7 @@ static inline size_t factEnd(Fact const &f, size_t i) {
 }
 
 // helper to avoid duplication
-static inline bool addPeriodicity(bool runsOnly, vector<list<Periodicity>> &Lt1,
+static inline bool addPeriodicity(bool runsOnly, PerLists &Lt1,
                                   Periodicity p) {
   if (!Lt1[p.b].empty() && runsOnly) { // if we want only runs,
     Periodicity last = Lt1[p.b].back();
@@ -106,7 +106,7 @@ static inline bool addPeriodicity(bool runsOnly, vector<list<Periodicity>> &Lt1,
 }
 
 // Algorithm 5.17 - calculate type1 periodicities
-vector<list<Periodicity>> calcType1Periodicities(bool runsOnly, Fact const &lzf,
+PerLists calcType1Periodicities(bool runsOnly, Fact const &lzf,
                                                  Esa const &esa, size_t &pnum) {
   tick();
   RMQ lcptab = esa.precomputeLcp();
@@ -121,7 +121,7 @@ vector<list<Periodicity>> calcType1Periodicities(bool runsOnly, Fact const &lzf,
   pnum = 0;
   // as required, array of lists of max. per. of type 1
   // indexed by start position, each sorted by end position
-  vector<list<Periodicity>> Lt1(lzf.strLen + 1);
+  PerLists Lt1(lzf.strLen + 1);
   for (size_t j = 1; j < lzf.fact.size(); j++) {
     size_t sjLen = factLen(lzf, j);       // |s_j|
     size_t sjm1Len = factLen(lzf, j - 1); // |s_(j-1)|
@@ -171,9 +171,10 @@ static inline int64_t getPrevOcc(Fact const &lzf, size_t i) {
 // so that list remains sorted by end positions. This hack is necessary!
 // Ohlebusch/Algorithm 5.18 says "prepend". This is WRONG!!! Was a fun night
 // debugging -.-'
-void listInsert(list<Periodicity> &l, Periodicity p) {
+void listInsert(PerLists &ls, Periodicity p) {
+  auto &l = ls[p.b];
   if (l.empty() || l.front().e >= p.e) {
-    l.push_front(p);
+    l.insert(l.begin(), p);
     return;
   }
   auto it = l.begin();
@@ -183,7 +184,7 @@ void listInsert(list<Periodicity> &l, Periodicity p) {
 }
 
 // Algorithm 5.18 - calculate type 2 periodicities (proper substrings of LZ-factors)
-void calcType2Periodicities(vector<list<Periodicity>> &Lt1, Fact const &lzf,
+void calcType2Periodicities(PerLists &Lt1, Fact const &lzf,
                             size_t &pnum) {
   for (size_t j = 1; j < lzf.fact.size(); j++) {
     size_t bj = factStart(lzf, j); // b_j
@@ -196,7 +197,7 @@ void calcType2Periodicities(vector<list<Periodicity>> &Lt1, Fact const &lzf,
             break;
           /* listPrepend(&Lt1[i], newp); */ // XXX: doesn't work with prepend!!!
           // need to sort into list correctly!!!!!!!!!!!!!!!
-          listInsert(Lt1[i], Periodicity(i, p.e + dj, p.l));
+          listInsert(Lt1, Periodicity(i, p.e + dj, p.l));
           pnum++;
         }
       }
@@ -205,14 +206,14 @@ void calcType2Periodicities(vector<list<Periodicity>> &Lt1, Fact const &lzf,
 }
 
 // max. periodicities in O(n) using LZ-Factors, returns array of lists
-vector<list<Periodicity>> getPeriodicityLists(bool runsOnly, Fact const &lzf,
+PerLists getPeriodicityLists(bool runsOnly, Fact const &lzf,
                                               Esa const &esa, size_t &pnum) {
   auto Lt1 = calcType1Periodicities(runsOnly, lzf, esa, pnum);
   calcType2Periodicities(Lt1, lzf, pnum);
   return Lt1;
 }
 
-vector<Periodicity> collectPeriodicities(vector<list<Periodicity>> &pl, size_t pnum) {
+vector<Periodicity> collectPeriodicities(PerLists &pl, size_t pnum) {
   vector<Periodicity> ps;
   ps.reserve(pnum);
   for (size_t i = 0; i < pl.size(); i++) {

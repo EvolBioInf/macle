@@ -9,7 +9,7 @@ struct ComplexityData {
   size_t len;                             // length of sequence
   double gc;                              // gc content of sequence
   std::vector<size_t> mlf;                // match factors
-  std::vector<std::list<Periodicity>> pl; // periodicities
+  PerLists pl;                            // periodicities
   std::vector<std::pair<size_t, size_t>> bad;  // list of bad intervals
 };
 

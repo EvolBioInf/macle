@@ -136,7 +136,7 @@ void test_randomOnlyRuns() {
     while (it != pl[i].end()) {
       Periodicity currp = *it;
       if (!first && lastp.b == currp.b && lastp.e == currp.e) {
-        pl[i].erase(it++);
+        it = pl[i].erase(it);
         plen--;
       } else {
         lastp = currp;

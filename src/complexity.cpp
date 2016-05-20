@@ -148,7 +148,7 @@ double estimateAvgRunComplexity(double gc) {
   //     + 118.019*pow(gc,4) - 51.128*pow(gc,3) + 14.576*pow(gc,2) - 2.212*gc + 0.78;
 }
 
-void updateRunQueue(list<Periodicity> &runs, vector<list<Periodicity>> const &ls, size_t l, size_t r) {
+void updateRunQueue(list<Periodicity> &runs, PerLists const &ls, size_t l, size_t r) {
   //kick out runs that are now outside of window
   for (auto it=runs.begin(); it != runs.end(); it++)
     if (it->e < l) {
@@ -163,7 +163,7 @@ void updateRunQueue(list<Periodicity> &runs, vector<list<Periodicity>> const &ls
 
 // get "information content" of window
 void runComplexity(size_t n, size_t w, size_t k, vector<double> &y,
-                   vector<list<Periodicity>> const &ls, double gc,
+                   PerLists const &ls, double gc,
                    vector<pair<size_t,size_t>> const &badiv, bool calcAvg) {
   vector<int64_t> ps(n, 1); // all nucleotides marked
   for (auto &l : ls)

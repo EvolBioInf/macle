@@ -169,7 +169,7 @@ void fprintnf(FILE *fp, char const *str, int n) {
     fprintf(fp, "...");
 }
 
-vector<list<Periodicity>> getRuns(string const &seq) {
+PerLists getRuns(string const &seq) {
   bool b = args.b;
   args.b = false;
   Esa esa(seq.c_str(), seq.size()); // esa for sequence+$

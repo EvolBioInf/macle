@@ -23,9 +23,10 @@ size_t lcp2(char const *str, size_t n, size_t i, size_t j);
 std::vector<Periodicity> getPeriodicities(bool runsOnly, Fact const &lzf, Esa const &esa,
                                           size_t &pnum);
 
-std::vector<std::list<Periodicity>> getPeriodicityLists(bool runsOnly, Fact const &lzf,
-                                                        Esa const &esa, size_t &pnum);
-std::vector<Periodicity> collectPeriodicities(std::vector<std::list<Periodicity>> &lst);
+typedef std::vector<std::vector<Periodicity>> PerLists;
+
+PerLists getPeriodicityLists(bool runsOnly, Fact const &lzf, Esa const &esa, size_t &pnum);
+std::vector<Periodicity> collectPeriodicities(PerLists &lst);
 
 std::vector<Periodicity> getPeriodicities2(Esa const &esa);
 

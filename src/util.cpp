@@ -149,6 +149,7 @@ bool with_mmap(char const *file, function<bool(MMapReader&)> lambda) {
   if (file)
     r.sz=getFilesize(file);
   char* data = reinterpret_cast<char*>(mmap(NULL, r.sz, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0));
+  assert(data != MAP_FAILED);
   r.dat = data;
   bool ret = lambda(r);
   int rc = munmap(data, r.sz);

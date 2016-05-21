@@ -179,7 +179,8 @@ void updateRunQueue(list<Periodicity> &runs, PerLists const &ls, size_t l, size_
       it--;
     }
   //add new runs
-  for (size_t i=max(l,runs.back().b+1); i<=r; i++)
+  size_t start = runs.empty() ? l : max(l, runs.back().b+1);
+  for (size_t i=start; i<=r; i++)
     for (auto &p : ls[i])
       runs.push_back(p);
 }

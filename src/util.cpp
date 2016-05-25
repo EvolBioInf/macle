@@ -95,6 +95,10 @@ string revComp(string const &s) {
   return r;
 }
 
+std::string base_name(std::string const & path) {
+  return path.substr(path.find_last_of("/\\") + 1);
+}
+
 /* open_or_fail: open file on system level and report on error */
 int open_or_fail(char const *fname, int flag) {
   int fd = open(fname, flag, 0);
@@ -170,14 +174,17 @@ void fprintnf(FILE *fp, char const *str, int n) {
     fprintf(fp, "...");
 }
 
-PerLists getRuns(string const &seq) {
+PerLists getRuns(char const *seq, size_t n) {
   bool b = args.b;
   args.b = false;
-  Esa esa(seq.c_str(), seq.size()); // esa for sequence+$
+  Esa esa(seq, n); // esa for sequence+$
   Fact lzf;
   computeLZFact(lzf, esa, false);
   size_t pnum;
   auto ls=getPeriodicityLists(true, lzf, esa, pnum);
   args.b = b;
   return ls;
+}
+PerLists getRuns(string const &seq) {
+  return getRuns(seq.c_str(), seq.size());
 }

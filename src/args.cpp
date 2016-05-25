@@ -7,14 +7,17 @@ using namespace std;
 // globally accessible arguments for convenience
 Args args;
 
-static char const opts_short[] = "hw:k:m:slpg:b";
+static char const opts_short[] = "hw:k:m:jisln:pg:b";
 static struct option const opts[] = {
     {"help", no_argument, nullptr, 'h'},
     {"window-size", required_argument, nullptr, 'w'},
     {"window-interval", required_argument, nullptr, 'k'},
     {"mode", required_argument, nullptr, 'm'},
-    {"save-intermediate", no_argument, nullptr, 's'},
-    {"load-intermediate", no_argument, nullptr, 'l'},
+    {"join", required_argument, nullptr, 'j'},
+    {"load-index", no_argument, nullptr, 'i'},
+    {"save-index", no_argument, nullptr, 's'},
+    {"list-index", no_argument, nullptr, 'l'},
+    {"seq", no_argument, nullptr, 'n'},
     {"print-factors", no_argument, nullptr, 'p'},
     {"graph", required_argument, nullptr, 'g'},
     {"benchmark", no_argument, nullptr, 'b'},
@@ -29,8 +32,13 @@ static char const usage[] =
              "\t-w <NUM>: size of sliding window (default: whole sequence length)\n"
              "\t-k <NUM>: interval between sliding windows (default: w/10)\n"
              "\t-m m|r|b: complexity calculation mode (match factors, runs, both) (default: b)\n"
-             "\t-s: output intermediate data for further processing (no regular result)\n"
-             "\t-l: use intermediate data from file instead of FASTA sequence file\n"
+             "\t-j treat all sequences in a single file as one sequence\n"
+
+             "\t-i: use index file instead of FASTA sequence file\n"
+             "\t-s: output index file for further processing (no regular result)\n"
+             "\t-l: list sequences stored in index file\n"
+             "\t-n <NUM>: calculate for given sequence within file\n"
+
              "\t-p: print match-length and Lempel-Ziv factors and periodicities\n"
              "\t-b: print benchmarking information\n"
              "\t-g N: output pipe-ready to plot with:\n"
@@ -45,15 +53,9 @@ void Args::parse(int argc, char *argv[]) {
     case 0: // long option without a short name
       /* printf("Option: %s\n", opts[opt_idx].name); */
       break;
-    case 'p':
-      args.p = true;
-      break;
-    case 'g':
-      args.gf = optarg == nullptr ? 0 : atoi(optarg);
-      args.g = args.gf > 0;
-      break;
-    case 'b':
-      args.b = true;
+    case 'h':
+      cout << usage;
+      exit(0);
       break;
     case 'w':
       args.w = atoi(optarg);
@@ -64,17 +66,34 @@ void Args::parse(int argc, char *argv[]) {
     case 'm':
       args.m = *optarg;
       break;
+    case 'j':
+      args.j = true;
+      break;
+
+    case 'i':
+      args.i = true;
+      break;
     case 's':
       args.s = true;
       break;
     case 'l':
       args.l = true;
       break;
-
-    case 'h':
-      cout << usage;
-      exit(0);
+    case 'n':
+      args.n = atoi(optarg);
       break;
+
+    case 'p':
+      args.p = true;
+      break;
+    case 'g':
+      args.gf = optarg == nullptr ? 0 : atoi(optarg);
+      args.g = args.gf > 0;
+      break;
+    case 'b':
+      args.b = true;
+      break;
+
     case '?': // automatic error message from getopt
       exit(1);
       break;

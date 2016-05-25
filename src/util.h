@@ -13,7 +13,9 @@ std::string randRun(size_t n, size_t l, std::string alphabet = "ACGT");
 double gcContent(std::string const &s);
 std::string revComp(std::string const &s);
 PerLists getRuns(std::string const &seq);
+PerLists getRuns(char const *seq, size_t n);
 
+std::string base_name(std::string const & path);
 void fprintnf(FILE *fp, char const *str, int n);
 int open_or_fail(char const *fname, int flag);
 FILE *fopen_or_fail(char const *fname, char const *flags);

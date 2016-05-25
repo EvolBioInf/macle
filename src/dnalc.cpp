@@ -17,8 +17,20 @@ using namespace std;
 using namespace std;
 
 // given sequences from a fasta file, calculate match factors and runs
-void extractData(vector<ComplexityData> &cplx, FastaFile &ff) {
-  for (auto &seq : ff.seqs) {
+void extractData(vector<ComplexityData> &cplx, FastaFile &file, bool joinSeqs) {
+  FastaFile *ff = &file;
+
+  FastaFile virtfile;
+  if (joinSeqs) { //construct concatenated sequence
+    string wholeseq = "";
+    for (auto &seq : file.seqs) {
+      wholeseq += seq.seq;
+    }
+    virtfile.seqs.push_back(FastaSeq(file.filename, "", wholeseq));
+    ff = &virtfile;
+  }
+
+  for (auto &seq : ff->seqs) {
     ComplexityData c;
     c.name = seq.name;
     c.gc = gcContent(seq.seq);
@@ -73,6 +85,15 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &ff) {
           printPeriodicity(p);
     }
 
+    if (joinSeqs) { //store region information in concat. seq
+      size_t offset=0;
+      for (auto &it : file.seqs) {
+        c.regions.push_back(make_pair(offset, it.seq.size()));
+        c.labels.push_back(it.name+" "+it.comment);
+        offset += it.seq.size();
+      }
+    }
+
     // get list of bad intervals
     tick();
     bool insidebad = false;
@@ -90,6 +111,12 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &ff) {
     }
     if (insidebad) // push last one, if we are inside
       c.bad.push_back(make_pair(start, s.size() - 1));
+
+    //calculate total number of bad nucleotides for global mode
+    c.numbad=0;
+    for (auto &bad : c.bad)
+      c.numbad += bad.second - bad.first + 1;
+
     tock("find bad intervals");
 
     cplx.push_back(c);
@@ -117,11 +144,30 @@ void printPlot(uint32_t w, uint32_t k, size_t n, vector<vector<double>> &ys) {
 // read data, do stuff
 void processFile(char const *file) {
   vector<ComplexityData> dat;
-  if (args.l) {
+  if (args.i) { //load from index
     tick();
     if (!loadData(dat, file))
       return;
     tock("loadData");
+    if (args.l) { //list index file contents and exit
+      for (size_t i=0; i<dat.size(); i++) {
+        if (dat.size()>1)
+          cout << i << ":" << endl;
+        string tab = dat.size()>1 ? "\t" : "";
+        cout << tab << "name:\t" << dat[i].name << endl
+             << tab << "len:\t" << dat[i].len << endl
+             << tab << "gc:\t" << dat[i].gc << endl
+             << tab << "bad:\t" << (double)dat[i].numbad / dat[i].len << endl;
+        if (dat[i].regions.size()>1) {
+          cout << tab << "regions:" << endl;
+          for (size_t j=0; j<dat[i].regions.size(); j++) {
+            cout << "\t" << j << ":\t" << dat[i].labels[j] << endl;
+            // cout << "\t" << j << ":\t" << dat[i].regions[j].first << " " << dat[i].regions[j].second << endl;
+          }
+        }
+      }
+      return;
+    }
   } else { // not loading from pre-computed data -> fasta file
     tick();
     FastaFile ff(file);
@@ -130,7 +176,7 @@ void processFile(char const *file) {
       cerr << "Skipping invalid FASTA file..." << endl;
       return;
     }
-    extractData(dat, ff);
+    extractData(dat, ff, args.j);
 
     if (args.s && !args.p) { // just dump intermediate results and quit
       saveData(dat);
@@ -138,18 +184,29 @@ void processFile(char const *file) {
     }
   }
 
+  bool isJoined = dat[0].regions.size()>1;
+
   size_t maxlen = 0;        // max implies the domain of the plot
   size_t minlen = SIZE_MAX; // min restricts the reasonable window sizes
-  for (size_t i = 0; i < dat.size(); i++) {
-    size_t len = dat[i].len;
-    if (len > maxlen)
-      maxlen = len;
-    if (len < minlen)
-      minlen = len;
-  }
+  if (!isJoined)
+    for (auto &d : dat) {
+      if (d.len > maxlen)
+        maxlen = d.len;
+      if (d.len < minlen)
+        minlen = d.len;
+    }
+  else
+    for (auto &it : dat[0].regions) {
+      size_t len = it.second;
+      if (len > maxlen)
+        maxlen = len;
+      if (len < minlen)
+        minlen = len;
+    }
 
   // adapt window size and interval
   size_t w = args.w;
+  bool globalmode = w==0;
   size_t k = args.k;
   if (w == 0)
     w = minlen;       // default window = whole (smallest) seq.
@@ -161,22 +218,41 @@ void processFile(char const *file) {
   // array for results for all sequences in file
   size_t entries = numEntries(maxlen, w, k);
   size_t numMetrics = args.m == 'b' ? 2 : 1;
-  vector<vector<double>> ys(numMetrics * dat.size(), vector<double>(entries));
+  vector<vector<double>> ys(numMetrics * max(dat.size(),dat[0].regions.size()), vector<double>(entries));
 
   int col = 0;
-  for (auto &seq : dat) {
-    if (args.m != 'r') {
-      tick();
-      mlComplexity(seq.len, w, k, ys[col++], seq.mlf, seq.gc, seq.bad);
-      tock("mlComplexity");
-    }
+  if (!isJoined)
+    for (auto &seq : dat) {
+      size_t currw = globalmode ? seq.len : w;
+      size_t currk = globalmode ? seq.len : k;
+      if (args.m != 'r') {
+        tick();
+        mlComplexity(0, seq.len, currw, currk, ys[col++], seq);
+        tock("mlComplexity");
+      }
 
-    if (args.m != 'm') {
-      tick();
-      runComplexity(seq.len, w, k, ys[col++], seq.pl, seq.gc, seq.bad, true);
-      tock("runComplexity");
+      if (args.m != 'm') {
+        tick();
+        runComplexity(0, seq.len, currw, currk, ys[col++], seq, true);
+        tock("runComplexity");
+      }
     }
-  }
+  else
+    for (auto &it : dat[0].regions) {
+      size_t currw = globalmode ? it.second : w;
+      size_t currk = globalmode ? it.second : k;
+      if (args.m != 'r') {
+        tick();
+        mlComplexity(it.first, it.second, currw, currk, ys[col++], dat[0]);
+        tock("mlComplexity");
+      }
+
+      if (args.m != 'm') {
+        tick();
+        runComplexity(it.first, it.second, currw, currk, ys[col++], dat[0], true);
+        tock("runComplexity");
+      }
+    }
 
   if (!args.p) {
     cout << fixed << setprecision(4);
@@ -192,11 +268,12 @@ void processFile(char const *file) {
         gnuplotCode(w, k, ys.size()); // gnuplot control code
         // print column header (for plot labels)
         cout << "offset\t";
-        for (size_t j = 0; j < dat.size(); j++) { // columns for each seq
+        for (size_t j = 0; j < max(dat.size(),dat[0].regions.size()); j++) { // columns for each seq
+          string name = isJoined ? dat[0].labels[j] : dat[j].name;
           if (args.m != 'r')
-            cout << "\"" << dat[j].name << " (MC)\"\t";
+            cout << "\"" << name << " (MC)\"\t";
           if (args.m != 'm')
-            cout << "\"" << dat[j].name << " (RC)\"\t";
+            cout << "\"" << name << " (RC)\"\t";
         }
         cout << endl;
         printPlot(w, k, entries, ys); // print plot itself

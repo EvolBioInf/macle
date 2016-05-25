@@ -43,11 +43,24 @@ void serialize(ComplexityData const &cd) {
       binwrite(p.e);
       binwrite(p.l);
     }
+
+  binwrite(cd.regions.size());
+  for (auto i : cd.regions){
+    binwrite(i.first);
+    binwrite(i.second);
+  }
+  for (auto &l : cd.labels){
+    binwrite(l.size());
+    for (char c : l)
+      binwrite(c);
+  }
+
   binwrite((size_t)cd.bad.size());
   for (auto i : cd.bad){
     binwrite(i.first);
     binwrite(i.second);
   }
+  binwrite(cd.numbad);
 }
 
 // serialize a series of sequences
@@ -98,6 +111,25 @@ bool loadData(vector<ComplexityData> &cplx, char const *file) {
         c.pl[b].push_back(Periodicity(b, e, l));
       }
 
+      size_t rnum;
+      binread(fin,rnum);
+      c.regions.resize(rnum);
+      c.labels.resize(rnum);
+      for (size_t j = 0; j < rnum; j++) {
+        size_t s, l;
+        binread(fin,s);
+        binread(fin,l);
+        c.regions[j] = make_pair(s, l);
+      }
+      for (size_t j = 0; j < rnum; j++) {
+        size_t lbllen;
+        binread(fin,lbllen);
+        for (size_t k=0; k<lbllen; k++) {
+          binread(fin,tmp);
+          c.labels[j] += tmp;
+        }
+      }
+
       size_t bnum;
       binread(fin,bnum);
       c.bad.resize(bnum);
@@ -107,6 +139,7 @@ bool loadData(vector<ComplexityData> &cplx, char const *file) {
         binread(fin,r);
         c.bad[j] = make_pair(l, r);
       }
+      binread(fin, c.numbad);
 
       cplx.push_back(c);
     }

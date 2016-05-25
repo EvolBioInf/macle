@@ -17,6 +17,8 @@ using namespace std;
 FastaSeq::FastaSeq(string const &n, string const &c, string const &s)
     : name(n), comment(c), seq(s) {}
 
+FastaFile::FastaFile() : failed(false) {}
+
 // input: filename of fasta file (or 0 for STDIN), reference to an empty number
 // output: either successfully parsed file, or NULL
 FastaFile::FastaFile(char const *file) : failed(false) {
@@ -24,7 +26,7 @@ FastaFile::FastaFile(char const *file) : failed(false) {
 
   // open file
   int fd = file ? open_or_fail(file, O_RDONLY) : STDIN_FILENO;
-  char const *filename = file ? file : "stdin";
+  filename = file ? base_name(string(file)) : "<stdin>";
   if (fd < 0)
     err(1, "%s", file);
 
@@ -32,7 +34,7 @@ FastaFile::FastaFile(char const *file) : failed(false) {
   int l;
   pfasta_file pf;
   if ((l = pfasta_parse(&pf, fd)) != 0) {
-    warnx("%s: %s", filename, pfasta_strerror(&pf));
+    warnx("%s: %s", filename.c_str(), pfasta_strerror(&pf));
     pfasta_free(&pf);
     failed = true;
     return;
@@ -51,7 +53,7 @@ FastaFile::FastaFile(char const *file) : failed(false) {
   }
 
   if (l < 0) {
-    warnx("%s: %s", filename, pfasta_strerror(&pf));
+    warnx("%s: %s", filename.c_str(), pfasta_strerror(&pf));
     pfasta_seq_free(&seq);
     failed = true;
   }

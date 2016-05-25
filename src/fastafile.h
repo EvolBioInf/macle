@@ -13,7 +13,9 @@ struct FastaSeq {
 
 /* basic sequence type representing >= 1 entry in FASTA file */
 struct FastaFile {
+  FastaFile();
   FastaFile(char const *file);
-  std::vector<FastaSeq> seqs; /* the sequences */
+  std::string filename; //filename
+  std::vector<FastaSeq> seqs; // the sequences
   bool failed;
 };

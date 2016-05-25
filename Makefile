@@ -42,7 +42,7 @@ format:
 	clang-format -i src/*.cpp src/*.h tests/*.cpp tests/*.h
 
 libdivsufsort:
-	git clone git@github.com:y-256/libdivsufsort.git
+	git clone https://github.com/y-256/libdivsufsort.git
 	cd libdivsufsort && cmake -DBUILD_SHARED_LIBS=0 -DBUILD_EXAMPLES=0 -DBUILD_DIVSUFSORT64=1 && make
 
 gsl:

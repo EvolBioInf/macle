@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 #include <vector>
 #include <utility>
@@ -9,8 +10,8 @@ using namespace std;
 #include "util.h"
 using namespace std;
 
-template<typename T> void binwrite(T x) {
-  cout.write(reinterpret_cast<const char*>(&x),sizeof(x));
+template<typename T> void binwrite(ostream &o, T x) {
+  o.write(reinterpret_cast<char*>(&x),sizeof(x));
 }
 template<typename T> void binread(istream &i, T &x) {
   i.read(reinterpret_cast<char*>(&x),sizeof(x));
@@ -24,50 +25,55 @@ template<typename T> void binread(MMapReader &i, T &x) {
 }
 
 // serialize relevant data of a sequence
-void serialize(ComplexityData const &cd) {
-  binwrite((size_t)cd.name.size());
+void serialize(ostream &o, ComplexityData const &cd) {
+  assert(cd.regions.size() == cd.labels.size());
+
+  binwrite(o, (size_t)cd.name.size());
   for (auto c : cd.name)
-    binwrite(c);
-  binwrite(cd.len);
-  binwrite(cd.gc);
-  binwrite((size_t)cd.mlf.size());
+    binwrite(o, c);
+  binwrite(o, cd.len);
+  binwrite(o, cd.gc);
+  binwrite(o, (size_t)cd.mlf.size());
   for (auto i : cd.mlf)
-    binwrite(i);
+    binwrite(o, i);
   size_t pernum = 0;
   for (auto &l : cd.pl)
     pernum += l.size();
-  binwrite(pernum);
+  binwrite(o, pernum);
   for (auto &l : cd.pl)
     for (auto p : l) {
-      binwrite(p.b);
-      binwrite(p.e);
-      binwrite(p.l);
+      binwrite(o, p.b);
+      binwrite(o, p.e);
+      binwrite(o, p.l);
     }
 
-  binwrite(cd.regions.size());
+  binwrite(o, cd.regions.size());
   for (auto i : cd.regions){
-    binwrite(i.first);
-    binwrite(i.second);
+    binwrite(o, i.first);
+    binwrite(o, i.second);
   }
   for (auto &l : cd.labels){
-    binwrite(l.size());
+    binwrite(o, l.size());
     for (char c : l)
-      binwrite(c);
+      binwrite(o, c);
   }
 
-  binwrite((size_t)cd.bad.size());
+  binwrite(o, (size_t)cd.bad.size());
   for (auto i : cd.bad){
-    binwrite(i.first);
-    binwrite(i.second);
+    binwrite(o, i.first);
+    binwrite(o, i.second);
   }
-  binwrite(cd.numbad);
+  binwrite(o, cd.numbad);
 }
 
 // serialize a series of sequences
-void saveData(vector<ComplexityData> &vec) {
-  binwrite((size_t)vec.size());
-  for (auto &d : vec)
-    serialize(d);
+bool saveData(vector<ComplexityData> &vec, char const *file) {
+  return with_file(file, [&](ostream &o) {
+    binwrite(o, (size_t)vec.size());
+    for (auto &d : vec)
+      serialize(o, d);
+    return true;
+  });
 }
 
 // load precomputed data from stdin (when file=nullptr) or some file

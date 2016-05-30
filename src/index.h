@@ -24,4 +24,4 @@ struct ComplexityData {
 };
 
 bool loadData(std::vector<ComplexityData> &cplx, char const *file);
-void saveData(std::vector<ComplexityData> &vec);
+bool saveData(std::vector<ComplexityData> &cplx, char const *file);

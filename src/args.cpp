@@ -32,12 +32,13 @@ static char const usage[] =
              "\t-w <NUM>: size of sliding window (default: whole sequence length)\n"
              "\t-k <NUM>: interval between sliding windows (default: w/10)\n"
              "\t-m m|r|b: complexity calculation mode (match factors, runs, both) (default: b)\n"
-             "\t-j treat all sequences in a single file as one sequence\n"
+             "\t-j treat all sequences in a single file as one sequence"
+             " (no effect when using existing index file, default: off)\n"
 
              "\t-i: use index file instead of FASTA sequence file\n"
              "\t-s: output index file for further processing (no regular result)\n"
              "\t-l: list sequences stored in index file\n"
-             "\t-n <NUM>: calculate for given sequence within file\n"
+             "\t-n <NUM>: calculate for given sequence within file (default: 0=all)\n"
 
              "\t-p: print match-length and Lempel-Ziv factors and periodicities\n"
              "\t-b: print benchmarking information\n"
@@ -87,8 +88,7 @@ void Args::parse(int argc, char *argv[]) {
       args.p = true;
       break;
     case 'g':
-      args.gf = optarg == nullptr ? 0 : atoi(optarg);
-      args.g = args.gf > 0;
+      args.g = optarg == nullptr ? 0 : atoi(optarg);
       break;
     case 'b':
       args.b = true;

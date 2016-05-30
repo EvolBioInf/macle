@@ -20,6 +20,7 @@ void fprintnf(FILE *fp, char const *str, int n);
 int open_or_fail(char const *fname, int flag);
 FILE *fopen_or_fail(char const *fname, char const *flags);
 bool with_file(char const *file, std::function<bool(std::istream&)> lambda, std::ios_base::openmode mode=std::ios_base::in);
+bool with_file(char const *file, std::function<bool(std::ostream&)> lambda, std::ios_base::openmode mode=std::ios_base::out);
 
 struct MMapReader {
   char *dat=nullptr;

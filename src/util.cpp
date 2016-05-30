@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -15,7 +16,6 @@
 #include <fcntl.h>
 
 //for mmap stuff
-#include <cassert>
 #include <sys/mman.h>
 #include <sys/stat.h>
 
@@ -119,11 +119,11 @@ FILE *fopen_or_fail(char const *fname, char const *flags) {
   return f;
 }
 
-// if file==nullptr, calls lambda with stdin as stream, otherwise opens file +
-// closes afterwards
-bool with_file(char const *file, function<bool(istream&)> lambda, ios_base::openmode mode) {
-  istream *finP = &cin;
-  ifstream fs;
+// if file==nullptr, calls lambda with stdin as stream, otherwise opens file, auto-closes
+template<typename T>
+bool with_file(char const *file, function<bool(T&)> lambda, ios_base::openmode mode, T& def) {
+  T *streamP = &def;
+  fstream fs;
   if (file) {
     // fs = ifstream(file); //does not work with older g++?
     fs.open(file, mode);
@@ -131,13 +131,19 @@ bool with_file(char const *file, function<bool(istream&)> lambda, ios_base::open
       cerr << "ERROR: Could not open file: " << file << endl;
       return false;
     }
-    finP = &fs;
+    streamP = &fs;
   }
-  istream &fin = *finP;
-  bool ret = lambda(fin);
+  T &stream = *streamP;
+  bool ret = lambda(stream);
   if (fs.is_open())
     fs.close();
   return ret;
+}
+bool with_file(char const *file, function<bool(istream&)> lambda, ios_base::openmode mode) {
+  return with_file(file, lambda, mode, cin);
+}
+bool with_file(char const *file, function<bool(ostream&)> lambda, ios_base::openmode mode) {
+  return with_file(file, lambda, mode, cout);
 }
 
 size_t getFilesize(const char* filename) {

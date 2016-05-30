@@ -18,6 +18,7 @@ using namespace std;
 // input: prefix-sum array, left and right bound (inclusive)
 #define sumFromTo(a, l, r) ((a)[(r)] - ((l) ? (a)[(l)-1] : 0))
 
+// number of sliding windows with width w that fit into n with step k
 size_t numEntries(size_t n, size_t w, size_t k) {
   assert(w <= n);
   assert(k > 0);
@@ -32,7 +33,7 @@ size_t numEntries(size_t n, size_t w, size_t k) {
 // given sequence length, desired window and step size and a list of intervals
 // with invalid nucleotides, returns a list of windows (iteration numbers) that
 // should be ignored in the complexity calculation
-queue<size_t> calcNAWindows(size_t n, size_t w, size_t k,
+queue<size_t> calcNAWindows(size_t offset, size_t n, size_t w, size_t k,
                              vector<pair<size_t, size_t>> const &badiv) {
   queue<size_t> na;
   list<pair<size_t,size_t>> bad;
@@ -42,35 +43,56 @@ queue<size_t> calcNAWindows(size_t n, size_t w, size_t k,
     each_window(n, w, k) {
       //kick out runs that are now outside of window
       for (auto it=bad.begin(); it != bad.end(); it++)
-        if (it->second < l) {
+        if (it->second < l+offset) {
           it = bad.erase(it);
           it--;
         }
       //add possible new bad intervals
-      while (currbad != badiv.end() && currbad->first <= r) {
+      while (currbad != badiv.end() && currbad->first <= r+offset) {
         bad.push_back(*currbad);
         currbad++;
       }
 
       size_t sum = 0;
       for (auto &i : bad)
-        sum += max(i.first, l) - min(r, i.second) + 1;
+        sum += max(i.first, l+offset) - min(r+offset, i.second) + 1;
       if ((double)sum / (double)w > 0.05)
         na.push(j);
     }
   return na;
 }
 
+//get number of bad nucleotides in given interval of given sequence data
+pair<size_t,size_t> numBad(size_t offset, size_t len, ComplexityData const &dat) {
+  if (offset==0 && len==dat.len)
+    return make_pair(dat.numbad, dat.bad.size()); //stored in data
+
+  size_t sum = 0;
+  size_t ivs = 0;
+  auto it = lower_bound(dat.bad.begin(),dat.bad.end(),make_pair(offset,offset),
+      [](pair<size_t,size_t> a, pair<size_t,size_t> b){return a.first < b.first;});
+  if (it != dat.bad.begin() && it->first < offset)
+    it--;
+
+  while (it != dat.bad.end() && it->first < offset+len) {
+    sum += min(offset+len, it->second) - max(it->first, offset) + 1;
+    ivs++;
+    it++;
+  }
+  return make_pair(sum,ivs);
+}
+
 // calculate match length complexity for sliding windows
-// input: sequence length, sane w and k, allocated array for results,
-//        match length factors, gc content
+// input: sequence length, sane w and k, allocated array for results, extracted data
 void mlComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y, ComplexityData const &dat) {
+  bool globalMode = n==w;
+  auto badpart = numBad(offset, n, dat);
+  size_t numbad = badpart.first;
+  size_t badivs = badpart.second;
   double gc = dat.gc;
-  if (n==w) {
-    // adapt gc content (as if no N-blocks present)
-    // oldgc = c(gc) / (c(n)+c(at)+c(gc))=seqlen
-    // -> newgc = oldgc * seqlen / (seqlen-c(n))
-    gc = gc * n / (n-dat.numbad);
+  if (globalMode) { // adapt gc content (as if no N-blocks present)
+    // oldgc = c(gc) / (c(n)+c(at)+c(gc))=seqlen -> newgc = oldgc * seqlen / (seqlen-c(n))
+    gc = gc * dat.len / (dat.len-numbad);
   }
 
   // compute observed number of match factors for every prefix
@@ -86,22 +108,22 @@ void mlComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y
   }
 
   // calculations (per nucleotide)
-  double cMin = 2.0 / n; // at least 2 factors an any sequence, like AAAAAA.A
-  if (n==w) //if global -> ignore N-blocks from sequence
-    cMin = cMin * n / (n-dat.numbad);
+  double cMin = 2.0 / dat.len; // at least 2 factors an any sequence, like AAAAAA.A
+  if (globalMode) // ignore N-blocks from sequence
+    cMin = cMin * dat.len / (dat.len-numbad);
 
   // some wildly advanced estimation for avg. shulen length,
   // 2n because matches are from both strands
   double esl = 0;
   if (n != w)
-    esl = expShulen(gc, 2 * n);
+    esl = expShulen(gc, 2 * dat.len);
   else { //global complexity -> ignore NNNN... blocks, as if they are not there
-    esl = expShulen(gc, 2 * (n - dat.numbad));
+    esl = expShulen(gc, 2 * (dat.len - dat.numbad));
 
-    double fracbad = (double)dat.numbad / (double)n;
-    if (n==w && fracbad > 0.05) {
+    double fracbad = (double)numbad / (double)n;
+    if (globalMode && fracbad > 0.05) {
       cerr << "WARNING: only " << (1-fracbad)*100 << "\% of sequence are valid DNA! "
-           << "Ignoring " << dat.bad.size() << " bad intervals..." << endl;
+           << "Ignoring " << badivs << " bad intervals..." << endl;
     }
   }
   // expected # of match length factors / nucleotide
@@ -115,10 +137,10 @@ void mlComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y
   }
 
   // get bad window indices for given parameters
-  queue<size_t> badj = calcNAWindows(n, w, k, dat.bad);
+  queue<size_t> badj = calcNAWindows(offset, n, w, k, dat.bad);
   for
     each_window(n, w, k) {
-      if (n!=w)
+      if (!globalMode)
         if (!badj.empty() && j == badj.front()) {
           y[j] = -1;
           badj.pop();
@@ -127,11 +149,11 @@ void mlComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y
 
       size_t numfacs = sumFromTo(ps, l, r);
       //in global mode -> subtract number of bad intervals from total
-      if (n==w)
-        numfacs -= dat.bad.size();
+      if (globalMode)
+        numfacs -= badivs;
 
       //in global mode we ignore the N-blocks
-      double effectiveW = n==w ? w-dat.numbad : w;
+      double effectiveW = n==w ? w-numbad : w;
 
       double cObs = (double)numfacs / effectiveW;
       y[j] = (cObs /* - cMin */) / cNorm;
@@ -187,12 +209,14 @@ void updateRunQueue(list<Periodicity> &runs, PerLists const &ls, size_t l, size_
 // get "information content" of window
 void runComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y,
                    ComplexityData const &dat, bool calcAvg) {
+  bool globalMode = n==w;
+  auto badpart = numBad(offset, n, dat);
+  size_t numbad = badpart.first;
+  size_t badivs = badpart.second;
   double gc = dat.gc;
-  if (n==w) {
-    // adapt gc content (as if no N-blocks present)
-    // oldgc = c(gc) / (c(n)+c(at)+c(gc))=seqlen
-    // -> newgc = oldgc * seqlen / (seqlen-c(n))
-    gc = gc * n / (n-dat.numbad);
+  if (globalMode) { // adapt gc content (as if no N-blocks present)
+    // oldgc = c(gc) / (c(n)+c(at)+c(gc))=seqlen -> newgc = oldgc * seqlen / (seqlen-c(n))
+    gc = gc * dat.len / (dat.len-numbad);
   }
 
   vector<int64_t> ps(n, 1); // all nucleotides marked
@@ -224,10 +248,10 @@ void runComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &
   list<Periodicity> runs; //current runs overlapping window
 
   // get bad window indices for given parameters
-  queue<size_t> badj = calcNAWindows(n, w, k, dat.bad);
+  queue<size_t> badj = calcNAWindows(offset, n, w, k, dat.bad);
   for
     each_window(n, w, k) {
-      if (n!=w)
+      if (!globalMode)
         if (!badj.empty() && j == badj.front()) {
           y[j] = -1;
           badj.pop();
@@ -238,8 +262,8 @@ void runComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &
 
       //in global mode, N-blocks are ignored, they have period length 1
       //-> subtract them away
-      if (n==w)
-        info -= dat.bad.size();
+      if (globalMode)
+        info -= badivs;
 
       if (args.p)
         cout << "NuclNotInRuns: " << info << endl;
@@ -259,7 +283,7 @@ void runComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &
         cout << " = " << info << " = infoContent" << endl;
 
       //in global mode we ignore the N-blocks
-      double effectiveW = n==w ? w-dat.numbad : w;
+      double effectiveW = n==w ? w - numbad : w;
 
       // we look at all overlapping runs, could lead to sum > w -> min(w,*)
       // subtract 1 from pObs to make 0 possible (e.g. for AAAA..)

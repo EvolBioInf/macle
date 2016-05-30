@@ -23,8 +23,7 @@ struct Args {
   uint32_t n = 0;  // number of sequence in index file to work on
 
   bool p = false;  // print match length decomposition?
-  bool g = false;  // output for plotting
-  uint32_t gf = 0; // plot output format
+  uint32_t g = 0;  // plot output format
   bool b = false;  // benchmark run
 
   // non-parameter arguments

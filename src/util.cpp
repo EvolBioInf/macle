@@ -142,7 +142,7 @@ bool with_file(char const *file, function<bool(T&)> lambda, ios_base::openmode m
 bool with_file(char const *file, function<bool(istream&)> lambda, ios_base::openmode mode) {
   return with_file(file, lambda, mode, cin);
 }
-bool with_file(char const *file, function<bool(ostream&)> lambda, ios_base::openmode mode) {
+bool with_file_out(char const *file, function<bool(ostream&)> lambda, ios_base::openmode mode) {
   return with_file(file, lambda, mode, cout);
 }
 

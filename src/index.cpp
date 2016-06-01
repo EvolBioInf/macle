@@ -68,7 +68,7 @@ void serialize(ostream &o, ComplexityData const &cd) {
 
 // serialize a series of sequences
 bool saveData(vector<ComplexityData> &vec, char const *file) {
-  return with_file(file, [&](ostream &o) {
+  return with_file_out(file, [&](ostream &o) {
     binwrite(o, (size_t)vec.size());
     for (auto &d : vec)
       serialize(o, d);

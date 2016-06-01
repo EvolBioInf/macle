@@ -253,7 +253,7 @@ void processFile(char const *file) {
   vector<ComplexityData> dat;
   if (args.i) { //load from index
     tick();
-    if (!loadData(dat, file))
+    if (!loadData(dat, file, args.l))
       return;
     tock("loadData");
     if (args.l) { //list index file contents and exit

@@ -33,6 +33,25 @@ void serialize(ostream &o, ComplexityData const &cd) {
     binwrite(o, c);
   binwrite(o, cd.len);
   binwrite(o, cd.gc);
+
+  binwrite(o, cd.regions.size());
+  for (auto i : cd.regions){
+    binwrite(o, i.first);
+    binwrite(o, i.second);
+  }
+  for (auto &l : cd.labels){
+    binwrite(o, l.size());
+    for (char c : l)
+      binwrite(o, c);
+  }
+
+  binwrite(o, cd.numbad);
+  binwrite(o, (size_t)cd.bad.size());
+  for (auto i : cd.bad){
+    binwrite(o, i.first);
+    binwrite(o, i.second);
+  }
+
   binwrite(o, (size_t)cd.mlf.size());
   for (auto i : cd.mlf)
     binwrite(o, i);
@@ -46,24 +65,6 @@ void serialize(ostream &o, ComplexityData const &cd) {
       binwrite(o, p.e);
       binwrite(o, p.l);
     }
-
-  binwrite(o, cd.regions.size());
-  for (auto i : cd.regions){
-    binwrite(o, i.first);
-    binwrite(o, i.second);
-  }
-  for (auto &l : cd.labels){
-    binwrite(o, l.size());
-    for (char c : l)
-      binwrite(o, c);
-  }
-
-  binwrite(o, (size_t)cd.bad.size());
-  for (auto i : cd.bad){
-    binwrite(o, i.first);
-    binwrite(o, i.second);
-  }
-  binwrite(o, cd.numbad);
 }
 
 // serialize a series of sequences
@@ -77,7 +78,7 @@ bool saveData(vector<ComplexityData> &vec, char const *file) {
 }
 
 // load precomputed data from stdin (when file=nullptr) or some file
-bool loadData(vector<ComplexityData> &cplx, char const *file) {
+bool loadData(vector<ComplexityData> &cplx, char const *file, bool onlyInfo) {
   if (!file) {
     cerr << "ERROR: Can not load binary index file from pipe!"
       << " Please pass it as argument!" << endl;
@@ -99,24 +100,6 @@ bool loadData(vector<ComplexityData> &cplx, char const *file) {
       binread(fin,c.len);
       binread(fin,c.gc);
 
-      size_t fnum;
-      binread(fin,fnum);
-      c.mlf.resize(fnum);
-      for (size_t j = 0; j < fnum; j++) {
-        binread(fin,c.mlf[j]);
-      }
-
-      size_t pnum;
-      binread(fin,pnum);
-      c.pl.resize(c.len);
-      for (size_t j = 0; j < pnum; j++) {
-        size_t b, e, l;
-        binread(fin,b);
-        binread(fin,e);
-        binread(fin,l);
-        c.pl[b].push_back(Periodicity(b, e, l));
-      }
-
       size_t rnum;
       binread(fin,rnum);
       c.regions.resize(rnum);
@@ -136,16 +119,43 @@ bool loadData(vector<ComplexityData> &cplx, char const *file) {
         }
       }
 
+      binread(fin, c.numbad);
+
       size_t bnum;
       binread(fin,bnum);
-      c.bad.resize(bnum);
+      if (!onlyInfo)
+        c.bad.resize(bnum);
       for (size_t j = 0; j < bnum; j++) {
         size_t l, r;
         binread(fin,l);
         binread(fin,r);
-        c.bad[j] = make_pair(l, r);
+        if (!onlyInfo)
+          c.bad[j] = make_pair(l, r);
       }
-      binread(fin, c.numbad);
+
+      size_t fnum;
+      binread(fin,fnum);
+      if (!onlyInfo)
+        c.mlf.resize(fnum);
+      for (size_t j = 0; j < fnum; j++) {
+        size_t fact;
+        binread(fin,fact);
+        if (!onlyInfo)
+          c.mlf[j] = fact;
+      }
+
+      size_t pnum;
+      binread(fin,pnum);
+      if (!onlyInfo)
+        c.pl.resize(c.len);
+      for (size_t j = 0; j < pnum; j++) {
+        size_t b, e, l;
+        binread(fin,b);
+        binread(fin,e);
+        binread(fin,l);
+        if (!onlyInfo)
+          c.pl[b].push_back(Periodicity(b, e, l));
+      }
 
       cplx.push_back(c);
     }

@@ -7,7 +7,8 @@
 #include <queue>
 using namespace std;
 
-#include "args.h"
+#include "args.h"  //args.p
+#include "bench.h" //ticktock
 #include "complexity.h"
 #include "index.h"
 #include "matchlength.h"
@@ -296,4 +297,62 @@ void runComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &
              << pObs << "/" << pAvg << " = " << y[j] << endl;
       }
     }
+}
+
+ResultMat calcComplexities(size_t &w, size_t &k, char m, size_t seqnum, vector<ComplexityData> const &dat) {
+  bool globalMode = w==0;   // output one number (window = whole sequence)?
+  bool isJoined = dat[0].regions.size()>1; //which kind is the input data?
+  size_t containedSeqs = max(dat[0].labels.size(), dat.size()); //how many (sub-)sequences are there?
+
+  size_t maxlen = 0;        // max implies the domain of the plot
+  size_t minlen = SIZE_MAX; // min restricts the reasonable window sizes
+  if (seqnum || isJoined)
+    maxlen = minlen = seqnum && isJoined ? dat[0].regions[seqnum-1].second : dat[0].len;
+  else //we need to consider the separate sequences, non-joined mode
+    for (auto &d : dat) {
+      maxlen = max(maxlen, d.len);
+      minlen = min(minlen, d.len);
+    }
+
+  // adapt window size and interval
+  if (w == 0)
+    w = minlen;       // default window = whole (smallest) seq.
+  w = min(w, minlen); // biggest window = whole (smallest) seq.
+  if (k == 0)
+    k = max((size_t)1, w / 10); // default interval = 1/10 of window
+  k = min(k, w);                // biggest interval = window size
+
+  // array for results for all sequences in file
+  size_t entries = numEntries(maxlen, w, k);
+  size_t numMetrics = m == 'b' ? 2 : 1; //complexity arrays per seq.
+  size_t usedSeqs = seqnum || isJoined ? 1 : containedSeqs;
+  ResultMat ys(numMetrics * usedSeqs, make_pair("", vector<double>(entries)));
+
+  int col = 0;
+  int start = seqnum ? max(seqnum-1,(size_t)0)       : 0;
+  int end   = seqnum ? min(seqnum-1,containedSeqs-1) : (isJoined ? start : containedSeqs-1);
+  for (int i=start; i<=end; i++) {
+    auto &data    = isJoined ? dat[0]                                           : dat[i];
+    string name   = isJoined ? (seqnum ? dat[0].labels[i] : dat[0].name)        : dat[i].name;
+    size_t offset = isJoined ? (seqnum ? dat[0].regions[i].first : 0)           : 0;
+    size_t len    = isJoined ? (seqnum ? dat[0].regions[i].second : dat[0].len) : dat[i].len;
+    size_t currw  = globalMode ? len : w;
+    size_t currk  = globalMode ? len : k;
+
+    if (m != 'r') {
+      tick();
+      ys[col].first = name + " (MC)";
+      mlComplexity(offset, len, currw, currk, ys[col].second, data);
+      tock("mlComplexity");
+      col++;
+    }
+    if (m != 'm') {
+      tick();
+      ys[col].first = name + " (RC)";
+      runComplexity(offset, len, currw, currk, ys[col].second, data, true);
+      tock("runComplexity");
+      col++;
+    }
+  }
+  return ys;
 }

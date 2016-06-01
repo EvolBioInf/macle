@@ -3,6 +3,7 @@
 #include <string>
 #include <utility>
 #include "periodicity.h"
+#include "fastafile.h"
 
 // All information from a sequence required to calculate complexity plots
 // either a file stores multiple such objects for separate sequences with one
@@ -26,3 +27,5 @@ struct ComplexityData {
 
 bool loadData(std::vector<ComplexityData> &cplx, char const *file, bool onlyInfo=false);
 bool saveData(std::vector<ComplexityData> &cplx, char const *file);
+
+void extractData(std::vector<ComplexityData> &cplx, FastaFile &file, bool joinSeqs);

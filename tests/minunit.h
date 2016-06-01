@@ -39,8 +39,8 @@ int tests_run;
 
 #define mu_assert_eq(expected, observed, message)                                        \
   do {                                                                                   \
-    int64_t e = (expected);                                                              \
-    int64_t o = (observed);                                                              \
+    auto e = (expected);                                                                 \
+    auto o = (observed);                                                                 \
     if (e != o) {                                                                        \
       std::stringstream sstrm;                                                           \
       sstrm << __FILE__ << ":" << __LINE__ << ": " message;                              \

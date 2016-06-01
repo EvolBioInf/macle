@@ -5,10 +5,14 @@
 #include <functional>
 using namespace std;
 
+#include "args.h"  //args.p
+#include "bench.h" //tick tock
+#include "matchlength.h" //computeMLFact
+#include "lempelziv.h"   //computeLZFact
+
 #include "index.h"
 #include "periodicity.h"
 #include "util.h"
-using namespace std;
 
 template<typename T> void binwrite(ostream &o, T x) {
   o.write(reinterpret_cast<char*>(&x),sizeof(x));
@@ -147,7 +151,7 @@ bool loadData(vector<ComplexityData> &cplx, char const *file, bool onlyInfo) {
       size_t pnum;
       binread(fin,pnum);
       if (!onlyInfo)
-        c.pl.resize(c.len);
+        c.pl.resize(c.len + 2); // +2 because of $ and one more for safety
       for (size_t j = 0; j < pnum; j++) {
         size_t b, e, l;
         binread(fin,b);
@@ -163,3 +167,110 @@ bool loadData(vector<ComplexityData> &cplx, char const *file, bool onlyInfo) {
   }); //, ios::binary);
 }
 
+// given sequences from a fasta file, calculate match factors and runs
+void extractData(vector<ComplexityData> &cplx, FastaFile &file, bool joinSeqs) {
+  FastaFile *ff = &file;
+
+  vector<string> labels;
+  vector<pair<size_t,size_t>> regions;
+  FastaFile virtfile;
+  if (joinSeqs) { //construct concatenated sequence
+
+    //extract region list from file if sequences are to be joined
+    size_t offset=0;
+    for (auto &it : file.seqs) {
+      regions.push_back(make_pair(offset, it.seq.size()));
+      labels.push_back(it.name+" "+it.comment);
+      offset += it.seq.size();
+    }
+
+    string wholeseq = "";
+    for (auto &seq : file.seqs) {
+      wholeseq += seq.seq;
+      seq.seq = ""; //free memory of separate sequences
+    }
+    virtfile.seqs.push_back(FastaSeq(file.filename, "", wholeseq));
+    ff = &virtfile;
+  }
+
+  for (auto &seq : ff->seqs) {
+    ComplexityData c;
+    c.name = seq.name;
+    c.gc = gcContent(seq.seq);
+    c.len = seq.seq.size();
+    c.labels = labels;
+    c.regions = regions;
+
+    string &s = seq.seq;
+    s = s + "$" + revComp(s) + "$";
+    tick();
+    Esa esa(s.c_str(), s.size()); // esa for seq+$+revseq+$
+    tock("getEsa (2n)");
+    tick();
+    Fact mlf;
+    computeMLFact(mlf, esa);
+    tock("computeMLFact");
+    c.mlf = mlf.fact;
+
+    if (args.p) {
+      cout << seq.name << seq.comment << endl;
+      // esa.print();
+      cout << "ML-Factors for both strands (" << mlf.fact.size() << "):" << endl;
+      mlf.print();
+    }
+
+    tick();
+    s.resize(s.size() / 2); // drop complementary seq.
+    s.shrink_to_fit();
+    esa.str = s.c_str();
+    esa.n = s.size();
+    reduceEsa(esa);
+    tock("reduceEsa");
+
+    tick();
+    Fact lzf;
+    computeLZFact(lzf, esa, false);
+    lzf.lpf.resize(0); // we dont need it, memory waste
+    tock("computeLZFact");
+    tick();
+    size_t pnum;
+    c.pl = getPeriodicityLists(true, lzf, esa, pnum);
+    tock("getPeriodicityLists");
+
+    if (args.p) {
+      cout << "LZ-Factors (" << lzf.fact.size() << "):" << endl;
+      lzf.print();
+      cout << "Runs (" << pnum << "):" << endl;
+      for (auto &l : c.pl)
+        for (auto p : l)
+          printPeriodicity(p);
+    }
+
+    // get list of bad intervals
+    tick();
+    bool insidebad = false;
+    size_t start = 0;
+    string validchars = "ACGT$";
+    for (size_t i = 0; i < s.size(); i++) {
+      bool valid = validchars.find(s[i]) != string::npos;
+      if (insidebad && valid) {
+        insidebad = false;
+        c.bad.push_back(make_pair(start, i - 1));
+      } else if (!insidebad && !valid) {
+        start = i;
+        insidebad = true;
+      }
+    }
+    if (insidebad) // push last one, if we are inside
+      c.bad.push_back(make_pair(start, s.size() - 1));
+
+    //calculate total number of bad nucleotides for global mode
+    c.numbad=0;
+    for (auto &bad : c.bad)
+      c.numbad += bad.second - bad.first + 1;
+
+    tock("find bad intervals");
+
+    cplx.push_back(c);
+  }
+}

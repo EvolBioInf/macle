@@ -5,7 +5,7 @@ using namespace std;
 #include "util.h"
 
 void test_randSeq() {
-  size_t n = 100;
+  size_t n = 80;
   string alphabet = "XYZ";
   string seq = randSeq(n, alphabet);
   mu_assert_eq(n, seq.size(), "incorrect size!");
@@ -35,7 +35,7 @@ void test_randRun() {
   for (auto l : vector<size_t>{1, 2, 4, 8, 16}) {
     string runseq = randRun(n, l);
     string per = runseq.substr(0, l);
-    int cnt = 0;
+    size_t cnt = 0;
     size_t pos = 0;
     while (runseq.find(per, pos) != string::npos) {
       cnt++;

@@ -22,7 +22,9 @@ using namespace std;
 // number of sliding windows with width w that fit into n with step k
 size_t numEntries(size_t n, size_t w, size_t k) {
   assert(w <= n);
-  assert(k > 0);
+  assert(k <= w);
+  if (w==0) //1 entry in global mode (no window set)
+    return 1;
   return (n - w) / k + 1;
 }
 
@@ -300,7 +302,7 @@ void runComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &
 }
 
 ResultMat calcComplexities(size_t &w, size_t &k, char m, size_t seqnum, vector<ComplexityData> const &dat) {
-  bool globalMode = w==0;   // output one number (window = whole sequence)?
+  bool globalMode = w==0;   // output one number (window = each whole sequence)?
   bool isJoined = dat[0].regions.size()>1; //which kind is the input data?
   size_t containedSeqs = max(dat[0].labels.size(), dat.size()); //how many (sub-)sequences are there?
 
@@ -315,10 +317,8 @@ ResultMat calcComplexities(size_t &w, size_t &k, char m, size_t seqnum, vector<C
     }
 
   // adapt window size and interval
-  if (w == 0)
-    w = minlen;       // default window = whole (smallest) seq.
   w = min(w, minlen); // biggest window = whole (smallest) seq.
-  if (k == 0)
+  if (w != 0 && k == 0)
     k = max((size_t)1, w / 10); // default interval = 1/10 of window
   k = min(k, w);                // biggest interval = window size
 

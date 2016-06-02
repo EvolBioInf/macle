@@ -43,7 +43,7 @@ void test_LempelZiv() {
               "wrong factor");
   }
 
-  mu_assert_eq(20, lzf.fact.size(), "wrong number of LZ factors");
+  mu_assert_eq((size_t)20, lzf.fact.size(), "wrong number of LZ factors");
 }
 
 void test_prevOcc() {

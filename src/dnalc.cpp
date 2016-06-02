@@ -34,6 +34,7 @@ void gnuplotCode(uint32_t w, uint32_t k, int n) {
 }
 
 // print data: X Y1 ... Yn
+// TODO: in global mode print seq. length as offset? does this make sense with multiple?
 void printPlot(uint32_t w, uint32_t k, ResultMat const &ys) {
   for (size_t j = 0; j < ys[0].second.size(); j++) {
     cout << (j * k + w / 2) << "\t"; // center of window
@@ -91,6 +92,11 @@ void processFile(char const *file) {
       saveData(dat, nullptr);
       return;
     }
+  }
+
+  if (args.n>max(dat.size(),dat[0].regions.size())) {
+    cerr << "Invalid sequence number!" << endl;
+    return;
   }
 
   size_t w = args.w;

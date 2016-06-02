@@ -33,11 +33,11 @@ void test_knownExample() {
   computeLZFact(lzf, esa, false);
 
   auto ps = getPeriodicities2(esa);
-  mu_assert_eq(8, ps.size(), "wrong number of periodicities detected (easy algorithm)");
+  mu_assert_eq((size_t)8, ps.size(), "wrong number of periodicities detected (easy algorithm)");
 
   size_t plen;
   auto pl = getPeriodicityLists(false, lzf, esa, plen);
-  mu_assert_eq(8, plen, "wrong number of periodicities detected");
+  mu_assert_eq((size_t)8, plen, "wrong number of periodicities detected");
 }
 
 void test_onlyRuns() {
@@ -47,14 +47,14 @@ void test_onlyRuns() {
   computeLZFact(lzf, esa, false);
 
   auto ps2 = getPeriodicities2(esa);
-  mu_assert_eq(16, ps2.size(), "wrong number of periodicities detected (easy algorithm)");
+  mu_assert_eq((size_t)16, ps2.size(), "wrong number of periodicities detected (easy algorithm)");
 
   size_t plen;
   auto ps = getPeriodicities(false, lzf, esa, plen);
-  mu_assert_eq(16, plen, "wrong number of periodicities detected");
+  mu_assert_eq((size_t)16, plen, "wrong number of periodicities detected");
 
   ps = getPeriodicities(true, lzf, esa, plen);
-  mu_assert_eq(4, plen, "wrong number of runs detected");
+  mu_assert_eq((size_t)4, plen, "wrong number of runs detected");
 }
 
 void test_randomSequence() {

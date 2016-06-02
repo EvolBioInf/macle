@@ -61,16 +61,18 @@ void test_saveLoadData() {
   //create 2 index files - joined and unjoined
   vector<ComplexityData> dat;
   extractData(dat,ff,false);
-  mu_assert_eq(dat.size(), (size_t)2, "wrong number of sequences");
-  mu_assert_eq(dat[0].regions.size(), (size_t)0, "wrong number of regions");
-  mu_assert_eq(dat[0].name, seq1.name, "wrong sequence name");
+  mu_assert_eq((size_t)2, dat.size(), "wrong number of sequences");
+  mu_assert_eq((size_t)0, dat[0].regions.size(), "wrong number of regions");
+  mu_assert_eq((size_t)0, dat[1].regions.size(), "wrong number of regions");
+  mu_assert_eq(seq1.name, dat[0].name, "wrong sequence name");
+  mu_assert_eq(seq2.name, dat[1].name, "wrong sequence name");
   saveData(dat, iname1);
 
   vector<ComplexityData> datJ;
   extractData(datJ,ff,true);
-  mu_assert_eq(datJ.size(), (size_t)1, "wrong number of sequences");
-  mu_assert_eq(datJ[0].regions.size(), (size_t)2, "wrong number of regions");
-  mu_assert_eq(datJ[0].name, ff.filename, "wrong sequence name");
+  mu_assert_eq((size_t)1, datJ.size(), "wrong number of sequences");
+  mu_assert_eq((size_t)2, datJ[0].regions.size(), "wrong number of regions");
+  mu_assert_eq(ff.filename, datJ[0].name, "wrong sequence name");
   saveData(datJ, iname2);
 
   //try loading and check

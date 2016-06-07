@@ -3,6 +3,7 @@
 #include <vector>
 #include <utility>
 #include <functional>
+#include <algorithm>
 using namespace std;
 
 #include "args.h"  //args.p
@@ -244,6 +245,43 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &file, bool joinSeqs) {
       for (auto &l : c.pl)
         for (auto p : l)
           printPeriodicity(p);
+
+      //Visualise Periodicities
+      vector<pair<size_t, int>> events;
+      for (auto &l : c.pl)
+        for (auto p : l) {
+          events.push_back(make_pair(p.e+1,0));
+          events.push_back(make_pair(p.b+p.l,1));
+          events.push_back(make_pair(p.b,2));
+        }
+      sort(events.begin(), events.end(), [](pair<size_t,int> a, pair<size_t,int> b){
+          if (a.first==b.first)
+            return a.second < b.second;
+          return a.first < b.first;
+          });
+
+      int maxnested=0;
+      int nested=0;
+      for (auto &ev : events) {
+        nested += ev.second==2 ? 1 : (ev.second==1 ? 0 : -1);
+        maxnested=max(maxnested, nested);
+      }
+      vector<string> pervis(maxnested, string(s.size(),' '));
+      for (auto &l : c.pl)
+        for (auto &p : l) {
+          int i=0;
+          while (pervis[i][p.b]!=' ')
+            i++;
+          pervis[i][p.b]='(';
+          pervis[i][p.b+p.l] = '|';
+          pervis[i][p.e]=')';
+          for (size_t j=p.b+1; j<p.e; j++)
+            if (j!=p.b+p.l)
+              pervis[i][j] = '-';
+        }
+      cout << s << endl;
+      for (auto &v : pervis)
+        cout << v << endl;
     }
 
     // get list of bad intervals

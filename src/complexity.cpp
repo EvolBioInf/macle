@@ -260,6 +260,8 @@ void runComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &
           badj.pop();
           continue;
         }
+      if (args.p)
+        cout << "Calculate RC for interval " << l << "-" << r << " ..." << endl;
 
       size_t info = sumFromTo(ps, l, r); // count non-run nucl. in window
 
@@ -278,9 +280,12 @@ void runComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &
       if (args.p)
         cout << "Add unique info (=period length) of runs: NuclNotInRuns";
       for (auto &run : runs) {
-        info += run.l;
+        int64_t overlap = perLen(run) - max(0L,(int64_t)run.e-(int64_t)r) - max(0L,(int64_t)l-(int64_t)run.b);
+        size_t val = min(run.l, (size_t)overlap);
+        info += val;
+
         if (args.p)
-          cout << " + " << run.l;
+          cout << " + " << val;
       }
       if (args.p)
         cout << " = " << info << " = infoContent" << endl;

@@ -2,13 +2,15 @@
 #include <cmath>
 #include <algorithm>
 using namespace std;
+#include <sdsl/int_vector.hpp>
+using namespace sdsl;
 
 #include "rmq.h"
 
 #define BLOCKSIZE(n) ((size_t)(log2(n) / 4) + 1)
 #define BLOCKNUM(n) (n / BLOCKSIZE(n) + 1)
 
-vector<int64_t> precomputePow2RMQ(vector<int64_t> const &A) {
+int_vector<VECBIT> precomputePow2RMQ(int_vector<VECBIT> const &A) {
   auto n = A.size();
   size_t row = log2(n) + 1;
   vector<int64_t> B(n * row);
@@ -28,10 +30,15 @@ vector<int64_t> precomputePow2RMQ(vector<int64_t> const &A) {
         B[i * row + j] = B[i2 * row + (j - 1)];
     }
   }
-  return B;
+  int_vector<VECBIT> ret(B.size());
+  for (size_t i=0; i<B.size(); i++)
+    ret[i] = B[i];
+  if (!VECBIT)
+    util::bit_compress(ret);
+  return ret;
 }
 
-int64_t getRMQwithPow2(vector<int64_t> const &A, vector<int64_t> const &B, size_t l,
+int64_t getRMQwithPow2(int_vector<VECBIT> const &A, int_vector<VECBIT> const &B, size_t l,
                        size_t r) {
   auto n = A.size();
   assert(l <= r);
@@ -51,19 +58,21 @@ int64_t getRMQwithPow2(vector<int64_t> const &A, vector<int64_t> const &B, size_
   return min(cand1, cand2);
 }
 
-vector<int64_t> precomputeBlockRMQ(sdsl::int_vector<VECBIT> const &A) {
+int_vector<VECBIT> precomputeBlockRMQ(sdsl::int_vector<VECBIT> const &A) {
   auto n = A.size();
   size_t bSz = BLOCKSIZE(n);
   size_t bNum = BLOCKNUM(n);
-  vector<int64_t> B(bNum);
+  int_vector<VECBIT> B(bNum);
   for (size_t i = 0; i < bNum; i++) {
     size_t next = min((i + 1) * bSz, n);
-    int64_t min = INT64_MAX;
+    size_t min = SIZE_MAX;
     for (size_t j = i * bSz; j < next; j++)
       if (min > A[j])
         min = A[j];
     B[i] = min;
   }
+  if (!VECBIT)
+    util::bit_compress(B);
   return B;
 }
 
@@ -72,7 +81,7 @@ RMQ::RMQ(sdsl::int_vector<VECBIT> const &A) : arr(&A) {
   this->ptab = precomputePow2RMQ(this->btab);
 }
 
-int64_t RMQ::get(size_t l, size_t r) const {
+size_t RMQ::operator()(size_t l, size_t r) const {
   auto &A = *arr;
   auto n = arr->size();
   assert(l <= r);
@@ -84,16 +93,16 @@ int64_t RMQ::get(size_t l, size_t r) const {
   size_t lblock = l / bSz;
   size_t rblock = r / bSz;
   if (lblock == rblock) {
-    int64_t min = INT64_MAX;
+    size_t min = SIZE_MAX;
     for (size_t i = l; i <= r; i++)
       if (A[i] < min)
         min = A[i];
     return min;
   }
 
-  int64_t lmin = INT64_MAX;
-  int64_t rmin = INT64_MAX;
-  int64_t medmin = INT64_MAX;
+  size_t lmin = SIZE_MAX;
+  size_t rmin = SIZE_MAX;
+  size_t medmin = SIZE_MAX;
 
   size_t nextbs = min((lblock + 1) * bSz, n);
   for (size_t i = l; i < nextbs; i++)

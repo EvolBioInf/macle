@@ -17,7 +17,7 @@ void printPeriodicity(Periodicity &p) { printf("(%zu,%zu,%zu)\n", p.b, p.e, p.l)
 #define LAZY_CONST 10
 
 // for small lcps naive is faster -> try naive, then fall back to efficient RMQ
-int64_t lcp(const Esa &esa, const sdsl::rmq_succinct_sct<> &tab, size_t i, size_t j) {
+int64_t lcp(const Esa &esa, const RMQ &tab, size_t i, size_t j) {
   i--;
   j--;
   if (i >= esa.n || j >= esa.n)
@@ -33,7 +33,7 @@ int64_t lcp(const Esa &esa, const sdsl::rmq_succinct_sct<> &tab, size_t i, size_
   return max(k, (uint64_t)0);
 }
 
-int64_t lcs(const Esa &resa, const sdsl::rmq_succinct_sct<> &rlcptab, size_t i, size_t j) {
+int64_t lcs(const Esa &resa, const RMQ &rlcptab, size_t i, size_t j) {
   int64_t maxval = lcp(resa, rlcptab, resa.n - i + 1, resa.n - j + 1);
   return max(maxval, (int64_t)0);
 }

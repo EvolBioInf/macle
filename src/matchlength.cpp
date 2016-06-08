@@ -7,25 +7,33 @@
 #include "shulen.h"
 #include <algorithm>
 #include <vector>
+#include <sdsl/int_vector.hpp>
 using namespace std;
 
 void computeMLFact(Fact &mlf, Esa const &esa) {
   mlf.prevOcc.clear();
-  mlf.fact.clear();
-  mlf.lpf.clear();
+  mlf.fact.resize(0);
+  mlf.lpf.resize(0);
   mlf.str = esa.str;
   mlf.strLen = esa.n;
 
   /* construct and fill array of match lengths */
   vector<uint64_t> ml(esa.n);
   for (size_t i = 0; i < esa.n; i++) {
-    ml[esa.sa[i]] = std::max((int64_t)1, std::max(esa.lcp[i], esa.lcp[i + 1]));
+    ml[esa.sa[i]] = std::max((int64_t)1, std::max((int64_t)esa.lcp[i], (int64_t)esa.lcp[i + 1]));
   }
 
   /* compute observed number of match factors, store their positions */
+  vector<size_t> factmp;
   size_t i = 0;
   while (i < esa.n) {
-    mlf.fact.push_back(i);
+    factmp.push_back(i);
     i += ml[i];
   }
+
+  mlf.fact.resize(factmp.size());
+  for (i=0; i<factmp.size(); i++)
+    mlf.fact[i] = factmp[i];
+  if (!VECBIT)
+    sdsl::util::bit_compress(mlf.fact);
 }

@@ -15,8 +15,8 @@ struct Periodicity {
 void printPeriodicity(Periodicity &p);
 
 // these only exported for test cases
-int64_t lcp(const Esa &esa, const RMQ &tab, size_t i, size_t j);
-int64_t lcs(const Esa &resa, const RMQ &rtab, size_t i, size_t j);
+int64_t lcp(const Esa &esa, const sdsl::rmq_succinct_sct<> &tab, size_t i, size_t j);
+int64_t lcs(const Esa &resa, const sdsl::rmq_succinct_sct<> &rtab, size_t i, size_t j);
 size_t lcs2(char const *str, size_t i, size_t j);
 size_t lcp2(char const *str, size_t n, size_t i, size_t j);
 
@@ -33,5 +33,7 @@ std::vector<Periodicity> getPeriodicities2(Esa const &esa);
 /* length (from start to end) of run/periodicity */
 static inline size_t perLen(Periodicity const &p) { return p.e - p.b + 1; }
 
-/* number of periodicities corresponding to a run */
+// number of periodicities corresponding to a run
+/*
 static inline size_t persFromRun(Periodicity const &p) { return perLen(p) / (2 * p.l); }
+*/

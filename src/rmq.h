@@ -3,12 +3,14 @@
 #include <cstdlib>
 #include <vector>
 
+#include <sdsl/int_vector.hpp>
+
 class RMQ {
 public:
-  RMQ(std::vector<int64_t> const &A);
+  RMQ(sdsl::int_vector<VECBIT> const &A);
   int64_t get(size_t l, size_t r) const;
 
-  std::vector<int64_t> const *arr;
+  sdsl::int_vector<VECBIT> const *arr;
 
   std::vector<int64_t> btab;
   std::vector<int64_t> ptab;

@@ -51,7 +51,7 @@ int64_t getRMQwithPow2(vector<int64_t> const &A, vector<int64_t> const &B, size_
   return min(cand1, cand2);
 }
 
-vector<int64_t> precomputeBlockRMQ(vector<int64_t> const &A) {
+vector<int64_t> precomputeBlockRMQ(sdsl::int_vector<VECBIT> const &A) {
   auto n = A.size();
   size_t bSz = BLOCKSIZE(n);
   size_t bNum = BLOCKNUM(n);
@@ -67,7 +67,7 @@ vector<int64_t> precomputeBlockRMQ(vector<int64_t> const &A) {
   return B;
 }
 
-RMQ::RMQ(vector<int64_t> const &A) : arr(&A) {
+RMQ::RMQ(sdsl::int_vector<VECBIT> const &A) : arr(&A) {
   this->btab = precomputeBlockRMQ(A);
   this->ptab = precomputePow2RMQ(this->btab);
 }

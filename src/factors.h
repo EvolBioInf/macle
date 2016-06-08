@@ -2,14 +2,15 @@
 #include <cstddef>
 #include <cstdint>
 #include <vector>
+#include <sdsl/int_vector.hpp>
 
 /* a factorization of a string (LempelZiv or MatchLength) */
 struct Fact {
   void print() const;
 
-  std::vector<size_t> fact;     /* positions of factors */
+  sdsl::int_vector<VECBIT> fact;     /* positions of factors */
+  sdsl::int_vector<VECBIT> lpf;      /* lpf in case of Lempel-Ziv, otherwise empty */
   std::vector<int64_t> prevOcc; /* LZ: prevOcc array (previous occurence of factor s_j) */
-  std::vector<size_t> lpf;      /* lpf in case of Lempel-Ziv, otherwise empty */
 
   char const *str; /* string */
   size_t strLen;   /* string length */

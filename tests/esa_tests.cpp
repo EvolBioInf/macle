@@ -29,11 +29,11 @@ void test_getEsa() {
   mu_assert(esa.str == s, "ESA does not point to original sequence");
   mu_assert(esa.n == n, "ESA size not correct");
   mu_assert(esa.str[esa.sa[0]] == '$', "first ESA entry not $");
-  mu_assert(esa.sa[0] == (int64_t)(n - 1), "wrong SA index");
+  mu_assert(esa.sa[0] == (uint64_t)(n - 1), "wrong SA index");
   mu_assert(esa.isa[esa.sa[0]] == 0, "isa incorrect");
-  mu_assert(esa.isa[esa.sa[n - 1]] == (int64_t)(n - 1), "isa incorrect");
-  mu_assert(esa.lcp[0] == -1, "first LCP not -1");
-  mu_assert(esa.lcp[esa.n] == -1, "last LCP not -1");
+  mu_assert(esa.isa[esa.sa[n - 1]] == (uint64_t)(n - 1), "isa incorrect");
+  mu_assert(esa.lcp[0] == 0, "first LCP not 0");
+  mu_assert(esa.lcp[esa.n] == 0, "last LCP not 0");
 }
 
 // tests lcs value retrieval from reverse esa using getLcp vs naive
@@ -50,7 +50,7 @@ void test_revEsaRnd() {
   char const *srev = strrev.c_str();
 
   Esa resa(srev, n);
-  RMQ rmq = resa.precomputeLcp();
+  auto rmq = resa.precomputeLcp();
 
   /* printEsa(esa); */
   /* printEsa(resa); */
@@ -75,7 +75,7 @@ void test_reduceEsa() {
   reduceEsa(esaBoth);
   esaBoth.str = str.c_str();
 
-  mu_assert_eq(-1, esaBoth.lcp[esaBoth.sa.size()], "last LCP not -1!");
+  mu_assert_eq(0UL, esaBoth.lcp[esaBoth.sa.size()], "last LCP not 0!");
   for (size_t i = 0; i < str.size(); i++) {
     mu_assert_eq(esaOne.sa[i], esaBoth.sa[i], "SA[" << i << "] does not match");
     mu_assert_eq(esaOne.lcp[i], esaBoth.lcp[i], "LCP[" << i << "] does not match");

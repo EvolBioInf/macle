@@ -211,7 +211,8 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &file, bool joinSeqs) {
     Fact mlf;
     computeMLFact(mlf, esa);
     tock("computeMLFact");
-    c.mlf = mlf.fact;
+    for (auto f : mlf.fact)
+      c.mlf.push_back(f);
 
     if (args.p) {
       cout << seq.name << seq.comment << endl;

@@ -55,7 +55,7 @@ void test_prevOcc() {
 
   // should be same as poResult[sa[i]]
   for (size_t i = 0; i < str.size(); i++)
-    mu_assert(lzf.prevOcc[i] == lzfRef.prevOcc[i], "wrong prevOcc array");
+    mu_assert_eq(lzfRef.prevOcc[i], lzf.prevOcc[i], "wrong prevOcc array value at pos " << i);
 }
 
 void test_randomSequence() {

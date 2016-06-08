@@ -1,6 +1,6 @@
 CXX := g++
-CFLAGS := -std=c++11 -Isrc -Ilibdivsufsort/include -Igsl/include -Wall -Wextra -Wshadow -O2 -g -ggdb # -pg
-LDFLAGS := -lm -lgsl -lgslcblas -lblas -ldivsufsort64 -Llibdivsufsort/lib -Lgsl/lib # -pg
+CFLAGS := -DVECBIT=0 -std=c++11 -Isrc -Ilibdivsufsort/include -Igsl/include -Isdsl/include -Wall -Wextra -O2 -g -ggdb -Wno-missing-braces -funroll-loops # -pg -Wshadow
+LDFLAGS := -lm -lgsl -lgslcblas -lblas -ldivsufsort -ldivsufsort64 -lsdsl -Llibdivsufsort/lib -Lgsl/lib -Lsdsl/lib # -pg
 TARGET := dnalc
 
 SOURCES := $(wildcard src/*.cpp)
@@ -51,5 +51,9 @@ gsl:
 	cd gsl-2.1 && ./configure --prefix=$(shell pwd)/gsl && make && make install
 	find gsl -name "*.so.*" -exec rm {} \;
 
+sdsl:
+	git clone https://github.com/simongog/sdsl-lite.git
+	cd sdsl-lite
+	sdsl-lite/install.sh sdsl
 
-.PHONY: all build clean tests valgrind format libdivsufsort gsl
+.PHONY: all build clean tests valgrind format libdivsufsort gsl sdsl

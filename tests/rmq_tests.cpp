@@ -3,48 +3,54 @@
 #include "rmq.h"
 
 #include <vector>
+#include <sdsl/int_vector.hpp>
+#include <sdsl/rmq_support.hpp>
+using namespace sdsl;
 
 void test_rmqSmall() {
   size_t n = 25;
-  std::vector<int64_t> array(n);
+  int_vector<> array(n);
   for (size_t i = 0; i < n; i++) {
     array[i] = rand() % n;
     /* printf("%ld ", array[i]); */
   }
   /* printf("\n\n"); */
 
-  RMQ rmq(array);
+  // RMQ rmq(array);
+  rmq_succinct_sct<> rmq(&array);
 
   for (size_t i = 0; i < n; i++)
     for (size_t j = i; j < n; j++) {
       int64_t exp = INT64_MAX;
       for (size_t k = i; k <= j; k++)
-        if (array[k] < exp)
+        if ((int64_t)array[k] < exp) {
           exp = array[k];
+        }
 
-      int64_t obs = rmq.get(i, j);
+      // int64_t obs = rmq.get(i, j);
+      int64_t obs = array[rmq(i, j)];
       mu_assert_eq(exp, obs, "wrong range minimum (tried " << i << " and " << j << ")");
     }
 }
 
 void test_rmqRand() {
   size_t n = 10000;
-  std::vector<int64_t> array(n);
+  sdsl::int_vector<> array(n);
   for (size_t i = 0; i < n; i++) {
     array[i] = rand() % n;
   }
 
-  RMQ rmq(array);
+  rmq_succinct_sct<> rmq(&array);
 
   for (size_t i = 0; i < 1000; i++) {
     size_t l = rand() % n;
     size_t r = l + rand() % (n - l);
     int64_t exp = INT64_MAX;
     for (size_t k = l; k <= r; k++)
-      if (array[k] < exp)
+      if ((int64_t)array[k] < exp)
         exp = array[k];
 
-    int64_t obs = rmq.get(l, r);
+    int64_t obs = array[rmq(l, r)];
     mu_assert_eq(exp, obs, "wrong range minimum (tried " << l << " and " << r << ")");
   }
 }

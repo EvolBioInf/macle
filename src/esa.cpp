@@ -9,27 +9,32 @@
  * Author: Bernhard Haubold, haubold@evolbio.mpg.de
  * Date: Mon Jul 15 11:11:19 2013
  **************************************************/
-#include "bench.h"
 #include <cinttypes>
 #include <iostream>
 #include <algorithm>
-#include <vector>
 using namespace std;
 
 #include <divsufsort64.h>
 
+#include "bench.h"
 #include "esa.h"
-#include "rmq.h"
+
+using namespace sdsl;
 
 // calculate suffix array using divsufsort
-vector<saidx64_t> getSa(char const *seq, size_t n) {
+int_vector<VECBIT> getSa(char const *seq, size_t n) {
   sauchar_t *t = (sauchar_t *)seq;
   vector<saidx64_t> sa(n + 1);
   if (divsufsort64(t, sa.data(), (saidx64_t)n) != 0) {
     cout << "ERROR[esa]: suffix sorting failed." << endl;
     exit(-1);
   }
-  return sa;
+  int_vector<VECBIT> ret(n+1);
+  for (size_t i=0; i<n+1; i++)
+    ret[i] = sa[i];
+  if (!VECBIT)
+    util::bit_compress(ret);
+  return ret;
 }
 
 /* calcLcp: compute LCP array using the algorithm in Figure 3
@@ -43,10 +48,10 @@ void calcLcp(Esa &esa) {
   auto &sa = esa.sa;
   auto &rank = esa.isa;
 
-  esa.lcp = vector<saidx64_t>(n + 1);
+  esa.lcp.resize(n + 1);
   auto &lcp = esa.lcp;
   int64_t h = 0, j = 0;
-  lcp[0] = lcp[n] = -1;
+  lcp[0] = lcp[n] = 0;
   for (size_t i = 0; i < n; i++) {
     if (rank[i] > 0) {
       j = sa[rank[i] - 1];
@@ -57,67 +62,25 @@ void calcLcp(Esa &esa) {
         h--;
     }
   }
-}
-
-// alternative lcp calculation (PLCP algorithm, Ohlebusch book)
-// from: EvolBioInf/andi source code
-void esa_init_LCP(Esa &esa) {
-  const char *S = esa.str;
-  auto &SA = esa.sa;
-  saidx64_t len = esa.n;
-
-  // The LCP array is one element longer than S.
-  esa.lcp = vector<saidx64_t>(len + 1);
-  auto &LCP = esa.lcp;
-
-  LCP[0] = -1;
-  LCP[len] = -1;
-
-  // Allocate temporary arrays
-  vector<saidx64_t> PHI(len);
-  auto &PLCP = PHI;
-
-  PHI[SA[0]] = -1;
-  saidx64_t k;
-  ssize_t i;
-
-  for (i = 1; i < len; i++) {
-    PHI[SA[i]] = SA[i - 1];
-  }
-
-  ssize_t l = 0;
-  for (i = 0; i < len; i++) {
-    k = PHI[i];
-    if (k != -1) {
-      while (S[k + l] == S[i + l]) {
-        l++;
-      }
-      PLCP[i] = l;
-      l--;
-      if (l < 0)
-        l = 0;
-    } else {
-      PLCP[i] = -1;
-    }
-  }
-
-  // unpermutate the LCP array
-  for (i = 1; i < len; i++)
-    LCP[i] = PLCP[SA[i]];
+  if (!VECBIT)
+    util::bit_compress(lcp);
 }
 
 Esa::Esa(char const *seq, size_t len) : str(seq), n(len) {
+  // string s(str);
+  // construct_im(sa, s.c_str(), 1);
   tick();
   sa = getSa(seq, n);
   tock("libdivsufsort");
 
-  isa = vector<saidx64_t>(n);
+  isa = int_vector<VECBIT>(n+1);
   for (size_t i = 0; i < n; i++)
     isa[sa[i]] = i;
+  if (!VECBIT)
+    util::bit_compress(isa);
 
   tick();
-  // calcLcp(*this);
-  esa_init_LCP(*this);
+  calcLcp(*this);
   tock("calcLCP");
 }
 
@@ -128,24 +91,24 @@ void Esa::print() const {
          << endl;
 }
 
-RMQ Esa::precomputeLcp() const { return RMQ(this->lcp); }
+rmq_succinct_sct<> Esa::precomputeLcp() const { return rmq_succinct_sct<>(&lcp); }
 
-int64_t Esa::getLcp(const RMQ &rmq, size_t sai, size_t saj) const {
+int64_t Esa::getLcp(rmq_succinct_sct<> const &rmq, size_t sai, size_t saj) const {
   if (sai == saj)
     return this->n - sai;
   size_t l = min(this->isa[sai], this->isa[saj]) + 1;
   size_t r = max(this->isa[sai], this->isa[saj]);
-  return rmq.get(l, r);
+  return lcp[rmq(l, r)];
 }
 
 // reduce esa to half (seq+$+revseq+$ -> seq+$) without recomputing
 // important! asserting that n and str are replaced by user!
 void reduceEsa(Esa &esa) {
   size_t n = esa.sa.size() / 2;
-  vector<saidx64_t> sa(n);
-  vector<saidx64_t> isa(n);
-  vector<int64_t> lcp(n + 1);
-  lcp[0] = lcp[n] = -1;
+  int_vector<VECBIT> sa(n);
+  int_vector<VECBIT> isa(n);
+  int_vector<VECBIT> lcp(n + 1);
+  lcp[0] = lcp[n] = 0;
   sa[0] = n - 1;
   isa[n - 1] = 0;
   int64_t lcptmp = INT64_MAX;
@@ -154,16 +117,21 @@ void reduceEsa(Esa &esa) {
     if ((size_t)esa.sa[i] < n - 1) {
       sa[ind] = esa.sa[i];
       isa[sa[ind]] = ind;
-      lcp[ind] = min(lcptmp, esa.lcp[i]);
+      lcp[ind] = min(lcptmp, (int64_t)esa.lcp[i]);
       ind++;
       lcptmp = INT64_MAX;
     } else {
-      lcptmp = min(lcptmp, esa.lcp[i]);
+      lcptmp = min(lcptmp, (int64_t)esa.lcp[i]);
     }
   }
-  esa.sa.clear();
-  esa.isa.clear();
-  esa.lcp.clear();
+  esa.sa.resize(0);
+  esa.isa.resize(0);
+  esa.lcp.resize(0);
+  if (!VECBIT) {
+    util::bit_compress(sa);
+    util::bit_compress(isa);
+    util::bit_compress(lcp);
+  }
   esa.sa = sa;
   esa.isa = isa;
   esa.lcp = lcp;

@@ -195,7 +195,10 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &file, bool joinSeqs) {
   }
 
   for (auto &seq : ff->seqs) {
-    ComplexityData c;
+    //first push, then fill (prevent copying in the end)
+    cplx.push_back(ComplexityData());
+    auto &c = cplx.back();
+
     c.name = seq.name;
     c.gc = gcContent(seq.seq);
     c.len = seq.seq.size();
@@ -309,7 +312,5 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &file, bool joinSeqs) {
       c.numbad += bad.second - bad.first + 1;
 
     tock("find bad intervals");
-
-    cplx.push_back(c);
   }
 }

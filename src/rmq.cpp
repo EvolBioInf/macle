@@ -2,15 +2,13 @@
 #include <cmath>
 #include <algorithm>
 using namespace std;
-#include <sdsl/int_vector.hpp>
-using namespace sdsl;
 
 #include "rmq.h"
 
 #define BLOCKSIZE(n) ((size_t)(log2(n) / 4) + 1)
 #define BLOCKNUM(n) (n / BLOCKSIZE(n) + 1)
 
-int_vector<VECBIT> precomputePow2RMQ(int_vector<VECBIT> const &A) {
+uint_vec precomputePow2RMQ(uint_vec const &A) {
   auto n = A.size();
   size_t row = log2(n) + 1;
   vector<int64_t> B(n * row);
@@ -30,15 +28,16 @@ int_vector<VECBIT> precomputePow2RMQ(int_vector<VECBIT> const &A) {
         B[i * row + j] = B[i2 * row + (j - 1)];
     }
   }
-  int_vector<VECBIT> ret(B.size());
+  uint_vec ret(B.size());
   for (size_t i=0; i<B.size(); i++)
     ret[i] = B[i];
-  if (!VECBIT)
-    util::bit_compress(ret);
+#ifdef USE_SDSL
+  sdsl::util::bit_compress(ret);
+#endif
   return ret;
 }
 
-int64_t getRMQwithPow2(int_vector<VECBIT> const &A, int_vector<VECBIT> const &B, size_t l,
+size_t getRMQwithPow2(uint_vec const &A, uint_vec const &B, size_t l,
                        size_t r) {
   auto n = A.size();
   assert(l <= r);
@@ -53,16 +52,18 @@ int64_t getRMQwithPow2(int_vector<VECBIT> const &A, int_vector<VECBIT> const &B,
   range >>= 1;
   power--;
   size_t l2 = l + (diff - range);
-  int64_t cand1 = A[B[l * row + power] - 1];
-  int64_t cand2 = A[B[l2 * row + power] - 1];
-  return min(cand1, cand2);
+  size_t cand1 = B[l * row + power] - 1;
+  size_t cand2 = B[l2 * row + power] - 1;
+  if (A[cand1] <= A[cand2])
+    return cand1;
+  return cand2;
 }
 
-int_vector<VECBIT> precomputeBlockRMQ(sdsl::int_vector<VECBIT> const &A) {
+uint_vec precomputeBlockRMQ(uint_vec const &A) {
   auto n = A.size();
   size_t bSz = BLOCKSIZE(n);
   size_t bNum = BLOCKNUM(n);
-  int_vector<VECBIT> B(bNum);
+  uint_vec B(bNum);
   for (size_t i = 0; i < bNum; i++) {
     size_t next = min((i + 1) * bSz, n);
     size_t min = SIZE_MAX;
@@ -71,22 +72,23 @@ int_vector<VECBIT> precomputeBlockRMQ(sdsl::int_vector<VECBIT> const &A) {
         min = A[j];
     B[i] = min;
   }
-  if (!VECBIT)
-    util::bit_compress(B);
+#ifdef USE_SDSL
+  sdsl::util::bit_compress(B);
+#endif
   return B;
 }
 
-RMQ::RMQ(sdsl::int_vector<VECBIT> const &A) : arr(&A) {
-  this->btab = precomputeBlockRMQ(A);
+RMQ_custom::RMQ_custom(uint_vec const *A) : arr(A) {
+  this->btab = precomputeBlockRMQ(*A);
   this->ptab = precomputePow2RMQ(this->btab);
 }
 
-size_t RMQ::operator()(size_t l, size_t r) const {
+size_t RMQ_custom::operator()(size_t l, size_t r) const {
   auto &A = *arr;
   auto n = arr->size();
   assert(l <= r);
   if (l == r)
-    return A[l];
+    return l;
 
   size_t bSz = BLOCKSIZE(n);
 
@@ -94,24 +96,45 @@ size_t RMQ::operator()(size_t l, size_t r) const {
   size_t rblock = r / bSz;
   if (lblock == rblock) {
     size_t min = SIZE_MAX;
+    size_t minind=0;
     for (size_t i = l; i <= r; i++)
-      if (A[i] < min)
+      if (A[i] < min) {
         min = A[i];
-    return min;
+        minind = i;
+      }
+    return minind;
   }
 
   size_t lmin = SIZE_MAX;
   size_t rmin = SIZE_MAX;
   size_t medmin = SIZE_MAX;
+  size_t lminind=0, rminind=0, medminind=0;
 
   size_t nextbs = min((lblock + 1) * bSz, n);
   for (size_t i = l; i < nextbs; i++)
-    if (A[i] < lmin)
+    if (A[i] < lmin) {
       lmin = A[i];
+      lminind = i;
+    }
   for (size_t i = rblock * bSz; i <= r; i++)
-    if (A[i] < rmin)
+    if (A[i] < rmin) {
       rmin = A[i];
-  if (rblock - lblock > 1)
-    medmin = getRMQwithPow2(btab, ptab, lblock + 1, rblock - 1);
-  return min(medmin, min(lmin, rmin));
+      rminind = i;
+    }
+  if (rblock - lblock > 1) {
+    size_t btabind = getRMQwithPow2(btab, ptab, lblock + 1, rblock - 1);
+    medmin = btab[btabind];
+    nextbs = min((btabind+1)*bSz, n);
+    for (size_t i = btabind*bSz; i < nextbs; i++)
+      if (A[i] == medmin) {
+        medminind = i;
+        break;
+      }
+  }
+
+  if (lmin <= medmin && lmin <= rmin)
+    return lminind;
+  if (medmin <= rmin)
+    return medminind;
+  return rminind;
 }

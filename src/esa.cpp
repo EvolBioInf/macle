@@ -19,21 +19,20 @@ using namespace std;
 #include "bench.h"
 #include "esa.h"
 
-using namespace sdsl;
-
 // calculate suffix array using divsufsort
-int_vector<VECBIT> getSa(char const *seq, size_t n) {
+uint_vec getSa(char const *seq, size_t n) {
   sauchar_t *t = (sauchar_t *)seq;
   vector<saidx64_t> sa(n + 1);
   if (divsufsort64(t, sa.data(), (saidx64_t)n) != 0) {
     cout << "ERROR[esa]: suffix sorting failed." << endl;
     exit(-1);
   }
-  int_vector<VECBIT> ret(n+1);
+  uint_vec ret(n+1);
   for (size_t i=0; i<n+1; i++)
     ret[i] = sa[i];
-  if (!VECBIT)
-    util::bit_compress(ret);
+#ifdef USE_SDSL
+    sdsl::util::bit_compress(ret);
+#endif
   return ret;
 }
 
@@ -62,8 +61,9 @@ void calcLcp(Esa &esa) {
         h--;
     }
   }
-  if (!VECBIT)
-    util::bit_compress(lcp);
+#ifdef USE_SDSL
+  sdsl::util::bit_compress(lcp);
+#endif
 }
 
 Esa::Esa(char const *seq, size_t len) : str(seq), n(len) {
@@ -73,11 +73,12 @@ Esa::Esa(char const *seq, size_t len) : str(seq), n(len) {
   sa = getSa(seq, n);
   tock("libdivsufsort");
 
-  isa = int_vector<VECBIT>(n+1);
+  isa = uint_vec(n+1);
   for (size_t i = 0; i < n; i++)
     isa[sa[i]] = i;
-  if (!VECBIT)
-    util::bit_compress(isa);
+#ifdef USE_SDSL
+  sdsl::util::bit_compress(isa);
+#endif
 
   tick();
   calcLcp(*this);
@@ -91,23 +92,23 @@ void Esa::print() const {
          << endl;
 }
 
-RMQ Esa::precomputeLcp() const { return RMQ(lcp); }
+RMQ Esa::precomputeLcp() const { return RMQ(&lcp); }
 
 int64_t Esa::getLcp(RMQ const &rmq, size_t sai, size_t saj) const {
   if (sai == saj)
     return this->n - sai;
   size_t l = min(this->isa[sai], this->isa[saj]) + 1;
   size_t r = max(this->isa[sai], this->isa[saj]);
-  return rmq(l, r);
+  return lcp[rmq(l, r)];
 }
 
 // reduce esa to half (seq+$+revseq+$ -> seq+$) without recomputing
 // important! asserting that n and str are replaced by user!
 void reduceEsa(Esa &esa) {
   size_t n = esa.sa.size() / 2;
-  int_vector<VECBIT> sa(n);
-  int_vector<VECBIT> isa(n);
-  int_vector<VECBIT> lcp(n + 1);
+  uint_vec sa(n);
+  uint_vec isa(n);
+  uint_vec lcp(n + 1);
   lcp[0] = lcp[n] = 0;
   sa[0] = n - 1;
   isa[n - 1] = 0;
@@ -127,11 +128,11 @@ void reduceEsa(Esa &esa) {
   esa.sa.resize(0);
   esa.isa.resize(0);
   esa.lcp.resize(0);
-  if (!VECBIT) {
-    util::bit_compress(sa);
-    util::bit_compress(isa);
-    util::bit_compress(lcp);
-  }
+#ifdef USE_SDSL
+  sdsl::util::bit_compress(sa);
+  sdsl::util::bit_compress(isa);
+  sdsl::util::bit_compress(lcp);
+#endif
   esa.sa = sa;
   esa.isa = isa;
   esa.lcp = lcp;

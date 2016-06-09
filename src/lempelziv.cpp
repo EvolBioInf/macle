@@ -18,9 +18,6 @@
 #include <vector>
 using namespace std;
 
-#include <sdsl/int_vector.hpp>
-using namespace sdsl;
-
 // sum type used in lpf algorithm
 struct Elem {
   Elem(int64_t i, int64_t lcp);
@@ -38,12 +35,12 @@ Elem::Elem(int64_t a, int64_t b) : i(a), lcp(b) {}
  *   Computer Society, Los Alamitos, CA, 2008,
  *   pp. 482-488.
  */
-void computeLpf(int_vector<VECBIT> &lpf, vector<int64_t> &prevOcc, Esa const &esa) {
+void computeLpf(uint_vec &lpf, vector<int64_t> &prevOcc, Esa const &esa) {
   size_t n = esa.n;
   auto &sa = esa.sa;
   auto &lcp = esa.lcp;
 
-  lpf = int_vector<VECBIT>(n + 1);
+  lpf = uint_vec(n + 1);
   prevOcc = vector<int64_t>(n);
 
   lpf[n] = 0;
@@ -73,14 +70,14 @@ void computeLpf(int_vector<VECBIT> &lpf, vector<int64_t> &prevOcc, Esa const &es
 }
 
 // alternative prevOcc calculation (from same paper)
-void computeLpf2(int_vector<VECBIT> &lpf, vector<int64_t> &prevOcc, Esa const &esa) {
+void computeLpf2(uint_vec &lpf, vector<int64_t> &prevOcc, Esa const &esa) {
   size_t n = esa.n;
   auto &sa = esa.sa;
   vector<int64_t> lprev(n);
   vector<int64_t> lnext(n);
   vector<int64_t> prevl(n);
   vector<int64_t> prevr(n);
-  lpf = int_vector<VECBIT>(n, 0);
+  lpf = uint_vec(n, 0);
   vector<int64_t> lpfl(n, 0);
   vector<int64_t> lpfr(n, 0);
   prevOcc = vector<int64_t>(n);
@@ -134,8 +131,9 @@ void computeLZFact(Fact &lzf, Esa const &esa, bool alternative) {
     computeLpf2(lzf.lpf, lzf.prevOcc, esa);
   else
     computeLpf(lzf.lpf, lzf.prevOcc, esa);
-  if (!VECBIT)
-    util::bit_compress(lzf.lpf);
+#ifdef USE_SDSL
+  sdsl::util::bit_compress(lzf.lpf);
+#endif
 
   vector<size_t> lzftmp;
   lzftmp.push_back(0);
@@ -143,9 +141,10 @@ void computeLZFact(Fact &lzf, Esa const &esa, bool alternative) {
     lzftmp.push_back(lzftmp.back() + max(1UL, (size_t)lzf.lpf[lzftmp.back()]));
   lzftmp.pop_back();
 
-  lzf.fact = int_vector<VECBIT>(lzftmp.size());
+  lzf.fact = uint_vec(lzftmp.size());
   for (size_t i=0; i<lzftmp.size(); i++)
     lzf.fact[i] = lzftmp[i];
-  if (!VECBIT)
-    util::bit_compress(lzf.fact);
+#ifdef USE_SDSL
+  sdsl::util::bit_compress(lzf.fact);
+#endif
 }

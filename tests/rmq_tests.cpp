@@ -2,19 +2,16 @@
 #include "minunit.h"
 #include "rmq.h"
 
-#include <sdsl/int_vector.hpp>
-using namespace sdsl;
-
 void test_rmqSmall() {
   size_t n = 25;
-  int_vector<VECBIT> array(n);
+  uint_vec array(n);
   for (size_t i = 0; i < n; i++) {
     array[i] = rand() % n;
     /* printf("%ld ", array[i]); */
   }
   /* printf("\n\n"); */
 
-  RMQ rmq(array);
+  RMQ rmq(&array);
   // rmq_succinct_sct<> rmq(&array);
 
   for (size_t i = 0; i < n; i++)
@@ -25,20 +22,20 @@ void test_rmqSmall() {
           exp = array[k];
         }
 
-      // int64_t obs = array[rmq(i, j)];
-      int64_t obs = rmq(i, j);
+      int64_t obs = array[rmq(i, j)];
+      // int64_t obs = rmq(i, j);
       mu_assert_eq(exp, obs, "wrong range minimum (tried " << i << " and " << j << ")");
     }
 }
 
 void test_rmqRand() {
   size_t n = 10000;
-  sdsl::int_vector<VECBIT> array(n);
+  uint_vec array(n);
   for (size_t i = 0; i < n; i++) {
     array[i] = rand() % n;
   }
 
-  RMQ rmq(array);
+  RMQ rmq(&array);
   // rmq_succinct_sct<> rmq(&array);
 
   for (size_t i = 0; i < 1000; i++) {
@@ -49,8 +46,8 @@ void test_rmqRand() {
       if ((int64_t)array[k] < exp)
         exp = array[k];
 
-    // int64_t obs = array[rmq(l, r)];
-    int64_t obs = rmq(l, r);
+    int64_t obs = array[rmq(l, r)];
+    // int64_t obs = rmq(l, r);
     mu_assert_eq(exp, obs, "wrong range minimum (tried " << l << " and " << r << ")");
   }
 }

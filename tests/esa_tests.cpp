@@ -52,8 +52,8 @@ void test_revEsaRnd() {
   Esa resa(srev, n);
   auto rmq = resa.precomputeLcp();
 
-  /* printEsa(esa); */
-  /* printEsa(resa); */
+  // esa.print();
+  // resa.print();
 
   for (size_t i = 0; i < n - 1; i++)
     for (size_t j = i + 1; j < n; j++) {
@@ -61,7 +61,7 @@ void test_revEsaRnd() {
       int64_t obs = resa.getLcp(rmq, n - i - 1, n - j - 1);
       if (exp != obs)
         printf("%zu %zu -> %zu %zu\n", i, j, n - i - 1, n - j - 1);
-      mu_assert_eq(exp, obs, "lcs does not match");
+      mu_assert_eq(exp, obs, "lcs does not match at pos " << i);
     }
 }
 

@@ -83,7 +83,7 @@ void test_randomSequence() {
     int64_t po = lzf.prevOcc[lzf.fact[i]];
     bool tmp = po <= (int64_t)lzf.fact[i];
     if (!tmp)
-      printf("prev: %ld curr: %ld\n", po, lzf.fact[i]);
+      printf("prev: %ld curr: %ld\n", po, (size_t)lzf.fact[i]);
     mu_assert(tmp, "prev can not be after");
     if (po >= 0)
       mu_assert(!strncmp(esa.str + lzf.fact[i], esa.str + po, factLen(lzf, i)),

@@ -7,7 +7,6 @@
 #include "shulen.h"
 #include <algorithm>
 #include <vector>
-#include <sdsl/int_vector.hpp>
 using namespace std;
 
 void computeMLFact(Fact &mlf, Esa const &esa) {
@@ -34,6 +33,7 @@ void computeMLFact(Fact &mlf, Esa const &esa) {
   mlf.fact.resize(factmp.size());
   for (i=0; i<factmp.size(); i++)
     mlf.fact[i] = factmp[i];
-  if (!VECBIT)
+#ifdef USE_SDSL
     sdsl::util::bit_compress(mlf.fact);
+#endif
 }

@@ -39,7 +39,7 @@ void serialize(ostream &o, ComplexityData const &cd) {
   binwrite(o, cd.len);
   binwrite(o, cd.gc);
 
-  binwrite(o, cd.regions.size());
+  binwrite(o, (size_t)cd.regions.size());
   for (auto i : cd.regions){
     binwrite(o, i.first);
     binwrite(o, i.second);
@@ -72,9 +72,13 @@ void serialize(ostream &o, ComplexityData const &cd) {
     }
 }
 
+const string magicstr = "BINIDX";
+
 // serialize a series of sequences
 bool saveData(vector<ComplexityData> &vec, char const *file) {
   return with_file_out(file, [&](ostream &o) {
+    for (auto c : magicstr) //magic sequence
+      binwrite(o, c);
     binwrite(o, (size_t)vec.size());
     for (auto &d : vec)
       serialize(o, d);
@@ -91,6 +95,15 @@ bool loadData(vector<ComplexityData> &cplx, char const *file, bool onlyInfo) {
   }
   // return with_file(file, [&](istream &fin) {
   return with_mmap(file, [&](MMapReader &fin) {
+    char tmp;
+    for (size_t i = 0; i<magicstr.size(); i++) {
+      binread(fin, tmp);
+      if (tmp != magicstr[i]) {
+        cerr << "ERROR: This does not look like an index file!" << endl;
+        return false;
+      }
+    }
+
     size_t n;
     binread(fin,n);
     for (size_t i = 0; i < n; i++) {

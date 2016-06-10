@@ -5,7 +5,6 @@ using namespace std;
 #include "index.h"
 #include "complexity.h"
 
-size_t w=0, k=0;
 ResultMat ys;
 FastaFile ff;
 vector<ComplexityData> dat;
@@ -13,8 +12,7 @@ vector<ComplexityData> datJ;
 
 // dnalc seq.fa, dnalc -j seq.fa
 void test_global_no_settings() {
-  w=0;
-  k=0;
+  size_t w=0, k=0;
   //unjoined, global, both compl., no sequence specified
   ys = calcComplexities(w, k, 'b', 0, dat);
   mu_assert_eq((size_t)0, w, "w not zero anymore!");
@@ -35,9 +33,7 @@ void test_global_no_settings() {
 }
 
 void test_global_with_settings() {
-  w=0;
-  k=0;
-
+  size_t w=0, k=0;
   ys = calcComplexities(w, k, 'b', 0, dat);
   //unjoined, global, both compl., second sequence
   auto ys2 = calcComplexities(w, k, 'b', 2, dat);

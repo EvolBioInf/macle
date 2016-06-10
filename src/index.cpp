@@ -107,10 +107,12 @@ bool loadData(vector<ComplexityData> &cplx, char const *file, bool onlyInfo) {
     size_t n;
     binread(fin,n);
     for (size_t i = 0; i < n; i++) {
-      ComplexityData c;
+      //add new entry, THEN fill it (prevent copy)
+      cplx.push_back(ComplexityData());
+      auto &c = cplx.back();
+
       size_t namelen;
       binread(fin,namelen);
-      char tmp;
       for (size_t j=0; j<namelen; j++) {
         binread(fin,tmp);
         c.name += tmp;
@@ -174,8 +176,6 @@ bool loadData(vector<ComplexityData> &cplx, char const *file, bool onlyInfo) {
         if (!onlyInfo)
           c.pl[b].push_back(Periodicity(b, e, l));
       }
-
-      cplx.push_back(c);
     }
     return true;
   }); //, ios::binary);

@@ -18,8 +18,9 @@ void printIndexInfo(vector<ComplexityData> const &dat) {
     if (dat[i].regions.size()>1) {
       cout << tab << "regions:" << endl;
       for (size_t j=0; j<dat[i].regions.size(); j++) {
-        cout << "\t" << (j+1) << ":\t" << dat[i].labels[j] << endl;
-        // cout << dat[i].regions[j].first << " " << dat[i].regions[j].second << endl;
+        auto &r = dat[i].regions[j];
+        cout << "\tindex:\t" << (j+1) << ":\tregion:\t" << r.first << "-" << r.first+r.second-1 << endl;
+        cout << "\tname:\t" << dat[i].labels[j] << endl;
       }
     }
   }
@@ -34,7 +35,6 @@ void gnuplotCode(uint32_t w, uint32_t k, int n) {
 }
 
 // print data: X Y1 ... Yn
-// TODO: in global mode print seq. length as offset? does this make sense with multiple?
 void printPlot(uint32_t w, uint32_t k, ResultMat const &ys) {
   for (size_t j = 0; j < ys[0].second.size(); j++) {
     cout << (j * k + w / 2) << "\t"; // center of window

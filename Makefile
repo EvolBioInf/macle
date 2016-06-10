@@ -1,5 +1,5 @@
 CXX := g++
-CFLAGS := -DUSE_SDSL -std=c++11 -Isrc -Ilibdivsufsort/include -Igsl/include -Isdsl/include -Wall -Wextra -O2 -g -ggdb -Wno-missing-braces -funroll-loops # -pg -Wshadow
+CFLAGS := -DUSE_SDSL -std=c++11 -Isrc -Ilibdivsufsort/include -Igsl/include -Isdsl/include -Wall -Wextra -O2 -g -ggdb -Wshadow # -pg -Wshadow
 LDFLAGS := -lm -lgsl -lgslcblas -lblas -ldivsufsort -ldivsufsort64 -lsdsl -Llibdivsufsort/lib -Lgsl/lib -Lsdsl/lib # -pg
 TARGET := dnalc
 

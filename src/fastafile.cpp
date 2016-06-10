@@ -14,6 +14,7 @@
 #include <string>
 using namespace std;
 
+FastaSeq::FastaSeq() {}
 FastaSeq::FastaSeq(string const &n, string const &c, string const &s)
     : name(n), comment(c), seq(s) {}
 
@@ -43,12 +44,13 @@ FastaFile::FastaFile(char const *file) : failed(false) {
   // read sequences
   pfasta_seq seq;
   while ((l = pfasta_read(&pf, &seq)) == 0) {
-    string name = seq.name ? string(seq.name) : "";
-    string comment = seq.comment ? string(seq.comment) : "";
-    string sequence = seq.seq ? string(seq.seq) : "";
-    for (char &c : sequence)
+    seqs.push_back(FastaSeq());
+    auto &fseq = seqs.back();
+    fseq.name = seq.name ? string(seq.name) : "";
+    fseq.comment = seq.comment ? string(seq.comment) : "";
+    fseq.seq = seq.seq ? string(seq.seq) : "";
+    for (char &c : fseq.seq)
       c = toupper(c); // acgt->ACGT
-    seqs.push_back(FastaSeq(name, comment, sequence));
     pfasta_seq_free(&seq);
   }
 

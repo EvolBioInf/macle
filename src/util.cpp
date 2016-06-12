@@ -1,4 +1,3 @@
-#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -153,17 +152,22 @@ size_t getFilesize(const char* filename) {
 }
 bool with_mmap(char const *file, function<bool(MMapReader&)> lambda) {
   int fd = open_or_fail(file, O_RDONLY);
-  assert(fd != -1);
 
   MMapReader r;
   if (file)
     r.sz=getFilesize(file);
   char* data = reinterpret_cast<char*>(mmap(NULL, r.sz, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0));
-  assert(data != MAP_FAILED);
+  if (data == MAP_FAILED) {
+    cerr << "ERROR: mmap failed! Can not continue processing file! Aborting!" << endl;
+    exit(EXIT_FAILURE);
+  }
   r.dat = data;
   bool ret = lambda(r);
   int rc = munmap(data, r.sz);
-  assert(rc == 0);
+  if (rc != 0) {
+    cerr << "ERROR: Could not unmap memory! Aborting!" << endl;
+    exit(EXIT_FAILURE);
+  }
   close(fd);
   return ret;
 }

@@ -3,9 +3,15 @@
 #include <cstdint>
 
 #define PROGNAME "dnalc"
-#define DESCRIPTION "Calculate DNA local neighborhood complexity"
+#define DESCRIPTION "Tool to calculate DNA local neighborhood complexity"
 #define VERSION "0.1"
 #define COPYRIGHT "Copyright (C) 2016 Anton Pirogov, Bernhard Haubold"
+
+#ifdef USE_SDSL
+#define BUILD_INFO "with SDSL"
+#else
+#define BUILD_INFO "32 bit"
+#endif
 
 struct Args {
   void parse(int argc, char *argv[]);

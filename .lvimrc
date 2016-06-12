@@ -1,7 +1,7 @@
 setlocal expandtab shiftwidth=2 softtabstop=2
 let g:neomake_cpp_gcc_maker = neomake#makers#ft#cpp#gcc()
 let g:neomake_cpp_clang_maker = neomake#makers#ft#cpp#clang()
-let cflags = system("grep ^CFLAGS Makefile | sed 's/^CFLAGS[^=]*=//' | sed 's/\#.*//'")
+let cflags = system("make show_cxxflags")
 let g:neomake_cpp_gcc_maker.args += split(cflags)
 let g:neomake_cpp_clang_maker.args += split(cflags)
 let g:neomake_cpp_clang_maker.exe = $HOME.'/.vim/neomake-cpp'

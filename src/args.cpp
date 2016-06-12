@@ -1,8 +1,8 @@
 #include <iostream>
 using namespace std;
 
-#include <getopt.h>
 #include "args.h"
+#include <getopt.h>
 
 // globally accessible arguments for convenience
 Args args;
@@ -24,27 +24,27 @@ static struct option const opts[] = {
     {0, 0, 0, 0} // <- required
 };
 
-static char const usage[] =
-    PROGNAME " " VERSION " - " DESCRIPTION "\n" COPYRIGHT "\n"
-             "Usage: " PROGNAME " [OPTIONS] [FILES]\n"
-             "OPTIONS:\n"
-             "\t-h: print this help message and exit\n"
-             "\t-w <NUM>: size of sliding window (default: whole sequence length)\n"
-             "\t-k <NUM>: interval between sliding windows (default: w/10)\n"
-             "\t-m m|r|b: complexity calculation mode (match factors, runs, both) (default: b)\n"
-             "\t-j treat all sequences in a single file as one sequence"
-             " (no effect when using existing index file, default: off)\n"
+static char const usage[] = PROGNAME
+    " " VERSION " (" BUILD_INFO ")\n" DESCRIPTION "\n" COPYRIGHT "\n"
+    "Usage: " PROGNAME " [OPTIONS] [FILES]\n"
+    "OPTIONS:\n"
+    "\t-h: print this help message and exit\n"
+    "\t-w <NUM>: size of sliding window (default: whole sequence length)\n"
+    "\t-k <NUM>: interval between sliding windows (default: w/10)\n"
+    "\t-m m|r|b: complexity calculation mode (match factors, runs, both) (default: b)\n"
+    "\t-j treat all sequences in a single file as one sequence"
+    " (no effect when using existing index file, default: off)\n"
 
-             "\t-i: use index file instead of FASTA sequence file\n"
-             "\t-s: output index file for further processing (no regular result)\n"
-             "\t-l: list sequences stored in index file\n"
-             "\t-n <NUM>: calculate for given sequence within file (default: 0=all)\n"
+    "\t-i: use index file instead of FASTA sequence file\n"
+    "\t-s: output index file for further processing (no regular result)\n"
+    "\t-l: list sequences stored in index file\n"
+    "\t-n <NUM>: calculate for given sequence within file (default: 0=all)\n"
 
-             "\t-p: print match-length and Lempel-Ziv factors and periodicities\n"
-             "\t-b: print benchmarking information\n"
-             "\t-g N: output pipe-ready to plot with:\n"
-             "\t\tN=1 -> dnalc_plot.sh (-> gnuplot)\n"
-             "\t\tN=2 -> graph -T X (part of plotutils)\n";
+    "\t-p: print match-length and Lempel-Ziv factors and periodicities\n"
+    "\t-b: print benchmarking information\n"
+    "\t-g N: output pipe-ready to plot with:\n"
+    "\t\tN=1 -> dnalc_plot.sh (-> gnuplot)\n"
+    "\t\tN=2 -> graph -T X (part of plotutils)\n";
 
 void Args::parse(int argc, char *argv[]) {
   int c = 0;       // getopt stores value returned (last struct component) here

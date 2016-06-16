@@ -2,7 +2,6 @@
 #include <vector>
 #include <string>
 #include <utility>
-#include "periodicity.h"
 #include "fastafile.h"
 
 // All information from a sequence required to calculate complexity plots
@@ -21,11 +20,11 @@ struct ComplexityData {
   size_t numbad;                               // total # of bad nucleotides
   std::vector<std::pair<size_t, size_t>> bad;  // list of bad intervals (start,end)
 
+  std::vector<size_t> fstRegionFact;              //for each region, index of first factor
   std::vector<size_t> mlf;                // match factors
-  PerLists pl;                            // periodicities
 };
 
-bool loadData(std::vector<ComplexityData> &cplx, char const *file, bool onlyInfo=false);
+bool loadData(std::vector<ComplexityData> &cplx, char const *file, bool onlyInfo=false, size_t idx=0);
 bool saveData(std::vector<ComplexityData> &cplx, char const *file);
 
 void extractData(std::vector<ComplexityData> &cplx, FastaFile &file, bool joinSeqs);

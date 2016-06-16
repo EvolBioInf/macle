@@ -9,14 +9,6 @@ using namespace std;
 #include "fastafile.h"
 #include "esa.h"
 
-// naive: length of lcs of prefixes 1..i and 1..j of given seq (input 1-indexed)
-size_t lcsNaive(char const *str, int64_t i, int64_t j) {
-  int64_t k = 0;
-  while (((int64_t)min(i, j)) - k >= 0 && str[i - k] == str[j - k])
-    k++;
-  return k;
-}
-
 // some basic tests
 void test_getEsa() {
   FastaFile ff("Data/hotspotExample2.fasta");
@@ -34,35 +26,6 @@ void test_getEsa() {
   mu_assert(esa.isa[esa.sa[n - 1]] == (uint64_t)(n - 1), "isa incorrect");
   mu_assert(esa.lcp[0] == 0, "first LCP not 0");
   mu_assert(esa.lcp[esa.n] == 0, "last LCP not 0");
-}
-
-// tests lcs value retrieval from reverse esa using getLcp vs naive
-void test_revEsaRnd() {
-  /* char *s = "AACCGGTTGGTT$"; // from Ohlebusch book */
-  size_t n = 100;
-  string str = randSeq(n++);
-  str += "$";
-  char const *s = str.c_str();
-  Esa esa(s, n); // calculate esa, including $
-
-  string strrev = str;
-  reverse(strrev.begin(), strrev.end());
-  char const *srev = strrev.c_str();
-
-  Esa resa(srev, n);
-  auto rmq = resa.precomputeLcp();
-
-  // esa.print();
-  // resa.print();
-
-  for (size_t i = 0; i < n - 1; i++)
-    for (size_t j = i + 1; j < n; j++) {
-      int64_t exp = lcsNaive(s, i, j);
-      int64_t obs = resa.getLcp(rmq, n - i - 1, n - j - 1);
-      if (exp != obs)
-        printf("%zu %zu -> %zu %zu\n", i, j, n - i - 1, n - j - 1);
-      mu_assert_eq(exp, obs, "lcs does not match at pos " << i);
-    }
 }
 
 // tests ESA reduction from seq$revcompseq$ -> seq$ without recalculation
@@ -86,7 +49,6 @@ void test_reduceEsa() {
 void all_tests() {
   srand(time(NULL));
   mu_run_test(test_getEsa);
-  mu_run_test(test_revEsaRnd);
   mu_run_test(test_reduceEsa);
 }
 RUN_TESTS(all_tests)

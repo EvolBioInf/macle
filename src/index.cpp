@@ -9,10 +9,8 @@ using namespace std;
 #include "args.h"  //args.p
 #include "bench.h" //tick tock
 #include "matchlength.h" //computeMLFact
-#include "lempelziv.h"   //computeLZFact
 
 #include "index.h"
-#include "periodicity.h"
 #include "util.h"
 
 template<typename T> void binwrite(ostream &o, T x) {
@@ -57,28 +55,23 @@ void serialize(ostream &o, ComplexityData const &cd) {
     binwrite(o, i.second);
   }
 
+  binwrite(o, (size_t)cd.fstRegionFact.size());
+  for (auto i : cd.fstRegionFact)
+    binwrite(o, i);
   binwrite(o, (size_t)cd.mlf.size());
   for (auto i : cd.mlf)
     binwrite(o, i);
-  size_t pernum = 0;
-  for (auto &l : cd.pl)
-    pernum += l.size();
-  binwrite(o, pernum);
-  for (auto &l : cd.pl)
-    for (auto p : l) {
-      binwrite(o, p.b);
-      binwrite(o, p.e);
-      binwrite(o, p.l);
-    }
 }
 
 const string magicstr = "BINIDX";
 
 // serialize a series of sequences
 bool saveData(vector<ComplexityData> &vec, char const *file) {
+  bool joinedSeq = vec.size() == 1 && vec[0].regions.size() > 1;
   return with_file_out(file, [&](ostream &o) {
     for (auto c : magicstr) //magic sequence
       binwrite(o, c);
+    binwrite(o, (char)joinedSeq);
     binwrite(o, (size_t)vec.size());
     for (auto &d : vec)
       serialize(o, d);
@@ -87,7 +80,7 @@ bool saveData(vector<ComplexityData> &vec, char const *file) {
 }
 
 // load precomputed data from stdin (when file=nullptr) or some file
-bool loadData(vector<ComplexityData> &cplx, char const *file, bool onlyInfo) {
+bool loadData(vector<ComplexityData> &cplx, char const *file, bool onlyInfo, size_t idx) {
   if (!file) {
     cerr << "ERROR: Can not load binary index file from pipe!"
       << " Please pass it as argument!" << endl;
@@ -104,6 +97,8 @@ bool loadData(vector<ComplexityData> &cplx, char const *file, bool onlyInfo) {
       }
     }
 
+    char joinedSeq;
+    binread(fin,joinedSeq);
     size_t n;
     binread(fin,n);
     for (size_t i = 0; i < n; i++) {
@@ -153,28 +148,39 @@ bool loadData(vector<ComplexityData> &cplx, char const *file, bool onlyInfo) {
           c.bad[j] = make_pair(l, r);
       }
 
+      size_t ffnum;
+      binread(fin,ffnum);
+      if (!onlyInfo)
+        c.fstRegionFact.resize(ffnum);
+      for (size_t j = 0; j < ffnum; j++) {
+        size_t fi;
+        binread(fin,fi);
+        if (!onlyInfo)
+          c.fstRegionFact[j] = fi;
+      }
+
       size_t fnum;
       binread(fin,fnum);
-      if (!onlyInfo)
-        c.mlf.resize(fnum);
-      for (size_t j = 0; j < fnum; j++) {
+
+      size_t start=0;
+      size_t end=fnum;
+      if (!onlyInfo) {
+        if (!joinedSeq || !idx)
+          c.mlf.resize(fnum);
+        else {
+          start = c.fstRegionFact[idx-1];
+          end =  (size_t)idx==c.regions.size() ? fnum : c.fstRegionFact[idx];
+          c.mlf.resize(end - start);
+          fin.off += sizeof(size_t) * start;
+        }
+      }
+      if (args.p)
+        cerr << "Loading " << end-start << " of " << fnum << " factors..." << endl;
+      for (size_t j = start; j < end; j++) {
         size_t fact;
         binread(fin,fact);
         if (!onlyInfo)
-          c.mlf[j] = fact;
-      }
-
-      size_t pnum;
-      binread(fin,pnum);
-      if (!onlyInfo)
-        c.pl.resize(c.len + 2); // +2 because of $ and one more for safety
-      for (size_t j = 0; j < pnum; j++) {
-        size_t b, e, l;
-        binread(fin,b);
-        binread(fin,e);
-        binread(fin,l);
-        if (!onlyInfo)
-          c.pl[b].push_back(Periodicity(b, e, l));
+          c.mlf[j-start] = fact;
       }
     }
     return true;
@@ -227,8 +233,19 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &file, bool joinSeqs) {
     Fact mlf;
     computeMLFact(mlf, esa);
     tock("computeMLFact");
-    for (auto f : mlf.fact)
+
+    size_t currreg=0;
+    size_t idx=0;
+    for (auto f : mlf.fact) {
       c.mlf.push_back(f);
+
+      if (c.fstRegionFact.size() < c.regions.size() &&
+          (c.fstRegionFact.empty() || (c.fstRegionFact.back()<f && f>=regions[currreg].first))) {
+        c.fstRegionFact.push_back(idx);
+        currreg++;
+      }
+      idx++;
+    }
 
     if (args.p) {
       cout << seq.name << seq.comment << endl;
@@ -237,69 +254,15 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &file, bool joinSeqs) {
       mlf.print();
     }
 
-    tick();
     s.resize(s.size() / 2); // drop complementary seq.
     s.shrink_to_fit();
     esa.str = s.c_str();
     esa.n = s.size();
+    /*
+    tick();
     reduceEsa(esa);
     tock("reduceEsa");
-
-    tick();
-    Fact lzf;
-    computeLZFact(lzf, esa, false);
-    lzf.lpf.resize(0); // we dont need it, memory waste
-    tock("computeLZFact");
-    tick();
-    size_t pnum;
-    c.pl = getPeriodicityLists(true, lzf, esa, pnum);
-    tock("getPeriodicityLists");
-
-    if (args.p) {
-      cout << "LZ-Factors (" << lzf.fact.size() << "):" << endl;
-      lzf.print();
-      cout << "Runs (" << pnum << "):" << endl;
-      for (auto &l : c.pl)
-        for (auto p : l)
-          printPeriodicity(p);
-
-      //Visualise Periodicities
-      vector<pair<size_t, int>> events;
-      for (auto &l : c.pl)
-        for (auto p : l) {
-          events.push_back(make_pair(p.e+1,0));
-          events.push_back(make_pair(p.b+p.l,1));
-          events.push_back(make_pair(p.b,2));
-        }
-      sort(events.begin(), events.end(), [](pair<size_t,int> a, pair<size_t,int> b){
-          if (a.first==b.first)
-            return a.second < b.second;
-          return a.first < b.first;
-          });
-
-      int maxnested=0;
-      int nested=0;
-      for (auto &ev : events) {
-        nested += ev.second==2 ? 1 : (ev.second==1 ? 0 : -1);
-        maxnested=max(maxnested, nested);
-      }
-      vector<string> pervis(maxnested, string(s.size(),' '));
-      for (auto &l : c.pl)
-        for (auto &p : l) {
-          int i=0;
-          while (pervis[i][p.b]!=' ')
-            i++;
-          pervis[i][p.b]='(';
-          pervis[i][p.b+p.l] = '|';
-          pervis[i][p.e]=')';
-          for (size_t j=p.b+1; j<p.e; j++)
-            if (j!=p.b+p.l)
-              pervis[i][j] = '-';
-        }
-      cout << s << endl;
-      for (auto &v : pervis)
-        cout << v << endl;
-    }
+    */
 
     // get list of bad intervals
     tick();

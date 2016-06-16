@@ -20,7 +20,6 @@ struct Args {
 
   uint32_t w = 0;  // sliding window size
   uint32_t k = 0;  // sliding interval
-  char m = 'b';    // complexity mode (m,r,b)
   bool j = false;  // treat one file as one single sequence
 
   bool i = false;  // use index (intermediate data)

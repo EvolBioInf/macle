@@ -18,7 +18,6 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-#include "lempelziv.h"
 #include "util.h"
 #include "args.h"
 using namespace std;
@@ -184,17 +183,3 @@ void fprintnf(FILE *fp, char const *str, int n) {
     fprintf(fp, "...");
 }
 
-PerLists getRuns(char const *seq, size_t n) {
-  bool b = args.b;
-  args.b = false;
-  Esa esa(seq, n); // esa for sequence+$
-  Fact lzf;
-  computeLZFact(lzf, esa, false);
-  size_t pnum;
-  auto ls=getPeriodicityLists(true, lzf, esa, pnum);
-  args.b = b;
-  return ls;
-}
-PerLists getRuns(string const &seq) {
-  return getRuns(seq.c_str(), seq.size());
-}

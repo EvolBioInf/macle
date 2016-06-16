@@ -7,12 +7,11 @@ using namespace std;
 // globally accessible arguments for convenience
 Args args;
 
-static char const opts_short[] = "hw:k:m:jisln:pg:b";
+static char const opts_short[] = "hw:k:jisln:pg:b";
 static struct option const opts[] = {
     {"help", no_argument, nullptr, 'h'},
     {"window-size", required_argument, nullptr, 'w'},
     {"window-interval", required_argument, nullptr, 'k'},
-    {"mode", required_argument, nullptr, 'm'},
     {"join", required_argument, nullptr, 'j'},
     {"load-index", no_argument, nullptr, 'i'},
     {"save-index", no_argument, nullptr, 's'},
@@ -31,7 +30,6 @@ static char const usage[] = PROGNAME
     "\t-h: print this help message and exit\n"
     "\t-w <NUM>: size of sliding window (default: whole sequence length)\n"
     "\t-k <NUM>: interval between sliding windows (default: w/10)\n"
-    "\t-m m|r|b: complexity calculation mode (match factors, runs, both) (default: b)\n"
     "\t-j treat all sequences in a single file as one sequence"
     " (no effect when using existing index file, default: off)\n"
 
@@ -63,9 +61,6 @@ void Args::parse(int argc, char *argv[]) {
       break;
     case 'k':
       args.k = atoi(optarg);
-      break;
-    case 'm':
-      args.m = *optarg;
       break;
     case 'j':
       args.j = true;

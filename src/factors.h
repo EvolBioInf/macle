@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "rmq.h"
+#include "config.h"
 
 /* a factorization of a string (LempelZiv or MatchLength) */
 struct Fact {

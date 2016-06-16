@@ -36,14 +36,6 @@ void assert_dataEqual(vector<ComplexityData> const &d1, vector<ComplexityData> c
     mu_assert_eq(c1.mlf.size(), c2.mlf.size(), "Num. of MLF not equal");
     for (size_t j=0; j<c1.mlf.size(); j++)
       mu_assert_eq(c1.mlf[j], c2.mlf[j], "MLF not equal");
-
-    mu_assert_eq(c1.pl.size(), c2.pl.size(), "Num. of PL not equal");
-    for (size_t j=0; j<c1.pl.size(); j++)
-      for (size_t k=0; k<c1.pl[j].size(); k++) {
-        mu_assert_eq(c1.pl[j][k].b, c2.pl[j][k].b, "Per (b) not equal");
-        mu_assert_eq(c1.pl[j][k].e, c2.pl[j][k].e, "Per (e) not equal");
-        mu_assert_eq(c1.pl[j][k].l, c2.pl[j][k].l, "Per (l) not equal");
-      }
   }
 }
 

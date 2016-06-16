@@ -6,15 +6,13 @@
  * Date: Mon Jul 15 11:17:08 2013
  **************************************************/
 #pragma once
-#include "rmq.h"
+#include "config.h"
 #include <divsufsort64.h>
 
 /* define data container */
 class Esa {
 public:
   Esa(char const *seq, size_t n);
-  RMQ precomputeLcp() const;
-  int64_t getLcp(RMQ const &rmq, size_t sai, size_t saj) const;
   void print() const;
 
   uint_vec sa;    /* suffix array */

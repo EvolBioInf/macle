@@ -1,9 +1,3 @@
-#include <cassert>
-#include <cmath>
-#include <cinttypes>
-#include <vector>
-#include <algorithm>
-#include <utility>
 #include <queue>
 using namespace std;
 
@@ -12,9 +6,7 @@ using namespace std;
 #include "complexity.h"
 #include "index.h"
 #include "matchlength.h"
-#include "periodicity.h"
 #include "shulen.h"
-#include "util.h"
 
 // input: prefix-sum array, left and right bound (inclusive)
 #define sumFromTo(a, l, r) ((a)[(r)] - ((l) ? (a)[(l)-1] : 0))
@@ -170,143 +162,7 @@ void mlComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y
     }
 }
 
-
-// simulate complexity calculation on random dna sequence
-// to get expected value. the value is invariant under seq. length
-double calcAvgRunComplexity(size_t len, double gc, size_t reps) {
-  double c = 0;
-  vector<double> y(1);
-  for (size_t rep=0; rep<reps; rep++) {
-    string seq = randSeq(len, gc) + "$";
-    ComplexityData dat;
-    dat.pl = getRuns(seq);
-    dat.gc = gc;
-    runComplexity(0, len, len, len, y, dat, false);
-    c += y[0];
-  }
-  return c/reps;
-}
-// polynomial that was interpolated from data gathered via calcAvgRunComplexity
-double estimateAvgRunComplexity(double gc) {
-  // return 4.87*pow(gc, 4) - 9.768*pow(gc, 3) + 6.41*pow(gc, 2) - 1.516*gc + 0.766;
-  return 12.363*pow(gc,6) - 37.167*pow(gc,5) + 47.21*pow(gc,4)
-      - 32.397*pow(gc,3) + 12.064*pow(gc,2) - 2.075*gc + 0.778;
-  // return 26.615*pow(gc,8) - 106.236*pow(gc,7) + 185.481*pow(gc,6) - 185.114*pow(gc,5)
-  //     + 118.019*pow(gc,4) - 51.128*pow(gc,3) + 14.576*pow(gc,2) - 2.212*gc + 0.78;
-}
-
-void updateRunQueue(list<Periodicity> &runs, PerLists const &ls, size_t l, size_t r) {
-  //kick out runs that are now outside of window
-  for (auto it=runs.begin(); it != runs.end(); it++)
-    if (it->e < l) {
-      it = runs.erase(it);
-      it--;
-    }
-  //add new runs
-  size_t start = runs.empty() ? l : max(l, runs.back().b+1);
-  for (size_t i=start; i<=r; i++)
-    for (auto &p : ls[i])
-      runs.push_back(p);
-}
-
-// get "information content" of window
-void runComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y,
-                   ComplexityData const &dat, bool calcAvg) {
-  bool globalMode = n==w;
-  auto badpart = numBad(offset, n, dat);
-  size_t numbad = badpart.first;
-  size_t badivs = badpart.second;
-  double gc = dat.gc;
-  if (globalMode) { // adapt gc content (as if no N-blocks present)
-    // oldgc = c(gc) / (c(n)+c(at)+c(gc))=seqlen -> newgc = oldgc * seqlen / (seqlen-c(n))
-    gc = gc * dat.len / (dat.len-numbad);
-  }
-
-  vector<int64_t> ps(n, 1); // all nucleotides marked
-  for (size_t i=offset; i<offset+n; i++)
-    for (auto &p : dat.pl[i])
-      for (size_t j = p.b; j <= min(offset+n-1, p.e); j++) { // un-mark nucleotides inside runs
-        ps[j-offset] = 0;
-      }
-
-  // prefix sum over non-run nucleotides (for fast range sum retrieval)
-  for (size_t i = 1; i < n; i++)
-    ps[i] += ps[i - 1];
-
-  // subtract 1 from w to cap result at 1, max to prevent div. by 0
-  // divide by window length -> unnormalized max. information per nucleotide
-  // this is only used directly for the expected value simulations
-  double pAvg = max(1.0, (double)w - 1.0) / (double)w;
-  //obtain expected nucleotid information (should be used as default!)
-  if (calcAvg)
-    pAvg = estimateAvgRunComplexity(gc);
-
-  if (args.p) { //some user information
-    cout << "GC-content: "<<gc<<endl;
-    cout << "Estimated RC/nucleotide (via interpolated polynomial): "
-      << "12.363*gc^6-37.167*gc^547.21*gc^4-32.397*gc^3+12.064*gc^2-2.075*gc+0.778 = "
-      << pAvg << endl;
-  }
-
-  list<Periodicity> runs; //current runs overlapping window
-
-  // get bad window indices for given parameters
-  queue<size_t> badj = calcNAWindows(offset, n, w, k, dat.bad);
-  for
-    each_window(n, w, k) {
-      if (!globalMode)
-        if (!badj.empty() && j == badj.front()) {
-          y[j] = -1;
-          badj.pop();
-          continue;
-        }
-      if (args.p)
-        cout << "Calculate RC for interval " << l << "-" << r << " ..." << endl;
-
-      size_t info = sumFromTo(ps, l, r); // count non-run nucl. in window
-
-      //in global mode, N-blocks are ignored, they have period length 1
-      //-> subtract them away
-      if (globalMode)
-        info -= badivs;
-
-      if (args.p)
-        cout << "NuclNotInRuns: " << info << endl;
-
-      // update list of runs that overlap the current window
-      updateRunQueue(runs, dat.pl, l+offset, r+offset);
-
-      // add period lengths of runs touching window
-      if (args.p)
-        cout << "Add unique info (=period length) of runs: NuclNotInRuns";
-      for (auto &run : runs) {
-        int64_t overlap = perLen(run) - max(0L,(int64_t)run.e-(int64_t)r) - max(0L,(int64_t)l-(int64_t)run.b);
-        size_t val = min(run.l, (size_t)overlap);
-        info += val;
-
-        if (args.p)
-          cout << " + " << val;
-      }
-      if (args.p)
-        cout << " = " << info << " = infoContent" << endl;
-
-      //in global mode we ignore the N-blocks
-      double effectiveW = n==w ? w - numbad : w;
-
-      // we look at all overlapping runs, could lead to sum > w -> min(w,*)
-      // subtract 1 from pObs to make 0 possible (e.g. for AAAA..)
-      double pObs = (min(w, info) - 1.0)/effectiveW;
-      y[j] = pObs / pAvg;
-
-      if (args.p) {
-        cout << "avgPerNucl = (infoContent - 1) / seqLen = " << pObs << endl;
-        cout << "runComplexity = avgPerNucl / estimated = "
-             << pObs << "/" << pAvg << " = " << y[j] << endl;
-      }
-    }
-}
-
-ResultMat calcComplexities(size_t &w, size_t &k, char m, size_t seqnum, vector<ComplexityData> const &dat) {
+ResultMat calcComplexities(size_t &w, size_t &k, size_t seqnum, vector<ComplexityData> const &dat) {
   bool globalMode = w==0;   // output one number (window = each whole sequence)?
   bool isJoined = dat[0].regions.size()>1; //which kind is the input data?
   size_t containedSeqs = max(dat[0].labels.size(), dat.size()); //how many (sub-)sequences are there?
@@ -329,9 +185,8 @@ ResultMat calcComplexities(size_t &w, size_t &k, char m, size_t seqnum, vector<C
 
   // array for results for all sequences in file
   size_t entries = numEntries(maxlen, w, k);
-  size_t numMetrics = m == 'b' ? 2 : 1; //complexity arrays per seq.
   size_t usedSeqs = seqnum || isJoined ? 1 : containedSeqs;
-  ResultMat ys(numMetrics * usedSeqs, make_pair("", vector<double>(entries)));
+  ResultMat ys(usedSeqs, make_pair("", vector<double>(entries)));
 
   int col = 0;
   int start = seqnum ? max(seqnum-1,(size_t)0)       : 0;
@@ -344,20 +199,11 @@ ResultMat calcComplexities(size_t &w, size_t &k, char m, size_t seqnum, vector<C
     size_t currw  = globalMode ? len : w;
     size_t currk  = globalMode ? len : k;
 
-    if (m != 'r') {
-      tick();
-      ys[col].first = name + " (MC)";
-      mlComplexity(offset, len, currw, currk, ys[col].second, data);
-      tock("mlComplexity");
-      col++;
-    }
-    if (m != 'm') {
-      tick();
-      ys[col].first = name + " (RC)";
-      runComplexity(offset, len, currw, currk, ys[col].second, data, true);
-      tock("runComplexity");
-      col++;
-    }
+    tick();
+    ys[col].first = name + " (MC)";
+    mlComplexity(offset, len, currw, currk, ys[col].second, data);
+    tock("mlComplexity");
+    col++;
   }
   return ys;
 }

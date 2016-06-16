@@ -71,7 +71,7 @@ void processFile(char const *file) {
   vector<ComplexityData> dat;
   if (args.i) { //load from index
     tick();
-    if (!loadData(dat, file, args.l))
+    if (!loadData(dat, file, args.l, args.n))
       return;
     tock("loadData");
     if (args.l) { //list index file contents and exit
@@ -101,7 +101,7 @@ void processFile(char const *file) {
 
   size_t w = args.w;
   size_t k = args.k;
-  auto ys = calcComplexities(w, k, args.m, args.n, dat);
+  auto ys = calcComplexities(w, k, args.n, dat);
   if (!args.p)
     printResults(w, k, ys, args.g);
 }

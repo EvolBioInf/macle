@@ -92,16 +92,6 @@ void Esa::print() const {
          << endl;
 }
 
-RMQ Esa::precomputeLcp() const { return RMQ(&lcp); }
-
-int64_t Esa::getLcp(RMQ const &rmq, size_t sai, size_t saj) const {
-  if (sai == saj)
-    return this->n - sai;
-  size_t l = min(this->isa[sai], this->isa[saj]) + 1;
-  size_t r = max(this->isa[sai], this->isa[saj]);
-  return lcp[rmq(l, r)];
-}
-
 // reduce esa to half (seq+$+revseq+$ -> seq+$) without recomputing
 // important! asserting that n and str are replaced by user!
 void reduceEsa(Esa &esa) {

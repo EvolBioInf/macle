@@ -5,15 +5,12 @@
 #include <list>
 #include <functional>
 #include <iostream>
-#include "periodicity.h"
 
 std::string randSeq(size_t n, std::string alphabet = "ACGT");
 std::string randSeq(size_t n, double gc);
 std::string randRun(size_t n, size_t l, std::string alphabet = "ACGT");
 double gcContent(std::string const &s);
 std::string revComp(std::string const &s);
-PerLists getRuns(std::string const &seq);
-PerLists getRuns(char const *seq, size_t n);
 
 std::string base_name(std::string const & path);
 void fprintnf(FILE *fp, char const *str, int n);

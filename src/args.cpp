@@ -38,7 +38,7 @@ static char const usage[] = PROGNAME
     "\t-l: list sequences stored in index file\n"
     "\t-n <NUM>: calculate for given sequence within file (default: 0=all)\n"
 
-    "\t-p: print match-length and Lempel-Ziv factors and periodicities\n"
+    "\t-p: print match-length factors\n"
     "\t-b: print benchmarking information\n"
     "\t-g N: output pipe-ready to plot with:\n"
     "\t\tN=1 -> dnalc_plot.sh (-> gnuplot)\n"

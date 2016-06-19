@@ -51,17 +51,6 @@ string randSeq(size_t n, string alphabet) {
   return s;
 }
 
-string randRun(size_t n, size_t l, string alphabet) {
-  if (l > n)
-    l = n;
-  string s;
-  string rep = randSeq(l, alphabet);
-  while (s.size() < n)
-    s += rep;
-  s.resize(n);
-  return s;
-}
-
 // calculate the GC content
 double gcContent(string const &s) {
   size_t gc = 0;
@@ -169,17 +158,5 @@ bool with_mmap(char const *file, function<bool(MMapReader&)> lambda) {
   }
   close(fd);
   return ret;
-}
-
-// fprintnf: print max of n characters of str onto fp;
-// add ... if str was truncated
-void fprintnf(FILE *fp, char const *str, int n) {
-  int i, l, m;
-  l = strlen(str);
-  m = n < l ? n : l;
-  for (i = 0; i < m; i++)
-    fprintf(fp, "%c", str[i]);
-  if (m < l)
-    fprintf(fp, "...");
 }
 

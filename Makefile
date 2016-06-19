@@ -54,7 +54,7 @@ $(TESTS): $(OBJECTS) $(TEST_OBJ)
 
 clean:
 	$(RM) -r build
-	$(RM) $(OBJECTS) $(TEST_OBJ) $(TESTS)
+	$(RM) tests/*.o src/*.o
 
 tests: $(TESTS)
 	bash ./tests/runtests.sh

@@ -27,10 +27,9 @@ void checkML(string seq, string facts[], size_t num) {
   computeMLFact(mlf, esa);
   mu_assert(mlf.fact.size() == num, "wrong number of ML factors");
 
-  for (size_t i = 0; i < mlf.fact.size(); i++) {
-    mu_assert(!strncmp(mlf.str + mlf.fact[i], facts[i].c_str(), factLen(mlf, i)),
+  for (size_t i = 0; i < mlf.fact.size(); i++)
+    mu_assert(!strncmp(mlf.str + mlf.fact[i], facts[i].c_str(), mlf.factLen(i)),
               "wrong factor");
-  }
 }
 
 void test_MatchLength1() { return checkML(seq1, factors1, 8); }

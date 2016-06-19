@@ -1,4 +1,7 @@
 #include <queue>
+#include <cassert>
+#include <iostream>
+#include <algorithm>
 using namespace std;
 
 #include "args.h"  //args.p
@@ -36,7 +39,7 @@ queue<size_t> calcNAWindows(size_t offset, size_t n, size_t w, size_t k,
 
   for
     each_window(n, w, k) {
-      //kick out runs that are now outside of window
+      //kick out intervals that are now outside of window
       for (auto it=bad.begin(); it != bad.end(); it++)
         if (it->second < l+offset) {
           it = bad.erase(it);

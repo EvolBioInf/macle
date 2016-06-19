@@ -30,21 +30,6 @@ void test_randSeq() {
     mu_assert(alphabet.find(c) != string::npos, "invalid character: " << c);
 }
 
-void test_randRun() {
-  size_t n = 1000;
-  for (auto l : vector<size_t>{1, 2, 4, 8, 16}) {
-    string runseq = randRun(n, l);
-    string per = runseq.substr(0, l);
-    size_t cnt = 0;
-    size_t pos = 0;
-    while (runseq.find(per, pos) != string::npos) {
-      cnt++;
-      pos += l;
-    }
-    mu_assert_eq(n / l, cnt, "wrong number of repeats");
-  }
-}
-
 // test reverse complement. assumes normalized sequence, so just ACGT toggle
 // and whole string is reversed.
 void test_revComp() {
@@ -55,7 +40,6 @@ void test_revComp() {
 
 void all_tests() {
   mu_run_test(test_randSeq);
-  mu_run_test(test_randRun);
   mu_run_test(test_revComp);
 }
 RUN_TESTS(all_tests)

@@ -1,8 +1,7 @@
 # dnalc
 
 Experimental local neighborhood complexity estimation for DNA,
-based on match-length factorization (derived from Lempel-Ziv-factorization)
-and periodicity counting (detection of repetitive DNA).
+based on match-length factorization (derived from Lempel-Ziv-factorization).
 
 ### Build
 

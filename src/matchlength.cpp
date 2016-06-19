@@ -34,21 +34,22 @@ size_t Fact::factLen(size_t i) const {
   return f.fact[i + 1] - f.fact[i];
 }
 
+//input: esa for both strands (seq$revcompseq$)
 void computeMLFact(Fact &mlf, Esa const &esa) {
   mlf.fact.resize(0);
   mlf.str = esa.str;
-  mlf.strLen = esa.n;
+  mlf.strLen = esa.n/2; //single strand length
 
   /* construct and fill array of match lengths */
   vector<uint64_t> ml(esa.n);
   for (size_t i = 0; i < esa.n; i++) {
-    ml[esa.sa[i]] = std::max((int64_t)1, std::max((int64_t)esa.lcp[i], (int64_t)esa.lcp[i + 1]));
+    ml[esa.sa[i]] = max(1UL, (size_t)max(esa.lcp[i], esa.lcp[i + 1]));
   }
 
   /* compute observed number of match factors, store their positions */
   vector<size_t> factmp;
   size_t i = 0;
-  while (i < esa.n) {
+  while (i < mlf.strLen) {
     factmp.push_back(i);
     i += ml[i];
   }

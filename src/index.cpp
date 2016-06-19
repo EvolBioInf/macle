@@ -228,11 +228,17 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &file, bool joinSeqs) {
     s = s + "$" + revComp(s) + "$";
     tick();
     Esa esa(s.c_str(), s.size()); // esa for seq+$+revseq+$
-    tock("getEsa (2n)");
+    tock("getEsa (both strands)");
+
     tick();
     Fact mlf;
     computeMLFact(mlf, esa);
     tock("computeMLFact");
+
+    s.resize(s.size() / 2); // drop complementary seq.
+    s.shrink_to_fit();
+    mlf.str = esa.str = s.c_str();
+    esa.n = s.size();
 
     size_t currreg=0;
     size_t idx=0;
@@ -250,19 +256,9 @@ void extractData(vector<ComplexityData> &cplx, FastaFile &file, bool joinSeqs) {
     if (args.p) {
       cout << seq.name << seq.comment << endl;
       // esa.print();
-      cout << "ML-Factors for both strands (" << mlf.fact.size() << "):" << endl;
+      cout << "ML-Factors on first strand (" << mlf.fact.size() << "):" << endl;
       mlf.print();
     }
-
-    s.resize(s.size() / 2); // drop complementary seq.
-    s.shrink_to_fit();
-    esa.str = s.c_str();
-    esa.n = s.size();
-    /*
-    tick();
-    reduceEsa(esa);
-    tock("reduceEsa");
-    */
 
     // get list of bad intervals
     tick();

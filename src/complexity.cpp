@@ -68,7 +68,7 @@ pair<size_t,size_t> numBad(size_t offset, size_t len, ComplexityData const &dat)
   size_t sum = 0;
   size_t ivs = 0;
   auto it = lower_bound(dat.bad.begin(),dat.bad.end(),make_pair(offset,offset),
-      [](pair<size_t,size_t> a, pair<size_t,size_t> b){return a.first < b.first;});
+      [](pair<size_t,size_t> a, pair<size_t,size_t> b){return a.second < b.second;});
   if (it != dat.bad.begin() && it->first < offset)
     it--;
 
@@ -87,11 +87,6 @@ void mlComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y
   auto badpart = numBad(offset, n, dat);
   size_t numbad = badpart.first;
   size_t badivs = badpart.second;
-  double gc = dat.gc;
-  if (globalMode) { // adapt gc content (as if no N-blocks present)
-    // oldgc = c(gc) / (c(n)+c(at)+c(gc))=seqlen -> newgc = oldgc * seqlen / (seqlen-c(n))
-    gc = gc * dat.len / (dat.len-numbad);
-  }
 
   // compute observed number of match factors for every prefix
   vector<size_t> ps(n);
@@ -106,24 +101,19 @@ void mlComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y
   }
 
   // calculations (per nucleotide)
-  double cMin = 2.0 / dat.len; // at least 2 factors an any sequence, like AAAAAA.A
-  if (globalMode) // ignore N-blocks from sequence
-    cMin = cMin * dat.len / (dat.len-numbad);
+  double cMin = 2.0 / (dat.len - dat.numbad); // at least 2 factors an any sequence, like AAAAAA.A
 
   // some wildly advanced estimation for avg. shulen length,
   // 2n because matches are from both strands
-  double esl = 0;
-  if (n != w)
-    esl = expShulen(gc, 2 * dat.len);
-  else { //global complexity -> ignore NNNN... blocks, as if they are not there
-    esl = expShulen(gc, 2 * (dat.len - dat.numbad));
-
+  double esl = expShulen(dat.gc, 2 * (dat.len - dat.numbad));
+  if (globalMode) { //global complexity -> ignore NNNN... blocks, as if they are not there
     double fracbad = (double)numbad / (double)n;
-    if (globalMode && fracbad > 0.05) {
+    if (fracbad > 0.05) {
       cerr << "WARNING: only " << (1-fracbad)*100 << "\% of sequence are valid DNA! "
            << "Ignoring " << badivs << " bad intervals..." << endl;
     }
   }
+
   // expected # of match length factors / nucleotide
   double cAvg = 1.0 / (esl - 1.0);
   // only subtract cMin if its not a degenerate case
@@ -146,12 +136,11 @@ void mlComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y
         }
 
       size_t numfacs = sumFromTo(ps, l, r);
-      //in global mode -> subtract number of bad intervals from total
-      if (globalMode)
-        numfacs -= badivs;
-
-      //in global mode we ignore the N-blocks
-      double effectiveW = n==w ? w-numbad : w;
+      double effectiveW = w;
+      if (globalMode) {
+        numfacs -= badivs;     //subtract number of bad intervals from total
+        effectiveW -= numbad;  //we ignore the N-blocks
+      }
 
       double cObs = (double)numfacs / effectiveW;
       y[j] = (cObs /* - cMin */) / cNorm;

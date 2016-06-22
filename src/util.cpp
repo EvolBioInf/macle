@@ -54,10 +54,13 @@ string randSeq(size_t n, string alphabet) {
 // calculate the GC content
 double gcContent(string const &s) {
   size_t gc = 0;
+  size_t at = 0;
   for (auto c : s)
     if (c == 'g' || c == 'G' || c == 'c' || c == 'C')
       gc++;
-  return (double)gc / s.size();
+    else if (c == 'a' || c == 'A' || c == 't' || c == 'T')
+      at++;
+  return (double)gc/((double)gc+at);
 }
 
 // returns reverse complement DNA string

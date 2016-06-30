@@ -73,7 +73,9 @@ pair<size_t,size_t> numBad(size_t offset, size_t len, ComplexityData const &dat)
     it--;
 
   while (it != dat.bad.end() && it->first < offset+len) {
-    sum += min(offset+len, it->second) - max(it->first, offset) + 1;
+    int64_t add = max(0L, (int64_t)min(offset+len, it->second) - (int64_t)max(it->first, offset) + 1L);
+    // cerr << it->first << " - " << it->second << " -> " << add << endl;
+    sum += add;
     ivs++;
     it++;
   }
@@ -108,6 +110,7 @@ void mlComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y
   double esl = expShulen(dat.gc, 2 * (dat.len - dat.numbad));
   if (globalMode) { //global complexity -> ignore NNNN... blocks, as if they are not there
     double fracbad = (double)numbad / (double)n;
+    // cerr << fracbad << endl;
     if (fracbad > 0.05) {
       cerr << "WARNING: only " << (1-fracbad)*100 << "\% of sequence are valid DNA! "
            << "Ignoring " << badivs << " bad intervals..." << endl;

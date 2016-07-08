@@ -1,6 +1,8 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <vector>
+#include <string>
 
 #define PROGNAME "dnalc"
 #define DESCRIPTION "Tool to calculate DNA local neighborhood complexity"
@@ -13,6 +15,15 @@
 #define BUILD_INFO "32 bit"
 #endif
 
+struct Task {
+  int64_t idx;
+  size_t start;
+  size_t end;
+  size_t num;
+  Task(int64_t i, size_t s, size_t e);
+  Task(std::string str);
+};
+
 struct Args {
   void parse(int argc, char *argv[]);
 
@@ -20,12 +31,11 @@ struct Args {
 
   uint32_t w = 0;  // sliding window size
   uint32_t k = 0;  // sliding interval
-  bool j = false;  // treat one file as one single sequence
 
   bool i = false;  // use index (intermediate data)
   bool s = false;  // output index
   bool l = false;  // list contents of index
-  uint32_t n = 0;  // number of sequence in index file to work on
+  std::vector<Task> tasks;  // number of sequence/region (+ offsets) in index file to work on
 
   bool p = false;  // print match length decomposition?
   uint32_t g = 0;  // plot output format

@@ -5,8 +5,8 @@
 #include "fastafile.h"
 
 // All information from a sequence required to calculate complexity plots
-// either a file stores multiple such objects for separate sequences with one
-// region, or a file stores exactly one such object with one or more regions
+// a file stores exactly one such object with one or more regions defined
+// by the fasta sequences within the file
 struct ComplexityData {
   std::string name;                       // name of sequence
   size_t len;                             // length of sequence
@@ -24,7 +24,7 @@ struct ComplexityData {
   std::vector<size_t> mlf;                // match factors
 };
 
-bool loadData(std::vector<ComplexityData> &cplx, char const *file, bool onlyInfo=false, size_t idx=0);
-bool saveData(std::vector<ComplexityData> &cplx, char const *file);
+bool loadData(ComplexityData &cplx, char const *file, bool onlyInfo=false);
+bool saveData(ComplexityData &cplx, char const *file);
 
-void extractData(std::vector<ComplexityData> &cplx, FastaFile &file, bool joinSeqs);
+void extractData(ComplexityData &cplx, FastaFile &file);

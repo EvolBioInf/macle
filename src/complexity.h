@@ -3,6 +3,7 @@
 #include <list>
 #include <utility>
 
+#include "args.h"
 #include "index.h"
 
 size_t numEntries(size_t n, size_t w, size_t k);
@@ -18,4 +19,4 @@ typedef std::vector<std::pair<std::string,std::vector<double>>> ResultMat;
 // and the user can choose a region or sequence to process.
 // If NOT joined: no chosen seqnum -> compute for all separately, otherwise only given sequence
 // If joined: no chosen seqnum -> compute for complete sequence, otherwise only one region
-ResultMat calcComplexities(size_t &w, size_t &k, size_t seqnum, std::vector<ComplexityData> const &dat);
+ResultMat calcComplexities(size_t &w, size_t &k, Task task, ComplexityData const &dat);

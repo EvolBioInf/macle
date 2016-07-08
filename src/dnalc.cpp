@@ -6,23 +6,16 @@ using namespace std;
 #include "bench.h"
 #include "complexity.h"
 
-void printIndexInfo(vector<ComplexityData> const &dat) {
-  for (size_t i=0; i<dat.size(); i++) {
-    if (dat.size()>1)
-      cout << (i+1) << ":" << endl;
-    string tab = dat.size()>1 ? "\t" : "";
-    cout << tab << "name:\t" << dat[i].name << endl
-          << tab << "len:\t" << dat[i].len << endl
-          << tab << "gc:\t" << dat[i].gc << endl
-          << tab << "bad:\t" << (double)dat[i].numbad / dat[i].len << endl;
-    if (dat[i].regions.size()>1) {
-      cout << tab << "regions:" << endl;
-      for (size_t j=0; j<dat[i].regions.size(); j++) {
-        auto &r = dat[i].regions[j];
-        cout << "\tindex:\t" << (j+1) << ":\tregion:\t" << r.first << "-" << r.first+r.second-1 << endl;
-        cout << "\tname:\t" << dat[i].labels[j] << endl;
-      }
-    }
+void printIndexInfo(ComplexityData const &dat) {
+  cout << "name:\t" << dat.name << endl
+        << "len:\t" << dat.len << endl
+        << "gc:\t" << dat.gc << endl
+        << "bad:\t" << (double)dat.numbad / dat.len << endl;
+  cout << "sequences:" << endl;
+  for (size_t j=0; j<dat.regions.size(); j++) {
+    cout << "\tindex: " << (j+1);
+    cout << "\tlen: " << dat.regions[j].second;
+    cout << "\tname: " << dat.labels[j] << endl;
   }
 }
 
@@ -45,7 +38,6 @@ void printPlot(uint32_t w, uint32_t k, ResultMat const &ys) {
 }
 
 void printResults(size_t w, size_t k, ResultMat const &ys, int mode) {
-  cout << fixed << setprecision(4);
   if (mode == 0) { //simple output
     printPlot(w, k, ys);
   } else if (mode == 2) {
@@ -68,10 +60,10 @@ void printResults(size_t w, size_t k, ResultMat const &ys, int mode) {
 
 //load / extract data, show results
 void processFile(char const *file) {
-  vector<ComplexityData> dat;
+  ComplexityData dat;
   if (args.i) { //load from index
     tick();
-    if (!loadData(dat, file, args.l, args.n))
+    if (!loadData(dat, file, args.l))
       return;
     tock("loadData");
     if (args.l) { //list index file contents and exit
@@ -86,7 +78,7 @@ void processFile(char const *file) {
       cerr << "Skipping invalid FASTA file..." << endl;
       return;
     }
-    extractData(dat, ff, args.j);
+    extractData(dat, ff);
 
     if (args.s && !args.p) { // just dump intermediate results and quit
       saveData(dat, nullptr);
@@ -94,28 +86,39 @@ void processFile(char const *file) {
     }
   }
 
-  if (args.n>max(dat.size(),dat[0].regions.size())) {
-    cerr << "Invalid sequence number!" << endl;
-    return;
-  }
+  for (auto &task : args.tasks) {
+    if (task.idx < -1 || task.idx >= (int64_t)dat.regions.size()) {
+      cerr << "ERROR: Invalid sequence index!" << endl;
+      return;
+    }
+    size_t reglen = task.idx >= 0 ? dat.regions[task.idx].second : dat.len;
+    if ((task.start!=0 || task.end!=0) && (task.start > task.end || task.start >= reglen ||
+        task.end-task.start+1 > reglen - task.start)) {
+      cerr << "ERROR: Invalid range!" << endl;
+      return;
+    }
 
-  size_t w = args.w;
-  size_t k = args.k;
-  auto ys = calcComplexities(w, k, args.n, dat);
-  if (!args.p)
-    printResults(w, k, ys, args.g);
+    size_t w = args.w;
+    size_t k = args.k;
+    auto ys = calcComplexities(w, k, task, dat);
+    if (!args.p) {
+      if (args.tasks.size()==1) {
+        printResults(args.w, args.w, ys, args.g);
+      } else {
+        cout << task.num << "\t" << ys[0].second[0] << endl;
+      }
+    }
+  }
 }
 
 int main(int argc, char *argv[]) {
   args.parse(argc, argv);
+  cout << fixed << setprecision(4);
 
   tick();
-  if (!args.num_files) {
+  if (args.num_files == 0)
     processFile(nullptr); //from stdin
-  } else {
-    for (size_t i = 0; i < args.num_files; i++) {
-      processFile(args.files[i]);
-    }
-  }
+    else
+    processFile(args.files[0]);
   tock("total time");
 }

@@ -103,7 +103,7 @@ void processFile(char const *file) {
     auto ys = calcComplexities(w, k, task, dat);
     if (!args.p) {
       if (args.tasks.size()==1) {
-        printResults(args.w, args.w, ys, args.g);
+        printResults(args.w, args.k, ys, args.g);
       } else {
         cout << task.num << "\t" << ys[0].second[0] << endl;
       }

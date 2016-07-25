@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <queue>
 using namespace std;
 
 #include "args.h"
@@ -28,24 +29,32 @@ void gnuplotCode(uint32_t w, uint32_t k, int n) {
 }
 
 // print data: X Y1 ... Yn
-void printPlot(uint32_t w, uint32_t k, ResultMat const &ys) {
+void printPlot(int64_t idx, vector<pair<size_t,size_t>> &regs, uint32_t w, uint32_t k, ResultMat const &ys) {
+  queue<pair<size_t,size_t>> rs;
+  for (auto &r : regs)
+    rs.emplace(r);
+  uint32_t rcnt = idx < 0 ? 1 : idx+1; //region counter for output
+
   for (size_t j = 0; j < ys[0].second.size(); j++) {
-    cout << (j * k + w / 2) << "\t"; // center of window
+    size_t off = j * k + w / 2;
+    // cout << regs[idx].first + off << "\t";
+    if (idx < 0) {
+      if (off >= rs.front().first + rs.front().second) {
+        rs.pop();
+        rcnt++;
+      }
+      off -= rs.front().first;
+    }
+    cout << rcnt << "\t" << off << "\t"; // center of window
     for (size_t i = 0; i < ys.size(); i++)
       cout << ys[i].second[j] <<"\t";
     cout << endl;
   }
 }
 
-void printResults(size_t w, size_t k, ResultMat const &ys, int mode) {
+void printResults(int64_t idx, vector<pair<size_t,size_t>> &regs, size_t w, size_t k, ResultMat const &ys, int mode) {
   if (mode == 0) { //simple output
-    printPlot(w, k, ys);
-  } else if (mode == 2) {
-    for (size_t i = 0; i < ys.size(); i++) {
-      for (size_t j = 0; j < ys[0].second.size(); j++)
-        cout << (j * k + w / 2) << "\t" << ys[i].second[j] << endl;
-      cout << endl;
-    }
+    printPlot(idx, regs, w, k, ys);
   } else if (mode == 1) { //dnalc_plot
     cout << "DNALC_PLOT" << endl; //magic keyword
     gnuplotCode(w, k, ys.size()); // gnuplot control code
@@ -54,7 +63,13 @@ void printResults(size_t w, size_t k, ResultMat const &ys, int mode) {
     for (size_t j = 0; j < ys.size(); j++) // columns for each seq
       cout << "\"" << ys[j].first << "\"\t";
     cout << endl;
-    printPlot(w, k, ys); // print plot itself
+    printPlot(idx, regs, w, k, ys); // print plot itself
+  } else if (mode == 2) {
+    for (size_t i = 0; i < ys.size(); i++) {
+      for (size_t j = 0; j < ys[0].second.size(); j++)
+        cout << (j * k + w / 2) << "\t" << ys[i].second[j] << endl;
+      cout << endl;
+    }
   }
 }
 
@@ -103,7 +118,7 @@ void processFile(char const *file) {
     auto ys = calcComplexities(w, k, task, dat);
     if (!args.p) {
       if (args.tasks.size()==1) {
-        printResults(args.w, args.k, ys, args.g);
+        printResults(task.idx, dat.regions, w, k, ys, args.g);
       } else {
         cout << task.num << "\t" << ys[0].second[0] << endl;
       }

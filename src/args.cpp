@@ -9,7 +9,7 @@ using namespace std;
 // globally accessible arguments for convenience
 Args args;
 
-static char const opts_short[] = "hw:k:isln:f:pg:b";
+static char const opts_short[] = "hw:k:isln:f:pgb";
 static struct option const opts[] = {
     {"help", no_argument, nullptr, 'h'},
     {"window-size", required_argument, nullptr, 'w'},
@@ -41,11 +41,9 @@ static char const usage[] = PROGNAME
     "\t-f FILE: file that contains a list of regions to process\n"
     "\t   (syntax like for -n with one triple per line, not usable with -w)\n"
 
-    "\t-p: print match-length factors\n"
+    "\t-p: print match factors\n"
     "\t-b: print benchmarking information\n"
-    "\t-g N: output pipe-ready to plot with:\n"
-    "\t\tN=1 -> dnalc_plot.sh (-> gnuplot)\n"
-    "\t\tN=2 -> graph -T X (part of plotutils)\n";
+    "\t-g: output to plot with dnalc_plot.sh (gnuplot wrapper)\n";
 
 size_t stol_or_fail(string s) {
   size_t n;
@@ -143,7 +141,7 @@ void Args::parse(int argc, char *argv[]) {
       args.p = true;
       break;
     case 'g':
-      args.g = optarg == nullptr ? 0 : atoi(optarg);
+      args.g = true;
       break;
     case 'b':
       args.b = true;

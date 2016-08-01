@@ -24,7 +24,7 @@ void gnuplotCode(uint32_t w, uint32_t k, int n) {
   cout << "set key autotitle columnheader; set ylabel \"window complexity\"; "
     << "set xlabel \"window offset (w=" << w << ", k="<<k<<")\"; ";
   for (int i = 0; i < n; i++)
-    cout << (i ? ", ''" : "plot \"$PLOTFILE\"") << " using 1:"<<(i+2)<<" with lines";
+    cout << (i ? ", ''" : "plot \"$PLOTFILE\"") << " using 2:"<<(i+3)<<" with lines";
   cout << ";" << endl;
 }
 
@@ -52,10 +52,10 @@ void printPlot(int64_t idx, vector<pair<size_t,size_t>> &regs, uint32_t w, uint3
   }
 }
 
-void printResults(int64_t idx, vector<pair<size_t,size_t>> &regs, size_t w, size_t k, ResultMat const &ys, int mode) {
-  if (mode == 0) { //simple output
+void printResults(int64_t idx, vector<pair<size_t,size_t>> &regs, size_t w, size_t k, ResultMat const &ys, bool gnuplot) {
+  if (!gnuplot) { //simple output
     printPlot(idx, regs, w, k, ys);
-  } else if (mode == 1) { //dnalc_plot
+  } else { //dnalc_plot
     cout << "DNALC_PLOT" << endl; //magic keyword
     gnuplotCode(w, k, ys.size()); // gnuplot control code
     // print column header (for plot labels)
@@ -64,12 +64,6 @@ void printResults(int64_t idx, vector<pair<size_t,size_t>> &regs, size_t w, size
       cout << "\"" << ys[j].first << "\"\t";
     cout << endl;
     printPlot(idx, regs, w, k, ys); // print plot itself
-  } else if (mode == 2) {
-    for (size_t i = 0; i < ys.size(); i++) {
-      for (size_t j = 0; j < ys[0].second.size(); j++)
-        cout << (j * k + w / 2) << "\t" << ys[i].second[j] << endl;
-      cout << endl;
-    }
   }
 }
 

@@ -38,7 +38,7 @@ struct Args {
   std::vector<Task> tasks;  // number of sequence/region (+ offsets) in index file to work on
 
   bool p = false;  // print match length decomposition?
-  uint32_t g = 0;  // plot output format
+  bool g = false;  // output for ./dnalc_plot.sh
   bool b = false;  // benchmark run
 
   // non-parameter arguments

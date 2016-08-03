@@ -132,7 +132,7 @@ index can speed up the analysis of long sequences by orders of
 magnitude. An index file is obtained by calling dnalc with the `-s`
 flag and piping the output into a file: `dnalc seq.fa -s > seq.idx`.
 
-Upload an index file by using the `-i` flag; so if a file `seq.fa` was
+Load an index file by using the `-i` flag; so if a file `seq.fa` was
 transformed into the index `seq.idx`, use `dnalc -i seq.idx` instead
 of `dnalc seq.fa`, everything else stays the same. In fact, whenever
 dnalc is applied to a FASTA file, internally the index structure is

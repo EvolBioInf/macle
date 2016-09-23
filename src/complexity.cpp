@@ -146,7 +146,7 @@ void mlComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y
       }
 
       double cObs = (double)numfacs / effectiveW;
-      y[j] = (cObs /* - cMin */) / cNorm;
+      y[j] = max(0., (cObs  - cMin) / cNorm); //need max for corner case of no matches inside window
 
       if (args.p) {
         cout << "observed match factors: " << numfacs << endl;

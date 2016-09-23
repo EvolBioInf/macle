@@ -8,7 +8,7 @@
  *****************************************************************/
 #include <cmath>
 #include <cfloat>
-#include <gsl/gsl_sf_gamma.h>
+// #include <gsl/gsl_sf_gamma.h>
 #include "util.h"
 
 long long bctable[] = {
@@ -141,9 +141,9 @@ long long bctable[] = {
 }; /* 676 Entries */
 
 //from: http://stackoverflow.com/questions/11032781/fastest-way-to-generate-binomial-coefficients
-long long binomial(int n, int k) {
+double binomial(int n, int k) {
     int i;
-    long long b;
+    double b;
 
     if (0 == k || n == k) return 1LL;
     if (k > n) return 0LL;
@@ -171,8 +171,8 @@ double sum(double x, double p, double l) {
   double k = 0;
   if (!thresholdReached) {
     for (k = 0; k <= x; k++) {
-      double binom = gsl_sf_lnchoose(x, k);
-      //      double binom = log((double)binomial(x, k));
+      double binom = log(binomial(x, k));
+      // double binom = gsl_sf_lnchoose(x, k);
       double pows = pow(2, x) * pow(p, k) * pow(0.5 - p, x - k) *
                     pow(1 - pow(p, k) * pow(0.5 - p, x - k), l);
       s += exp(log(pows) + binom);

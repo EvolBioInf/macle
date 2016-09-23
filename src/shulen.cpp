@@ -8,6 +8,7 @@
  *****************************************************************/
 #include <cmath>
 #include <cfloat>
+#include <gsl/gsl_sf_gamma.h>
 #include "util.h"
 
 long long bctable[] = {
@@ -170,8 +171,8 @@ double sum(double x, double p, double l) {
   double k = 0;
   if (!thresholdReached) {
     for (k = 0; k <= x; k++) {
-      // double binom = gsl_sf_lnchoose(x, k);
-      double binom = log((double)binomial(x, k));
+      double binom = gsl_sf_lnchoose(x, k);
+      //      double binom = log((double)binomial(x, k));
       double pows = pow(2, x) * pow(p, k) * pow(0.5 - p, x - k) *
                     pow(1 - pow(p, k) * pow(0.5 - p, x - k), l);
       s += exp(log(pows) + binom);
@@ -201,7 +202,7 @@ double expShulen(double gc, double l) {
   x = 0;
   m = 0.0;
   prevP1 = 0.0;
-  d = 1.0 - gc * gc;
+  d = 1. - 2. * (p/2. * p/2.);
   while (cp < 1.0 - DBL_EPSILON) {
     x++;
     curP1 = sum(x, p / 2, l); /* exact formula */

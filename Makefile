@@ -3,7 +3,7 @@ USE_SDSL ?= 1
 LOCAL_LIBDIVSUFSORT ?= 1
 
 CXXFLAGS := -std=c++11 -Isrc -Wall -Wextra -O3 -g -ggdb -Wshadow # -pg
-LDFLAGS := -lm -ldivsufsort -ldivsufsort64 # -pg
+LDFLAGS := -lm -lgsl -lblas -ldivsufsort -ldivsufsort64 # -pg
 TARGET := dnalc
 
 SOURCES := $(wildcard src/*.cpp)

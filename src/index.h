@@ -24,7 +24,10 @@ struct ComplexityData {
   std::vector<size_t> mlf;                // match factors
 };
 
+const size_t MAX_LABEL_LEN = 32;
+
 bool loadData(ComplexityData &cplx, char const *file, bool onlyInfo=false);
 bool saveData(ComplexityData &cplx, char const *file);
+bool renameRegions(char const *file, vector<string> const &names);
 
 void extractData(ComplexityData &cplx, FastaFile &file);

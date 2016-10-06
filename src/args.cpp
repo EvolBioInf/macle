@@ -1,15 +1,17 @@
 #include <iostream>
+#include <algorithm>
 #include <string>
 using namespace std;
 
 #include "args.h"
+#include "index.h"
 #include "util.h"
 #include <getopt.h>
 
 // globally accessible arguments for convenience
 Args args;
 
-static char const opts_short[] = "hw:k:isln:f:pgb";
+static char const opts_short[] = "hw:k:islr:n:f:pgb";
 static struct option const opts[] = {
     {"help", no_argument, nullptr, 'h'},
     {"window-size", required_argument, nullptr, 'w'},
@@ -17,6 +19,7 @@ static struct option const opts[] = {
     {"load-index", no_argument, nullptr, 'i'},
     {"save-index", no_argument, nullptr, 's'},
     {"list-index", no_argument, nullptr, 'l'},
+    {"rename-regions", required_argument, nullptr, 'r'},
     {"seq", required_argument, nullptr, 'n'},
     {"batchfile", required_argument, nullptr, 'f'},
     {"print-factors", no_argument, nullptr, 'p'},
@@ -36,6 +39,7 @@ static char const usage[] = PROGNAME
     "\t-i: use index file instead of FASTA sequence file\n"
     "\t-s: output index file for further processing (no regular result)\n"
     "\t-l: list sequences stored in index file\n"
+    "\t-r FILE: file that contains a list of regions to process\n"
     "\t-n IDX:FROM-TO: calculate for given sequence and region within file\n"
     "\t   (defaults: IDX=0, FROM=0, TO=end of whole sequence. valid syntax: IDX | IDX:FROM-TO)\n"
     "\t-f FILE: file that contains a list of regions to process\n"
@@ -87,6 +91,7 @@ Task::Task(string str) {
 void Args::parse(int argc, char *argv[]) {
   int c = 0;       // getopt stores value returned (last struct component) here
   int opt_idx = 0; // getopt stores the option index here.
+  vector<string> names;
   while ((c = getopt_long(argc, argv, opts_short, opts, &opt_idx)) != -1) {
     switch (c) {
     case 0: // long option without a short name
@@ -124,7 +129,7 @@ void Args::parse(int argc, char *argv[]) {
         cerr << "ERROR: -f incompatible with -n!" << endl;
         exit(1);
       }
-      if (!with_file(optarg, [&](istream &in){
+      if (!with_file_in(optarg, [&](istream &in){
         string line;
         int num=0;
         while (in >> line) {
@@ -134,7 +139,35 @@ void Args::parse(int argc, char *argv[]) {
         }
         return true;
       }))
-      exit(1);
+        exit(1);
+      break;
+    case 'r':
+      if (!with_file_in(optarg, [&](istream &in){
+        string line;
+        while (getline(in, line)) {
+          if (line.size()>MAX_LABEL_LEN) {
+            cerr << "ERROR: Name list contains too long names!" << endl;
+            exit(1);
+          }
+          if (line.find_first_of("\t\n ")!=string::npos) {
+            cerr << "ERROR: Name list contains names with whitespace!" << endl;
+            exit(1);
+          }
+          names.push_back(line);
+        }
+        return true;
+      })) {
+        exit(1);
+      }
+      args.newnames = names;
+      sort(names.begin(),names.end());
+      for (size_t j=0; j<names.size()-1; j++) {
+        if (names[i]==names[j+1]) {
+          cerr << "ERROR: new names are not unique!" << endl;
+          exit(1);
+        }
+      }
+
       break;
 
     case 'p':

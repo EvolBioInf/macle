@@ -14,8 +14,10 @@ std::string revComp(std::string const &s);
 std::string base_name(std::string const & path);
 int open_or_fail(char const *fname, int flag);
 FILE *fopen_or_fail(char const *fname, char const *flags);
-bool with_file(char const *file, std::function<bool(std::istream&)> lambda, std::ios_base::openmode mode=std::ios_base::in);
+
 //overloading does not work here with old g++
+bool with_file(char const *file, std::function<bool(std::fstream&)> lambda, std::ios_base::openmode mode);
+bool with_file_in(char const *file, std::function<bool(std::istream&)> lambda, std::ios_base::openmode mode=std::ios_base::in);
 bool with_file_out(char const *file, std::function<bool(std::ostream&)> lambda, std::ios_base::openmode mode=std::ios_base::out);
 
 struct MMapReader {

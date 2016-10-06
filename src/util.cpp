@@ -5,7 +5,6 @@
 #include <random>
 #include <chrono>
 #include <cstring>
-#include <functional>
 #include <iostream>
 #include <fstream>
 
@@ -111,17 +110,20 @@ FILE *fopen_or_fail(char const *fname, char const *flags) {
 
 // if file==nullptr, calls lambda with stdin as stream, otherwise opens file, auto-closes
 template<typename T>
-bool with_file(char const *file, function<bool(T&)> lambda, ios_base::openmode mode, T& def) {
-  T *streamP = &def;
-  fstream fs;
+bool with_file(char const *file, std::function<bool(T&)> lambda, std::ios_base::openmode mode, T* def=nullptr) {
+  T *streamP = def;
+  std::fstream fs;
   if (file) {
-    // fs = ifstream(file); //does not work with older g++?
     fs.open(file, mode);
     if (!fs.is_open()) {
-      cerr << "ERROR: Could not open file: " << file << endl;
+      std::cerr << "ERROR: Could not open file: " << file << std::endl;
       return false;
     }
     streamP = &fs;
+  }
+  if (streamP == nullptr) {
+    std::cerr << "ERROR: Invalid default file stream!" << std::endl;
+    return false;
   }
   T &stream = *streamP;
   bool ret = lambda(stream);
@@ -129,11 +131,15 @@ bool with_file(char const *file, function<bool(T&)> lambda, ios_base::openmode m
     fs.close();
   return ret;
 }
-bool with_file(char const *file, function<bool(istream&)> lambda, ios_base::openmode mode) {
-  return with_file(file, lambda, mode, cin);
+
+bool with_file(char const *file, function<bool(fstream&)> lambda, ios_base::openmode mode) {
+  return with_file(file, lambda, mode, static_cast<fstream*>(nullptr));
+}
+bool with_file_in(char const *file, function<bool(istream&)> lambda, ios_base::openmode mode) {
+  return with_file(file, lambda, ios_base::in|mode, &cin);
 }
 bool with_file_out(char const *file, function<bool(ostream&)> lambda, ios_base::openmode mode) {
-  return with_file(file, lambda, mode, cout);
+  return with_file(file, lambda, ios_base::out|mode, &cout);
 }
 
 size_t getFilesize(const char* filename) {

@@ -36,6 +36,7 @@ struct Args {
   bool s = false;  // output index
   bool l = false;  // list contents of index
   std::vector<Task> tasks;  // number of sequence/region (+ offsets) in index file to work on
+  std::vector<std::string> newnames; //new names for regions -> rename regions in index
 
   bool p = false;  // print match length decomposition?
   bool g = false;  // output for ./dnalc_plot.sh

@@ -35,8 +35,7 @@ void assert_dataEqual(ComplexityData const &c1, ComplexityData const &c2, bool o
 }
 
 void test_saveLoadData() {
-  char const* iname1 = "_tmp_seq.fa.bin";
-  char const* iname2 = "_tmp_seq.fa.joined.bin";
+  char const* iname = "_tmp_seq.fa.bin";
 
   FastaSeq seq1("seq1","comment","NNNNNATATATGCGCGCATGCATGCNNNNN");
   FastaSeq seq2("seq2","comment","NNNNNNNNNNNATCGACATGCTANNNNGTGAGTCTANNNN");
@@ -50,22 +49,30 @@ void test_saveLoadData() {
   extractData(datJ,ff);
   mu_assert_eq((size_t)2, datJ.regions.size(), "wrong number of regions");
   mu_assert_eq(ff.filename, datJ.name, "wrong sequence name");
-  saveData(datJ, iname2);
+  cerr << "save index..." << endl;
+  saveData(datJ, iname);
 
   //try loading and check
-  cerr << "load joined complete..." << endl;
+  cerr << "load complete..." << endl;
   ComplexityData datJ2;
-  loadData(datJ2, iname2, false);
+  loadData(datJ2, iname, false);
   assert_dataEqual(datJ, datJ2, false);
 
   //try loading only info and check
-  cerr << "load joined info..." << endl;
+  cerr << "load info..." << endl;
   datJ2 = ComplexityData();
-  loadData(datJ2, iname2, true);
+  loadData(datJ2, iname, true);
   assert_dataEqual(datJ, datJ2, true);
 
-  remove(iname1);
-  remove(iname2);
+  cerr << "rename regions..." << endl;
+  vector<string> nn{"renamed1","renamed2"};
+  renameRegions(iname, nn);
+  ComplexityData datJ3;
+  loadData(datJ3, iname, true);
+  mu_assert_eq(datJ3.labels[0], nn[0], "wrong renamed name!");
+  mu_assert_eq(datJ3.labels[1], nn[1], "wrong renamed name!");
+
+  remove(iname);
 }
 
 void all_tests() {

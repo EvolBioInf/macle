@@ -71,7 +71,7 @@ void printResults(int64_t idx, vector<pair<size_t,size_t>> &regs, size_t w, size
 bool check_unique_names(FastaFile &ff) {
   vector<string> names;
   for (auto &seq : ff.seqs)
-    names.push_back(seq.name.substr(0,32));
+    names.push_back(seq.name.substr(0,MAX_LABEL_LEN));
   sort(names.begin(),names.end());
   for (size_t i=0; i<names.size()-1; i++)
     if (names[i]==names[i+1])
@@ -140,10 +140,19 @@ int main(int argc, char *argv[]) {
   args.parse(argc, argv);
   cout << fixed << setprecision(4);
 
+  if (args.newnames.size()>0) {
+    if (args.num_files==0) {
+      cerr << "ERROR: No index file provided!" << endl;
+      return EXIT_FAILURE;
+    }
+    renameRegions(args.files[0], args.newnames);
+    return EXIT_SUCCESS;
+  }
+
   tick();
   if (args.num_files == 0)
     processFile(nullptr); //from stdin
-    else
+  else
     processFile(args.files[0]);
   tock("total time");
 }

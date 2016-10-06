@@ -27,50 +27,45 @@ template<typename T> void binread(MMapReader &i, T &x) {
   i.off += sizeof(x);
 }
 
-// serialize relevant data of a sequence
-void serialize(ostream &o, ComplexityData const &cd) {
-  assert(cd.regions.size() == cd.labels.size());
-
-  binwrite(o, (size_t)cd.name.size());
-  for (auto c : cd.name)
-    binwrite(o, c);
-  binwrite(o, cd.len);
-  binwrite(o, cd.gc);
-
-  binwrite(o, (size_t)cd.regions.size());
-  for (auto i : cd.regions){
-    binwrite(o, i.first);
-    binwrite(o, i.second);
-  }
-  for (auto &l : cd.labels){
-    binwrite(o, l.size());
-    for (char c : l)
-      binwrite(o, c);
-  }
-
-  binwrite(o, cd.numbad);
-  binwrite(o, (size_t)cd.bad.size());
-  for (auto i : cd.bad){
-    binwrite(o, i.first);
-    binwrite(o, i.second);
-  }
-
-  binwrite(o, (size_t)cd.fstRegionFact.size());
-  for (auto i : cd.fstRegionFact)
-    binwrite(o, i);
-  binwrite(o, (size_t)cd.mlf.size());
-  for (auto i : cd.mlf)
-    binwrite(o, i);
-}
-
 const string magicstr = "BINIDX";
 
-// serialize a series of sequences
-bool saveData(ComplexityData &dat, char const *file) {
+bool saveData(ComplexityData &cd, char const *file) {
+  assert(cd.regions.size() == cd.labels.size());
   return with_file_out(file, [&](ostream &o) {
     for (auto c : magicstr) //magic sequence
       binwrite(o, c);
-    serialize(o, dat);
+
+    binwrite(o, (size_t)cd.name.size());
+    for (auto c : cd.name)
+      binwrite(o, c);
+    binwrite(o, cd.len);
+    binwrite(o, cd.gc);
+
+    binwrite(o, (size_t)cd.regions.size());
+    for (auto i : cd.regions){
+      binwrite(o, i.first);
+      binwrite(o, i.second);
+    }
+    for (auto &l : cd.labels) {
+      binwrite(o, l.size());
+      for (size_t i=0; i<MAX_LABEL_LEN; i++)
+        binwrite(o, i < l.size() ? l[i] : (char)0);
+    }
+
+    binwrite(o, cd.numbad);
+    binwrite(o, (size_t)cd.bad.size());
+    for (auto i : cd.bad){
+      binwrite(o, i.first);
+      binwrite(o, i.second);
+    }
+
+    binwrite(o, (size_t)cd.fstRegionFact.size());
+    for (auto i : cd.fstRegionFact)
+      binwrite(o, i);
+    binwrite(o, (size_t)cd.mlf.size());
+    for (auto i : cd.mlf)
+      binwrite(o, i);
+
     return true;
   });
 }
@@ -82,8 +77,8 @@ bool loadData(ComplexityData &dat, char const *file, bool onlyInfo) {
       << " Please pass it as argument!" << endl;
     return false;
   }
-  // return with_file(file, [&](istream &fin) {
-  return with_mmap(file, [&](MMapReader &fin) {
+  return with_file_in(file, [&](istream &fin) {
+  // return with_mmap(file, [&](MMapReader &fin) {
     char tmp;
     for (size_t i = 0; i<magicstr.size(); i++) {
       binread(fin, tmp);
@@ -115,9 +110,10 @@ bool loadData(ComplexityData &dat, char const *file, bool onlyInfo) {
     for (size_t j = 0; j < rnum; j++) {
       size_t lbllen;
       binread(fin,lbllen);
-      for (size_t k=0; k<lbllen; k++) {
+      for (size_t k=0; k<MAX_LABEL_LEN; k++) {
         binread(fin,tmp);
-        dat.labels[j] += tmp;
+        if (k < lbllen)
+          dat.labels[j] += tmp;
       }
     }
 
@@ -159,7 +155,49 @@ bool loadData(ComplexityData &dat, char const *file, bool onlyInfo) {
     }
 
     return true;
-  }); //, ios::binary);
+  }, ios::in|ios::binary);
+}
+
+bool renameRegions(char const *file, vector<string> const &names) {
+  if (!file) {
+    cerr << "ERROR: Can not load binary index file from pipe!"
+      << " Please pass it as argument!" << endl;
+    return false;
+  }
+  return with_file(file, [&](fstream &fs) {
+    char tmp;
+    for (size_t i = 0; i<magicstr.size(); i++) {
+      binread(fs, tmp);
+      if (tmp != magicstr[i]) {
+        cerr << "ERROR: This does not look like an index file!" << endl;
+        return false;
+      }
+    }
+    size_t tmpsz;
+    binread(fs,tmpsz);
+    for (size_t j=0; j<tmpsz; j++)
+      binread(fs,tmp);
+    double gc;
+    binread(fs,tmpsz);
+    binread(fs,gc);
+
+    size_t rnum;
+    binread(fs,rnum);
+    if (rnum != names.size()) {
+      cerr << "ERROR: number of given names and regions does not match!" << endl;
+      return false;
+    }
+    for (size_t j = 0; j < rnum; j++) {
+      binread(fs,tmpsz);
+      binread(fs,tmpsz);
+    }
+    for (auto &s : names) {
+      binwrite(fs, s.size());
+      for (size_t i=0; i<MAX_LABEL_LEN; i++)
+        binwrite(fs, i < s.size() ? s[i] : (char)0);
+    }
+    return true;
+  }, fstream::in|fstream::out|fstream::binary);
 }
 
 // given sequences from a fasta file, calculate match factors and runs

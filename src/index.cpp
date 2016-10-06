@@ -169,7 +169,7 @@ void extractData(ComplexityData &dat, FastaFile &file) {
   size_t offset=0;
   for (auto &it : file.seqs) { //extract region list from file
     dat.regions.push_back(make_pair(offset, it.seq.size()));
-    dat.labels.push_back(it.name+" "+it.comment);
+    dat.labels.push_back(it.name /* +" "+it.comment */);
     offset += it.seq.size();
 
     s += it.seq;

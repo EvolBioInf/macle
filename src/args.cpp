@@ -27,7 +27,7 @@ static struct option const opts[] = {
 
 static char const usage[] = PROGNAME
     " " VERSION " (" BUILD_INFO ")\n" DESCRIPTION "\n" COPYRIGHT "\n"
-    "Usage: " PROGNAME " [OPTIONS] [FILE]\n"
+    "Usage: " PROGNAME " [OPTIONS] FILE\n"
     "OPTIONS:\n"
     "\t-h: print this help message and exit\n"
     "\t-w NUM: size of sliding window (default: whole sequence length)\n"

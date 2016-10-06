@@ -1,0 +1,8 @@
+-std=c++11
+-Isrc
+-Wall
+-Wextra
+-Wshadow
+-DUSE_SDSL
+-Isdsl/include
+-Ilibdivsufsort/include

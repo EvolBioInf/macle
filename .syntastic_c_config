@@ -1,5 +1,0 @@
--std=gnu99
--Wall
--Wextra
--pedantic
--Isrc

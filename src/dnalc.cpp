@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <iomanip>
 #include <queue>
 using namespace std;
@@ -67,6 +68,17 @@ void printResults(int64_t idx, vector<pair<size_t,size_t>> &regs, size_t w, size
   }
 }
 
+bool check_unique_names(FastaFile &ff) {
+  vector<string> names;
+  for (auto &seq : ff.seqs)
+    names.push_back(seq.name.substr(0,32));
+  sort(names.begin(),names.end());
+  for (size_t i=0; i<names.size()-1; i++)
+    if (names[i]==names[i+1])
+      return false;
+  return true;
+}
+
 //load / extract data, show results
 void processFile(char const *file) {
   ComplexityData dat;
@@ -84,7 +96,11 @@ void processFile(char const *file) {
     FastaFile ff(file);
     tock("readFastaFromFile");
     if (ff.failed) {
-      cerr << "Skipping invalid FASTA file..." << endl;
+      cerr << "Invalid FASTA file!" << endl;
+      return;
+    }
+    if (!check_unique_names(ff)) {
+      cerr << "Headers of the FASTA sequence must be unique before the first whitespace or 32 characters!" << endl;
       return;
     }
     extractData(dat, ff);

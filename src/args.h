@@ -16,6 +16,7 @@
 #endif
 
 struct Task {
+  std::string lbl;
   int64_t idx;
   size_t start;
   size_t end;

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <queue>
+#include <map>
 using namespace std;
 
 #include "args.h"
@@ -30,32 +31,33 @@ void gnuplotCode(uint32_t w, uint32_t k, int n) {
 }
 
 // print data: X Y1 ... Yn
-void printPlot(int64_t idx, vector<pair<size_t,size_t>> &regs, uint32_t w, uint32_t k, ResultMat const &ys) {
+void printPlot(Task &t, vector<string> &lbls, vector<pair<size_t,size_t>> &regs, uint32_t w, uint32_t k, ResultMat const &ys) {
   queue<pair<size_t,size_t>> rs;
   for (auto &r : regs)
     rs.emplace(r);
-  uint32_t rcnt = idx < 0 ? 1 : idx+1; //region counter for output
+  uint32_t rcnt = t.idx < 0 ? 0 : t.idx; //region counter for output
 
   for (size_t j = 0; j < ys[0].second.size(); j++) {
     size_t off = j * k + w / 2;
     // cout << regs[idx].first + off << "\t";
-    if (idx < 0) {
+    if (t.idx < 0) {
       if (off >= rs.front().first + rs.front().second) {
         rs.pop();
         rcnt++;
       }
       off -= rs.front().first;
     }
-    cout << rcnt << "\t" << off << "\t"; // center of window
+    string lbl = (t.idx<0 && ys[0].second.size()==1) ? "<file>" : lbls[rcnt];
+    cout << lbl << "\t" << off << "\t"; // center of window
     for (size_t i = 0; i < ys.size(); i++)
       cout << ys[i].second[j] <<"\t";
     cout << endl;
   }
 }
 
-void printResults(int64_t idx, vector<pair<size_t,size_t>> &regs, size_t w, size_t k, ResultMat const &ys, bool gnuplot) {
+void printResults(Task &t, vector<string> &lbls, vector<pair<size_t,size_t>> &regs, size_t w, size_t k, ResultMat const &ys, bool gnuplot) {
   if (!gnuplot) { //simple output
-    printPlot(idx, regs, w, k, ys);
+    printPlot(t, lbls, regs, w, k, ys);
   } else { //dnalc_plot
     cout << "DNALC_PLOT" << endl; //magic keyword
     gnuplotCode(w, k, ys.size()); // gnuplot control code
@@ -64,7 +66,7 @@ void printResults(int64_t idx, vector<pair<size_t,size_t>> &regs, size_t w, size
     for (size_t j = 0; j < ys.size(); j++) // columns for each seq
       cout << "\"" << ys[j].first << "\"\t";
     cout << endl;
-    printPlot(idx, regs, w, k, ys); // print plot itself
+    printPlot(t, lbls, regs, w, k, ys); // print plot itself
   }
 }
 
@@ -111,11 +113,27 @@ void processFile(char const *file) {
     }
   }
 
+  //map from region name to index within index file
+  map<string, int64_t> nameidx;
+  nameidx[""] = -1;
+  for (int64_t i=0; i<(int64_t)dat.labels.size(); i++)
+    nameidx[dat.labels[i]] = i;
+
   for (auto &task : args.tasks) {
+    //get index of region if not global adressing
+    if (task.lbl != "") {
+      if (nameidx.find(task.lbl) == nameidx.end()) {
+        cerr << "ERROR: Invalid sequence name!" << endl;
+        return;
+      }
+      task.idx = nameidx[task.lbl];
+    }
+    //sanity check for manually set index values
     if (task.idx < -1 || task.idx >= (int64_t)dat.regions.size()) {
-      cerr << "ERROR: Invalid sequence index!" << endl;
+      cerr << "ERROR: Invalid sequence name!" << endl;
       return;
     }
+
     size_t reglen = task.idx >= 0 ? dat.regions[task.idx].second : dat.len;
     if ((task.start!=0 || task.end!=0) && (task.start > task.end || task.start >= reglen ||
         task.end-task.start+1 > reglen - task.start)) {
@@ -128,7 +146,7 @@ void processFile(char const *file) {
     auto ys = calcComplexities(w, k, task, dat);
     if (!args.p) {
       if (args.tasks.size()==1) {
-        printResults(task.idx, dat.regions, w, k, ys, args.g);
+        printResults(task, dat.labels, dat.regions, w, k, ys, args.g);
       } else {
         cout << task.num << "\t" << ys[0].second[0] << endl;
       }

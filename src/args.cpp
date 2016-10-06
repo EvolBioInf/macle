@@ -60,27 +60,28 @@ size_t stol_or_fail(string s) {
   return n;
 }
 
-Task::Task(int64_t i, size_t s, size_t e) : idx(i), start(s), end(e), num(0) {}
+Task::Task(int64_t i, size_t s, size_t e) : lbl(""), idx(i), start(s), end(e), num(0) {}
 Task::Task(string str) {
   string orig = str;
   size_t sep = str.find(":");
+  lbl = "";
   idx = -1;
   start = 0;
   end = 0;
   if (sep == 0) {
-    cerr << "ERROR: invalid region string \"" << orig << "\"! syntax: IDX | IDX:START-END" << endl;
+    cerr << "ERROR: invalid region string \"" << orig << "\"! syntax: LBL | LBL:START-END" << endl;
     exit(1);
   }
-  if (sep == string::npos) { //just index
-    idx = stol_or_fail(str) - 1;
+  if (sep == string::npos) { //just label
+    lbl = str;
     return;
   }
-  //index:start-end
-  idx = (int64_t)stol_or_fail(str.substr(0, sep)) - 1;
+  //label:start-end
+  lbl = str.substr(0, sep);
   str = str.substr(sep+1, str.size()-(sep+1));
   sep = str.find("-");
   if (sep == string::npos) {
-    cerr << "ERROR: invalid region string \"" << orig << "\"! syntax: IDX | IDX:START-END" << endl;
+    cerr << "ERROR: invalid region string \"" << orig << "\"! syntax: LBL | LBL:START-END" << endl;
     exit(1);
   }
   start = stol_or_fail(str.substr(0, sep)) - 1;

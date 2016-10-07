@@ -191,6 +191,7 @@ bool renameRegions(char const *file, vector<string> const &names) {
       binread(fs,tmpsz);
       binread(fs,tmpsz);
     }
+    fs.seekp(fs.tellg());
     for (auto &s : names) {
       binwrite(fs, s.size());
       for (size_t i=0; i<MAX_LABEL_LEN; i++)

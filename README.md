@@ -58,7 +58,7 @@ can be less than 0. However, it is possible to obtain MC values
 slighly larger than 1, as this maximum is only an expectation that
 holds in the limit of long sequences.
 
-## Usage 
+## Usage
 
 dnalc can be applied directly to FASTA files. If a file contains
 multiple sequences, they are treated as one long sequence in the
@@ -76,9 +76,11 @@ defined by input file.
 
 If no parameters are specified, dnalc returns a single MC value for
 the complete concatenated sequence. The `-n` parameter restricts dnalc
-to specific regions. If the file contains multiple sequences `-n NUM`
-selects the NUM-th sequence. It is also possible to restrict dnalc to
-a region of that sequence by using `-n NUM:FROM-TO`.
+to specific regions. If the file contains multiple sequences `-n NAME`
+selects the sequence with the given name. The name is a prefix of the FASTA
+header of the sequence until either the first whitespace or 32 characters are reached.
+It is also possible to restrict dnalc to a region of that sequence by using `-n
+NAME:FROM-TO`.
 
 **Examples**
 
@@ -86,12 +88,12 @@ a region of that sequence by using `-n NUM:FROM-TO`.
 # get MC value for the whole concatenated sequence:
 dnalc seq.fa
 # get MC value for the complete second sequence in the file:
-dnalc -n 2 seq.fa
+dnalc -n chrZ seq.fa
 # get MC value for the interval 12-345 of the second sequence in the file:
-dnalc -n 2:12-345 seq.fa
+dnalc -n chrZ:12-345 seq.fa
 ```
 
-### Batch modes 
+### Batch modes
 dnalc has two batch modes: *sliding window* or *list of queries*.
 When given the sliding window size parameter `-w`, dnalc returns a
 series of MC values. Alternatively, when given a file with intervals,
@@ -124,7 +126,7 @@ dnalc seq.fa -w 10000 -k 10000
 dnalc seq.fa -f queries.txt
 ```
 
-### FASTA vs index file 
+### FASTA vs index file
 Raw sequence data can either be piped into dnalc, or passed as a
 file. However, instead of raw sequence data, dnalc also accepts an
 index to that sequence as input. Working with such a pre-computed
@@ -143,6 +145,19 @@ returns a list of all sequences indexed, in the same order as in the
 input file. This also lists the possible arguments for the `-n`
 parameter.
 
+### Renaming
+If you want to rename the sequences in the index (e.g. if the name deduced from
+the FASTA header is not human readable), you can create a list of new names in a
+text file, one name per line. Each name shall have at most 32 characters and be
+unique. Then use the `-r` parameter to rename the sequences in an index. The
+new names stored in the text file should be in the order the sequences appear in the
+index (check with `-l`).
+
+```
+# rename sequences in existing index
+dnalc -r new_names_file.txt some_seq.idx
+```
+
 ### Gnuplot integration
 The results of a sliding window analysis are best visualized. This can
 be done using the script `dnalc_plot.sh`, which is part of the dnalc
@@ -151,7 +166,7 @@ gnuplot. To use it, add the `-g` flag to dnalc and pipe the result
 into the script:
 
 ```
-dnalc -i seq.idx -n 1 -w 10000 -g | ./dnalc_plot.sh
+dnalc -i seq.idx -n chrZ -w 10000 -g | ./dnalc_plot.sh
 ```
 
 ## References

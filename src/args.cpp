@@ -32,14 +32,13 @@ static char const usage[] = PROGNAME
     " " VERSION " (" BUILD_INFO ")\n" DESCRIPTION "\n" COPYRIGHT "\n"
     "Usage: " PROGNAME " [OPTIONS] FILE\n"
     "OPTIONS:\n"
-    "\t-h: print this help message and exit\n"
     "\t-w NUM: size of sliding window (default: whole sequence length)\n"
     "\t-k NUM: interval between sliding windows (default: w/10)\n"
 
     "\t-i: use index file instead of FASTA sequence file\n"
     "\t-s: output index file for further processing (no regular result)\n"
     "\t-l: list sequences stored in index file\n"
-    "\t-r FILE: file that contains a list of regions to process\n"
+    "\t-r FILE: rename sequences in index file to names provided in FILE\n"
     "\t-n IDX:FROM-TO: calculate for given sequence and region within file\n"
     "\t   (defaults: IDX=0, FROM=0, TO=end of whole sequence. valid syntax: IDX | IDX:FROM-TO)\n"
     "\t-f FILE: file that contains a list of regions to process\n"
@@ -47,7 +46,8 @@ static char const usage[] = PROGNAME
 
     "\t-p: print match factors\n"
     "\t-b: print benchmarking information\n"
-    "\t-g: output to plot with dnalc_plot.sh (gnuplot wrapper)\n";
+    "\t-g: output to plot with dnalc_plot.sh (gnuplot wrapper)\n"
+    "\t-h: print this help message and exit\n";
 
 size_t stol_or_fail(string s) {
   size_t n;

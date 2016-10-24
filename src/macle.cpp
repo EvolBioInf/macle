@@ -58,8 +58,8 @@ void printPlot(Task &t, vector<string> &lbls, vector<pair<size_t,size_t>> &regs,
 void printResults(Task &t, vector<string> &lbls, vector<pair<size_t,size_t>> &regs, size_t w, size_t k, ResultMat const &ys, bool gnuplot) {
   if (!gnuplot) { //simple output
     printPlot(t, lbls, regs, w, k, ys);
-  } else { //dnalc_plot
-    cout << "DNALC_PLOT" << endl; //magic keyword
+  } else { //macle_plot
+    cout << "MACLE_PLOT" << endl; //magic keyword
     gnuplotCode(w, k, ys.size()); // gnuplot control code
     // print column header (for plot labels)
     cout << "offset\t";

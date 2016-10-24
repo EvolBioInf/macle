@@ -4,8 +4,8 @@
 #include <vector>
 #include <string>
 
-#define PROGNAME "dnalc"
-#define DESCRIPTION "Tool to calculate DNA local neighborhood complexity"
+#define PROGNAME "macle"
+#define DESCRIPTION "Tool to calculate the global and local match complexity of DNA"
 #define VERSION "0.1"
 #define COPYRIGHT "Copyright (C) 2016 Anton Pirogov, Bernhard Haubold"
 
@@ -40,7 +40,7 @@ struct Args {
   std::vector<std::string> newnames; //new names for regions -> rename regions in index
 
   bool p = false;  // print match length decomposition?
-  bool g = false;  // output for ./dnalc_plot.sh
+  bool g = false;  // output for ./macle_plot.sh
   bool b = false;  // benchmark run
 
   // non-parameter arguments

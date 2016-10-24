@@ -1,8 +1,8 @@
 #/bin/bash
 PLOTFILE=plotdata.tmp
 read keyword
-if [ "$keyword" != "DNALC_PLOT" ]; then
-  >&2 echo "ERROR: Unexpected input data to dnalc_plot.sh! Did you set the correct flag in dnalc?"
+if [ "$keyword" != "MACLE_PLOT" ]; then
+  >&2 echo "ERROR: Unexpected input data to macle_plot.sh! Did you set the correct flag in macle?"
   exit
 fi
 

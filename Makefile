@@ -4,7 +4,7 @@ LOCAL_LIBDIVSUFSORT ?= 1
 
 CXXFLAGS := -std=c++11 -Isrc -Wall -Wextra -O3 -g -ggdb -Wshadow # -pg
 LDFLAGS := -lm -ldivsufsort -ldivsufsort64 # -pg
-TARGET := dnalc
+TARGET := macle
 
 SOURCES := $(wildcard src/*.cpp)
 OBJECTS := $(SOURCES:.cpp=.o)

@@ -1,17 +1,17 @@
-# dnalc
+# <img height="25" src="https://cdn.rawgit.com/EvolBioInf/macle/master/macle.svg" /> macle
 
-Local complexity estimation from DNA sequences
+Tool for **Ma**tch **c**omp**le**xity calculation for DNA sequences.
 
 ## Build
 
 This program depends on [libdivsufsort](https://github.com/y-256/libdivsufsort) and
 [SDSL](https://github.com/simongog/sdsl-lite).
 
-To build dnalc, first obtain the source:
+To build macle, first obtain the source:
 
 ```
-git clone https://github.com/EvolBioInf/dnalc.git
-cd dnalc
+git clone https://github.com/EvolBioInf/macle.git
+cd macle
 ```
 
 If libdivsufsort is not installed, build it first:
@@ -26,17 +26,17 @@ Simiarly, if SDSL is not installed, enter:
 make sdsl
 ```
 
-Finally, build dnalc:
+Finally, build macle:
 
 ```
 make
 ```
 
-The `dnalc` binary is now located in the `build` directory.
+The `macle` binary is now located in the `build` directory.
 
 ## The match complexity
 
-dnalc implements a measure of complexity we call the match complexity,
+macle implements a measure of complexity we call the match complexity,
 MC. MC is a measure of non-repetitiveness of a given sequence. To
 compute MC, a sequence gets factorized into consecutive unique
 substrings, the match factors.  A substring is unique if the sequence
@@ -60,7 +60,7 @@ holds in the limit of long sequences.
 
 ## Usage
 
-dnalc can be applied directly to FASTA files. If a file contains
+macle can be applied directly to FASTA files. If a file contains
 multiple sequences, they are treated as one long sequence in the
 factorization step.  The MC values are always calculated with respect
 to the complete input sequence.
@@ -69,35 +69,35 @@ For example, to investigate the repetitiveness of chromosomes within a
 genome, first create a FASTA file that contains the sequences of all
 chromosomes. Note that keeping the chromosomes in separate files may
 lead to different results, because possible repeats between
-chromosomes cannot be detected. This feature of dnalc allows
+chromosomes cannot be detected. This feature of macle allows
 repetitiveness to be investigated on various scales,
 e. g. chromosome-wide vs. genome-wide - the "frame of reference" is
 defined by input file.
 
-If no parameters are specified, dnalc returns a single MC value for
-the complete concatenated sequence. The `-n` parameter restricts dnalc
+If no parameters are specified, macle returns a single MC value for
+the complete concatenated sequence. The `-n` parameter restricts macle
 to specific regions. If the file contains multiple sequences `-n NAME`
 selects the sequence with the given name. The name is a prefix of the FASTA
 header of the sequence until either the first whitespace or 32 characters are reached.
-It is also possible to restrict dnalc to a region of that sequence by using `-n
+It is also possible to restrict macle to a region of that sequence by using `-n
 NAME:FROM-TO`.
 
 **Examples**
 
 ```
 # get MC value for the whole concatenated sequence:
-dnalc seq.fa
+macle seq.fa
 # get MC value for the complete second sequence in the file:
-dnalc -n chrZ seq.fa
+macle -n chrZ seq.fa
 # get MC value for the interval 12-345 of the second sequence in the file:
-dnalc -n chrZ:12-345 seq.fa
+macle -n chrZ:12-345 seq.fa
 ```
 
 ### Batch modes
-dnalc has two batch modes: *sliding window* or *list of queries*.
-When given the sliding window size parameter `-w`, dnalc returns a
+macle has two batch modes: *sliding window* or *list of queries*.
+When given the sliding window size parameter `-w`, macle returns a
 series of MC values. Alternatively, when given a file with intervals,
-dnalc prints an MC value for each interval.
+macle prints an MC value for each interval.
 
 The `-w` parameter (optionally combined with `-n`) yields the values
 of windows within the specified region. Using `-w` without `-n`
@@ -119,28 +119,28 @@ these intervals, one per line, in the same format as for
 
 ```
 #produces a series of values for sliding windows of size 10000 and step 1000
-dnalc seq.fa -w 10000
+macle seq.fa -w 10000
 #produces a series of values for non-overlapping windows (k=w) of size 10000
-dnalc seq.fa -w 10000 -k 10000
+macle seq.fa -w 10000 -k 10000
 #produces a value for each query
-dnalc seq.fa -f queries.txt
+macle seq.fa -f queries.txt
 ```
 
 ### FASTA vs index file
-Raw sequence data can either be piped into dnalc, or passed as a
-file. However, instead of raw sequence data, dnalc also accepts an
+Raw sequence data can either be piped into macle, or passed as a
+file. However, instead of raw sequence data, macle also accepts an
 index to that sequence as input. Working with such a pre-computed
 index can speed up the analysis of long sequences by orders of
-magnitude. An index file is obtained by calling dnalc with the `-s`
-flag and piping the output into a file: `dnalc seq.fa -s > seq.idx`.
+magnitude. An index file is obtained by calling macle with the `-s`
+flag and piping the output into a file: `macle seq.fa -s > seq.idx`.
 
 Load an index file by using the `-i` flag; so if a file `seq.fa` was
-transformed into the index `seq.idx`, use `dnalc -i seq.idx` instead
-of `dnalc seq.fa`, everything else stays the same. In fact, whenever
-dnalc is applied to a FASTA file, internally the index structure is
+transformed into the index `seq.idx`, use `macle -i seq.idx` instead
+of `macle seq.fa`, everything else stays the same. In fact, whenever
+macle is applied to a FASTA file, internally the index structure is
 calculated on the fly and thrown away after the analysis.
 
-To inspect an index file, use `dnalc -i someindex.idx -l`.  This
+To inspect an index file, use `macle -i someindex.idx -l`.  This
 returns a list of all sequences indexed, in the same order as in the
 input file. This also lists the possible arguments for the `-n`
 parameter.
@@ -155,18 +155,18 @@ index (check with `-l`).
 
 ```
 # rename sequences in existing index
-dnalc -r new_names_file.txt some_seq.idx
+macle -r new_names_file.txt some_seq.idx
 ```
 
 ### Gnuplot integration
 The results of a sliding window analysis are best visualized. This can
-be done using the script `dnalc_plot.sh`, which is part of the dnalc
-repository. The script accepts dnalc output and visualizes it with
-gnuplot. To use it, add the `-g` flag to dnalc and pipe the result
+be done using the script `macle_plot.sh`, which is part of the macle
+repository. The script accepts macle output and visualizes it with
+gnuplot. To use it, add the `-g` flag to macle and pipe the result
 into the script:
 
 ```
-dnalc -i seq.idx -n chrZ -w 10000 -g | ./dnalc_plot.sh
+macle -i seq.idx -n chrZ -w 10000 -g | ./macle_plot.sh
 ```
 
 ## References

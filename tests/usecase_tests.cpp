@@ -9,7 +9,7 @@ ResultMat ys;
 FastaFile ff;
 ComplexityData datJ;
 
-// dnalc seq.fa, dnalc -j seq.fa
+// macle seq.fa, macle -j seq.fa
 void test_global_no_settings() {
   size_t w=0, k=0;
   //joined, global, no sequence specified

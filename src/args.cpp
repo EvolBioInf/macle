@@ -46,7 +46,7 @@ static char const usage[] = PROGNAME
 
     "\t-p: print match factors\n"
     "\t-b: print benchmarking information\n"
-    "\t-g: output to plot with dnalc_plot.sh (gnuplot wrapper)\n"
+    "\t-g: output to plot with macle.sh (gnuplot wrapper)\n"
     "\t-h: print this help message and exit\n";
 
 size_t stol_or_fail(string s) {

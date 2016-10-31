@@ -49,51 +49,45 @@ static char const usage[] = PROGNAME
     "\t-g: output to plot with macle.sh (gnuplot wrapper)\n"
     "\t-h: print this help message and exit\n";
 
-size_t stol_or_fail(string s) {
-  size_t n;
+bool stol_or_fail(string s, size_t &n) {
   try {
     n = stol(s, nullptr, 10);
   } catch (...) {
-    cerr << "ERROR: failed to parse \"" << s << "\" as number!" << endl;
-    exit(1);
+    return false;
   }
-  return n;
+  return true;
 }
 
 Task::Task(int64_t i, size_t s, size_t e) : lbl(""), idx(i), start(s), end(e), num(0) {}
-Task::Task(string str) {
-  string orig = str;
+bool Task::parse(string str) {
   size_t sep = str.find(":");
-  lbl = "";
-  idx = -1;
-  start = 0;
-  end = 0;
-  num = 0;
-  if (sep == 0) {
-    cerr << "ERROR: invalid region string \"" << orig << "\"! syntax: LBL | LBL:START-END" << endl;
-    exit(1);
-  }
+  if (sep == 0)
+    return false;
   if (sep == string::npos) { //just label
     lbl = str;
-    return;
+    return true;
   }
   //label:start-end
   lbl = str.substr(0, sep);
   str = str.substr(sep+1, str.size()-(sep+1));
   sep = str.find("-");
-  if (sep == string::npos) {
-    cerr << "ERROR: invalid region string \"" << orig << "\"! syntax: LBL | LBL:START-END" << endl;
-    exit(1);
-  }
-  start = stol_or_fail(str.substr(0, sep)) - 1;
+  if (sep == string::npos)
+    return false;
+  if (!stol_or_fail(str.substr(0, sep), start))
+    return false;
+  start -= 1;
   str = str.substr(sep+1, str.size()-(sep+1));
-  end = stol_or_fail(str) - 1;
+  if (!stol_or_fail(str,end))
+    return false;
+  end -= 1;
+  return true;
 }
 
 void Args::parse(int argc, char *argv[]) {
   int c = 0;       // getopt stores value returned (last struct component) here
   int opt_idx = 0; // getopt stores the option index here.
   vector<string> names;
+  Task t(-1,0,0);
   while ((c = getopt_long(argc, argv, opts_short, opts, &opt_idx)) != -1) {
     switch (c) {
     case 0: // long option without a short name
@@ -124,7 +118,12 @@ void Args::parse(int argc, char *argv[]) {
         cerr << "ERROR: -n incompatible with -f!" << endl;
         exit(1);
       }
-      args.tasks.push_back(Task(string(optarg)));
+      if (t.parse(string(optarg)))
+        args.tasks.push_back(t);
+      else {
+        cerr << "ERROR: invalid region string \"" << optarg << "\"! syntax: LBL | LBL:START-END" << endl;
+        exit(1);
+      }
       break;
     case 'f':
       if (!args.tasks.empty()) {
@@ -135,9 +134,11 @@ void Args::parse(int argc, char *argv[]) {
         string line;
         int num=0;
         while (in >> line) {
-          Task t(line);
-          t.num=num++;
-          args.tasks.push_back(t);
+          t.num=++num;
+          if (t.parse(line))
+            args.tasks.push_back(t);
+          else
+            cerr << "WARNING: invalid region string \"" << line << "\" in line " << num << "! syntax: LBL | LBL:START-END" << endl;
         }
         return true;
       }))
@@ -192,6 +193,8 @@ void Args::parse(int argc, char *argv[]) {
       abort();
     }
   }
+
+  //no tasks given -> global complexity of whole sequence
   if (args.tasks.empty())
     args.tasks.push_back(Task(-1,0,0));
 

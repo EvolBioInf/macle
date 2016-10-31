@@ -22,7 +22,7 @@ struct Task {
   size_t end;
   size_t num;
   Task(int64_t i, size_t s, size_t e);
-  Task(std::string str);
+  bool parse(std::string str);
 };
 
 struct Args {

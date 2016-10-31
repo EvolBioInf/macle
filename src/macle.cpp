@@ -8,6 +8,7 @@ using namespace std;
 #include "args.h"
 #include "bench.h"
 #include "complexity.h"
+#include "util.h"
 
 void printIndexInfo(ComplexityData const &dat) {
   cout << "name:\t" << dat.name << endl
@@ -84,6 +85,11 @@ bool check_unique_names(FastaFile &ff) {
 //load / extract data, show results
 void processFile(char const *file) {
   ComplexityData dat;
+
+  //infer whether it is an index (user can forget -i)
+  if (with_file_in(file, readMagic))
+    args.i = true;
+
   if (args.i) { //load from index
     tick();
     if (!loadData(dat, file, args.l))
@@ -120,25 +126,27 @@ void processFile(char const *file) {
     nameidx[dat.labels[i]] = i;
 
   for (auto &task : args.tasks) {
+    string errstr = "ERROR in task #" + to_string(task.num) + ": ";
+
     //get index of region if not global adressing
     if (task.lbl != "") {
       if (nameidx.find(task.lbl) == nameidx.end()) {
-        cerr << "ERROR: Invalid sequence name!" << endl;
-        return;
+        cerr << errstr << "Invalid sequence name: " << task.lbl << endl;
+        continue;
       }
       task.idx = nameidx[task.lbl];
     }
     //sanity check for manually set index values
     if (task.idx < -1 || task.idx >= (int64_t)dat.regions.size()) {
-      cerr << "ERROR: Invalid sequence name!" << endl;
-      return;
+      cerr << errstr << "Invalid sequence index (" << task.idx << ") for name " << task.lbl << endl;
+      continue;
     }
 
     size_t reglen = task.idx >= 0 ? dat.regions[task.idx].second : dat.len;
     if ((task.start!=0 || task.end!=0) && (task.start > task.end || task.start >= reglen ||
         task.end-task.start+1 > reglen - task.start)) {
-      cerr << "ERROR: Invalid range!" << endl;
-      return;
+      cerr << errstr << "Invalid range: " << task.start << "-" << task.end << endl;
+      continue;
     }
 
     size_t w = args.w;

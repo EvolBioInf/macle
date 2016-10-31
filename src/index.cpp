@@ -70,6 +70,18 @@ bool saveData(ComplexityData &cd, char const *file) {
   });
 }
 
+//take stream, consume magic string, return success value
+bool readMagic(istream &fin) {
+  char tmp;
+  for (size_t i = 0; i<magicstr.size(); i++) {
+    binread(fin, tmp);
+    if (tmp != magicstr[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // load precomputed data from stdin (when file=nullptr) or some file
 bool loadData(ComplexityData &dat, char const *file, bool onlyInfo) {
   if (!file) {
@@ -79,15 +91,12 @@ bool loadData(ComplexityData &dat, char const *file, bool onlyInfo) {
   }
   return with_file_in(file, [&](istream &fin) {
   // return with_mmap(file, [&](MMapReader &fin) {
-    char tmp;
-    for (size_t i = 0; i<magicstr.size(); i++) {
-      binread(fin, tmp);
-      if (tmp != magicstr[i]) {
-        cerr << "ERROR: This does not look like an index file!" << endl;
-        return false;
-      }
+    if (!readMagic(fin)) {
+      cerr << "ERROR: This does not look like an index file!" << endl;
+      return false;
     }
 
+    char tmp;
     size_t namelen;
     binread(fin,namelen);
     for (size_t j=0; j<namelen; j++) {

@@ -68,6 +68,7 @@ Task::Task(string str) {
   idx = -1;
   start = 0;
   end = 0;
+  num = 0;
   if (sep == 0) {
     cerr << "ERROR: invalid region string \"" << orig << "\"! syntax: LBL | LBL:START-END" << endl;
     exit(1);

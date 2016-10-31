@@ -26,6 +26,7 @@ struct ComplexityData {
 
 const size_t MAX_LABEL_LEN = 32;
 
+bool readMagic(istream &fin);
 bool loadData(ComplexityData &cplx, char const *file, bool onlyInfo=false);
 bool saveData(ComplexityData &cplx, char const *file);
 bool renameRegions(char const *file, std::vector<std::string> const &names);

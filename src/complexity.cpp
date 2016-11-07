@@ -138,10 +138,11 @@ void mlComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y
           continue;
         }
 
-      size_t numfacs = sumFromTo(ps, l, r);
+      int64_t numfacs = (int64_t)sumFromTo(ps, l, r);
       double effectiveW = w;
       if (globalMode) {
         numfacs -= badivs;     //subtract number of bad intervals from total
+        numfacs = max(1L, numfacs); //bugfix: sometimes there are more bad ivs than factors!
         effectiveW -= numbad;  //we ignore the N-blocks
       }
 

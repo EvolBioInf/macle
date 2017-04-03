@@ -86,8 +86,8 @@ bool check_unique_names(FastaFile &ff) {
 void processFile(char const *file) {
   ComplexityData dat;
 
-  //infer whether it is an index (user can forget -i)
-  if (with_file_in(file, readMagic))
+  //infer whether given file is an index (user can forget -i)
+  if (file && with_file_in(file, readMagic))
     args.i = true;
 
   if (args.i) { //load from index

@@ -93,7 +93,7 @@ typedef struct dynstr {
   size_t capacity, count;
 } dynstr;
 
-static inline void *reallocarray(void *optr, size_t nmemb, size_t size);
+static inline void *my_reallocarray(void *optr, size_t nmemb, size_t size);
 static inline int dynstr_init(dynstr *ds);
 static inline int dynstr_put(dynstr *ds, char c);
 static inline void dynstr_free(dynstr *ds);
@@ -455,7 +455,7 @@ static inline int dynstr_init(dynstr *ds) {
  */
 static inline int dynstr_put(dynstr *ds, char c) {
   if (ds->count >= ds->capacity - 1) {
-    char *neu = (char *)reallocarray(ds->str, ds->capacity / 2, 3);
+    char *neu = (char *)my_reallocarray(ds->str, ds->capacity / 2, 3);
     if (!neu) {
       dynstr_free(ds);
       return -1;
@@ -521,7 +521,7 @@ static inline size_t dynstr_len(const dynstr *ds) { return ds->count; }
  */
 #define MUL_NO_OVERFLOW ((size_t)1 << (sizeof(size_t) * 4))
 
-static inline void *reallocarray(void *optr, size_t nmemb, size_t size) {
+static inline void *my_reallocarray(void *optr, size_t nmemb, size_t size) {
   if ((nmemb >= MUL_NO_OVERFLOW || size >= MUL_NO_OVERFLOW) && nmemb > 0 &&
       SIZE_MAX / nmemb < size) {
     errno = ENOMEM;

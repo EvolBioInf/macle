@@ -51,7 +51,7 @@ void printPlot(Task &t, vector<string> &lbls, vector<pair<size_t,size_t>> &regs,
     string lbl = (t.idx<0 && ys[0].second.size()==1) ? "<file>" : lbls[rcnt];
     cout << lbl << "\t" << off << "\t"; // center of window
     for (size_t i = 0; i < ys.size(); i++)
-      cout << ys[i].second[j] <<"\t";
+      cout << ys[i].second[j] << (i<ys.size()-1 ? "\t" : "");
     cout << endl;
   }
 }

@@ -7,7 +7,11 @@
  **************************************************/
 #pragma once
 #include "config.h"
+#ifndef PARALLEL
 #include <divsufsort64.h>
+#else
+#include <divsufsort.h>
+#endif
 
 /* define data container */
 class Esa {

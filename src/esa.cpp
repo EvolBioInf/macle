@@ -14,7 +14,13 @@
 #include <algorithm>
 using namespace std;
 
+#ifndef PARALLEL
 #include <divsufsort64.h>
+#else
+#include <omp.h>
+typedef int64_t saidx64_t;
+#include <divsufsort.h>
+#endif
 
 #include "bench.h"
 #include "esa.h"
@@ -23,7 +29,16 @@ using namespace std;
 uint_vec getSa(char const *seq, size_t n) {
   sauchar_t *t = (sauchar_t *)seq;
   vector<saidx64_t> sa(n + 1);
+#ifndef PARALLEL
   if (divsufsort64(t, sa.data(), (saidx64_t)n) != 0) {
+#else
+  #pragma omp parallel
+  {
+    #pragma omp single
+    cerr << "#threads: " << omp_get_num_threads() << endl;
+  }
+  if (divsufsort(t, sa.data(), (saidx64_t)n) != 0) {
+#endif
     cout << "ERROR[esa]: suffix sorting failed." << endl;
     exit(-1);
   }

@@ -17,7 +17,13 @@ cd macle
 If libdivsufsort is not installed, build it first:
 
 ```
-make libdivsufsort
+make divsufsort
+```
+
+If you want parallelized libdivsufsort, set the according flag in the Makefile and build it:
+
+```
+make parallel-divsufsort
 ```
 
 Simiarly, if SDSL is not installed, enter:

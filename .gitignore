@@ -2,6 +2,7 @@
 build/
 sdsl*/
 libdivsufsort/
+parallel-divsufsort/
 gsl*/
 tests/scratchpad*
 tags

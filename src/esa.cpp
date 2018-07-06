@@ -12,13 +12,13 @@
 #include <cinttypes>
 #include <iostream>
 #include <algorithm>
+#include <thread>
 using namespace std;
 
 #ifndef PARALLEL
 #include <divsufsort64.h>
 #else
 #include <omp.h>
-typedef int64_t saidx64_t;
 #include <divsufsort.h>
 #endif
 
@@ -28,16 +28,26 @@ typedef int64_t saidx64_t;
 // calculate suffix array using divsufsort
 uint_vec getSa(char const *seq, size_t n) {
   sauchar_t *t = (sauchar_t *)seq;
-  vector<saidx64_t> sa(n + 1);
 #ifndef PARALLEL
+  vector<saidx64_t> sa(n + 1);
   if (divsufsort64(t, sa.data(), (saidx64_t)n) != 0) {
 #else
+  vector<int64_t> sa(n + 1);
+  unsigned cores = std::thread::hardware_concurrency();
   #pragma omp parallel
   {
     #pragma omp single
-    cerr << "#threads: " << omp_get_num_threads() << endl;
+    {
+      unsigned nthreads = omp_get_num_threads();
+      if (nthreads > cores) {
+        omp_set_num_threads(cores);
+        nthreads = cores;
+      }
+      cerr << "#cores: " << cores << "\t#threads: " << nthreads << endl;
+
+    }
   }
-  if (divsufsort(t, sa.data(), (saidx64_t)n) != 0) {
+  if (divsufsort(t, sa.data(), (int64_t)n) != 0) {
 #endif
     cout << "ERROR[esa]: suffix sorting failed." << endl;
     exit(-1);

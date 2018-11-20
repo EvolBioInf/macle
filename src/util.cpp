@@ -14,8 +14,8 @@
 #include <fcntl.h>
 
 //for mmap stuff
-#include <sys/mman.h>
-#include <sys/stat.h>
+// #include <sys/mman.h>
+// #include <sys/stat.h>
 
 #include "util.h"
 #include "args.h"
@@ -142,6 +142,7 @@ bool with_file_out(char const *file, function<bool(ostream&)> lambda, ios_base::
   return with_file(file, lambda, ios_base::out|mode, &cout);
 }
 
+/*
 size_t getFilesize(const char* filename) {
     struct stat st;
     stat(filename, &st);
@@ -168,4 +169,5 @@ bool with_mmap(char const *file, function<bool(MMapReader&)> lambda) {
   close(fd);
   return ret;
 }
+*/
 

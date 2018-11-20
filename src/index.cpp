@@ -20,6 +20,7 @@ template<typename T> void binwrite(ostream &o, T x) {
 template<typename T> void binread(istream &i, T &x) {
   i.read(reinterpret_cast<char*>(&x),sizeof(x));
 }
+/*
 template<typename T> void binget(MMapReader &i, size_t offbytes, T &x) {
   x = *reinterpret_cast<T*>(i.dat+i.off+offbytes);
 }
@@ -27,6 +28,7 @@ template<typename T> void binread(MMapReader &i, T &x) {
   binget(i, 0, x);
   i.off += sizeof(x);
 }
+*/
 
 const string magicstr = "BINIDX";
 

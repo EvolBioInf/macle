@@ -73,7 +73,7 @@ pair<size_t,size_t> numBad(size_t offset, size_t len, ComplexityData const &dat)
     it--;
 
   while (it != dat.bad.end() && it->first < offset+len) {
-    int64_t add = max(0L, (int64_t)min(offset+len, it->second) - (int64_t)max(it->first, offset) + 1L);
+    int64_t add = max((int64_t)0, (int64_t)min(offset+len, it->second) - (int64_t)max(it->first, offset) + 1L);
     // cerr << it->first << " - " << it->second << " -> " << add << endl;
     sum += add;
     ivs++;
@@ -142,7 +142,7 @@ void mlComplexity(size_t offset, size_t n, size_t w, size_t k, vector<double> &y
       double effectiveW = w;
       if (globalMode) {
         numfacs -= badivs;     //subtract number of bad intervals from total
-        numfacs = max(1L, numfacs); //bugfix: sometimes there are more bad ivs than factors!
+        numfacs = max((int64_t)1, numfacs); //bugfix: sometimes there are more bad ivs than factors!
         effectiveW -= numbad;  //we ignore the N-blocks
       }
 

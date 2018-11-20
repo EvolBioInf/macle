@@ -20,9 +20,11 @@ bool with_file(char const *file, std::function<bool(std::fstream&)> lambda, std:
 bool with_file_in(char const *file, std::function<bool(std::istream&)> lambda, std::ios_base::openmode mode=std::ios_base::in);
 bool with_file_out(char const *file, std::function<bool(std::ostream&)> lambda, std::ios_base::openmode mode=std::ios_base::out);
 
+/*
 struct MMapReader {
   char *dat=nullptr;
   size_t sz=0;
   size_t off=0;
 };
 bool with_mmap(char const *file, std::function<bool(MMapReader&)> lambda);
+*/

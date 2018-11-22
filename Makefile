@@ -1,4 +1,5 @@
 CXX ?= g++
+BUILD64BIT ?= 1
 USE_SDSL ?= 0
 LOCAL_LIBDIVSUFSORT ?= 1
 PARALLEL_DIVSUFSORT ?= 0
@@ -23,6 +24,9 @@ TESTS=$(patsubst tests/%.cpp,build/%,$(TEST_SRC))
 ###############################################################################
 #### Add configuration dependent compiler flags
 
+ifeq ($(BUILD64BIT), 1)
+  CXXFLAGS += -DU64
+endif
 ifeq ($(USE_SDSL), 1)
   CXXFLAGS += -DUSE_SDSL -Isdsl/include -msse4.2
   LDFLAGS += -lsdsl -Lsdsl/lib

@@ -15,5 +15,9 @@
 #endif
 typedef sdsl::int_vector<VECBIT> uint_vec;
 #else
+#ifndef U64
 typedef std::vector<uint32_t> uint_vec;
+#else
+typedef std::vector<uint64_t> uint_vec;
+#endif
 #endif

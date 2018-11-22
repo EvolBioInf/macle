@@ -12,7 +12,11 @@
 #ifdef USE_SDSL
 #define BUILD_INFO "with SDSL"
 #else
+#ifdef U64
+#define BUILD_INFO "64 bit"
+#else
 #define BUILD_INFO "32 bit"
+#endif
 #endif
 
 struct Task {
